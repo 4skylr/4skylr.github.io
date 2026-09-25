@@ -2,120 +2,138 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>NOIR CINEMA — PROTOCOL</title>
-<meta name="description" content="Noir Cinema public node. Halls, vault, inventory, ledger."/>
-<link rel="icon" href="https://cdn.jsdelivr.net/gh/4skylr/noir-cinema@main/logo.svg"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;700;900&family=UnifrakturMaguntia&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Noir Cinema</title>
+<link rel="icon" href="logo.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;600;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root{ --bg:#0B0710; --card:#140C18; --line:rgba(244,237,228,.1); --text:#F4EDE4; --mute:#9A938C; --violet:#7A2A90; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text)}
+  body{font-family:"IBM Plex Sans",sans-serif;line-height:1.55}
+  body.ar{font-family:"Noto Sans Arabic","IBM Plex Sans",sans-serif}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 22px;background:rgba(11,7,16,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+  .brand img{width:40px;height:40px;border-radius:10px;object-fit:cover;background:var(--violet)}
+  .brand b{display:block;font-family:Syne,sans-serif;letter-spacing:.08em;font-size:13px}
+  .brand small{color:var(--mute);font-size:11px}
+  nav{display:flex;flex-wrap:wrap;gap:6px}
+  nav a{color:var(--mute);text-decoration:none;font-size:13px;padding:7px 10px;border-radius:8px}
+  nav a:hover,nav a.on{color:var(--text);background:rgba(122,42,144,.28)}
+  .lang{display:flex;gap:6px}
+  .lang button{border:1px solid var(--line);background:transparent;color:var(--mute);border-radius:8px;padding:6px 9px;font:inherit;font-size:12px;cursor:pointer}
+  .lang button.on{background:var(--violet);color:#fff;border-color:var(--violet)}
+  main{max-width:1080px;margin:0 auto;padding:28px 22px 72px}
+  .hero{display:grid;grid-template-columns:160px 1fr;gap:28px;align-items:center;margin-bottom:36px}
+  .hero img{width:160px;height:160px;border-radius:24px;object-fit:cover;background:var(--violet);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+  .kicker{color:var(--violet);font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 8px}
+  h1{font-family:Syne,sans-serif;font-size:clamp(36px,7vw,64px);line-height:.95;margin:0}
+  .lede{max-width:52ch;color:var(--mute);margin:14px 0 0}
+  .dates{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .chip{border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;color:var(--mute)}
+  .chip b{color:var(--text);font-weight:600}
+  h2{font-family:Syne,sans-serif;font-size:22px;margin:0 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 28px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;min-height:148px}
+  .card span{display:block;color:var(--violet);font-size:11px;letter-spacing:.14em;margin-bottom:18px}
+  .card h3{margin:0 0 6px;font-size:18px}
+  .card p{margin:0;color:var(--mute);font-size:13px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+  .bars{display:grid;gap:8px;margin-top:12px}
+  .bars div{display:grid;grid-template-columns:48px 1fr 28px;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .bars i{display:block;height:8px;background:rgba(122,42,144,.25);border-radius:99px;overflow:hidden}
+  .bars i b{display:block;height:100%;width:0;background:var(--violet);border-radius:99px;transition:width .8s ease}
+  footer{margin-top:36px;color:var(--mute);font-size:12px}
+  @media (max-width:860px){ nav{display:none} .hero,.grid,.split{grid-template-columns:1fr} .hero img{width:96px;height:96px;border-radius:18px} }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#home">
+    <img src="logo.svg" alt="Noir Cinema"/>
+    <div><b>NOIR CINEMA</b><small data-i="sub">Halls · vault · candy</small></div>
+  </a>
+  <nav>
+    <a class="on" href="#home" data-i="n1">Home</a>
+    <a href="#halls" data-i="n2">Halls</a>
+    <a href="#vault" data-i="n3">Vault</a>
+    <a href="#inv" data-i="n4">Inventory</a>
+    <a href="#led" data-i="n5">Ledger</a>
+  </nav>
+  <div class="lang">
+    <button id="enBtn" class="on">EN</button>
+    <button id="arBtn">AR</button>
+  </div>
+</header>
+<main>
+  <section class="hero" id="home">
+    <img src="logo.svg" alt="Noir Cinema mark"/>
+    <div>
+      <p class="kicker" data-i="kick">Noir Cinema</p>
+      <h1 data-i="title">Four halls. One house.</h1>
+      <p class="lede" data-i="lede">A simple operating page for halls, cold storage, candy count and intake. English first. Switch to Arabic anytime.</p>
+      <div class="dates" id="dates"></div>
+    </div>
+  </section>
+  <h2 id="halls" data-i="h2h">Halls</h2>
+  <div class="grid">
+    <article class="card"><span>H01</span><h3 data-i="h1t">Hall Alpha</h3><p data-i="h1p">218 seats · IMAX</p></article>
+    <article class="card"><span>H02</span><h3 data-i="h2t">Hall Beta</h3><p data-i="h2p">164 seats · Dolby</p></article>
+    <article class="card"><span>H03</span><h3 data-i="h3t">Hall Gamma</h3><p data-i="h3p">96 seats · VIP</p></article>
+    <article class="card"><span>H04</span><h3 data-i="h4t">Hall Delta</h3><p data-i="h4p">72 seats · festival</p></article>
+  </div>
+  <div class="split">
+    <section class="panel" id="vault">
+      <h2 data-i="h2v">Vault</h2>
+      <p class="lede" style="margin:0" data-i="vp">Keep 15–25°C. Door opens as an event. FIFO on candy. Photo every intake.</p>
+    </section>
+    <section class="panel" id="inv">
+      <h2 data-i="h2i">Inventory</h2>
+      <p class="lede" style="margin:0" data-i="ip">Hot dog · popcorn · nachos · soda line. Count at open and close.</p>
+    </section>
+  </div>
+  <section class="panel" id="led" style="margin-top:12px">
+    <h2 data-i="h2l">Week signal</h2>
+    <div class="bars" id="bars"></div>
+  </section>
+  <footer>github.com/4skylr/noir-cinema</footer>
+</main>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/isoWeek.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/ar.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="theme.css"/>
-</head>
-<body>
-<div class="sprocket l"></div>
-<div class="sprocket r"></div>
-<canvas id="field"></canvas>
-<div class="grain"></div>
-<div class="cursor" id="cur"><b></b></div>
-<div id="boot"><pre id="bootlog"></pre></div>
-<header>
-  <div class="brand">
-    <img src="https://cdn.jsdelivr.net/gh/4skylr/noir-cinema@main/logo.svg" alt="Noir Cinema"/>
-    <div>NOIR CINEMA<small data-i="tag">PUBLIC NODE · 0xNC</small></div>
-  </div>
-  <div class="mid" id="clock">SYNC</div>
-  <div class="acts">
-    <button id="enBtn" class="on">EN</button>
-    <button id="arBtn">AR</button>
-    <button id="connect" data-i="connect">CONNECT NODE</button>
-  </div>
-</header>
-<div class="wrap">
-  <section class="hero" id="home">
-    <div>
-      <div class="ghost" data-i="ghost">cinema as protocol</div>
-      <h1>NOIR<span>CINEMA</span></h1>
-      <p class="lede" data-i="lede">Not a brochure. A live operating surface for halls, cold vault, candy inventory and the intake ledger. English by default. Flip to Arabic when the room needs it.</p>
-      <div class="meta" id="dates"></div>
-    </div>
-    <aside class="stamp">
-      <div class="hash" id="hash">hash · mining frame</div>
-      <img src="https://cdn.jsdelivr.net/gh/4skylr/noir-cinema@main/logo.svg" alt="mark"/>
-      <div>
-        <div class="k" data-i="sig">OPERATOR SIGNATURE</div>
-        <div data-i="sigv">4skylr / noir-cinema</div>
-      </div>
-    </aside>
-  </section>
-  <div class="rail"><b id="ticker"></b></div>
-  <section class="block" id="halls">
-    <div class="k">01 — HALLS</div>
-    <h2 data-i="hallsTitle">Four rooms. One chain of seats.</h2>
-    <div class="cols">
-      <article class="cell"><em>H01</em><h3 data-i="h1t">Hall Alpha</h3><p data-i="h1p">218 seats · IMAX throw · clean cycle 00:40</p></article>
-      <article class="cell"><em>H02</em><h3 data-i="h2t">Hall Beta</h3><p data-i="h2p">164 seats · Dolby rack · clean cycle 00:32</p></article>
-      <article class="cell"><em>H03</em><h3 data-i="h3t">Hall Gamma</h3><p data-i="h3p">96 seats · VIP recline · clean cycle 00:28</p></article>
-      <article class="cell"><em>H04</em><h3 data-i="h4t">Hall Delta</h3><p data-i="h4p">72 seats · kids / festival · clean cycle 00:24</p></article>
-    </div>
-  </section>
-  <section class="block" id="store">
-    <div class="k">02 — VAULT</div>
-    <h2 data-i="vaultTitle">Warehouse is a temperature contract.</h2>
-    <div class="split">
-      <div class="vault">
-        <div class="k" data-i="cold">COLD BAND</div>
-        <p data-i="coldp">Hold between 15–25°C. Door state is binary. Open is an event, not a habit.</p>
-        <div class="bar"><i id="temp"></i></div>
-        <p style="margin-top:10px;font-size:11px;color:var(--acid)" id="tempv">21.4°C</p>
-      </div>
-      <div class="vault">
-        <div class="k" data-i="rules">RULES</div>
-        <p data-i="rulesp">FIFO on candy. Locked cage for high-value SKUs. No cardboard on wet floors. Photograph every intake.</p>
-      </div>
-    </div>
-  </section>
-  <section class="block" id="inv">
-    <div class="k">03 — INVENTORY</div>
-    <h2 data-i="invTitle">Tokens you can eat.</h2>
-    <div class="cols">
-      <article class="cell"><em>SKU-01</em><h3 data-i="i1t">Hot dog</h3><p data-i="i1p">Roll + frank + sauces. Count at open and close.</p></article>
-      <article class="cell"><em>SKU-02</em><h3 data-i="i2t">Popcorn</h3><p data-i="i2p">Kernel bins, oil, salt. Pop only against showtime load.</p></article>
-      <article class="cell"><em>SKU-03</em><h3 data-i="i3t">Nachos</h3><p data-i="i3p">Chips + cheese well. Temp log every two hours.</p></article>
-      <article class="cell"><em>SKU-04</em><h3 data-i="i4t">Soda line</h3><p data-i="i4p">Syrup tanks and CO2. Treat as a pressure system.</p></article>
-    </div>
-  </section>
-  <section class="block" id="led">
-    <div class="k">04 — LEDGER</div>
-    <h2 data-i="ledTitle">Week signal. Intake is append-only.</h2>
-    <canvas id="signal"></canvas>
-  </section>
-  <section class="block" id="stack">
-    <div class="k">05 — STACK</div>
-    <h2 data-i="stackTitle">Famous GitHub libraries in this node.</h2>
-    <div class="stack">
-      <span class="lib"><a href="https://github.com/mrdoob/three.js" target="_blank">mrdoob/three.js</a></span>
-      <span class="lib"><a href="https://github.com/greensock/GSAP" target="_blank">greensock/GSAP</a></span>
-      <span class="lib"><a href="https://github.com/darkroomengineering/lenis" target="_blank">darkroomengineering/lenis</a></span>
-      <span class="lib"><a href="https://github.com/juliangarnier/anime" target="_blank">juliangarnier/anime</a></span>
-      <span class="lib"><a href="https://github.com/goldfire/howler.js" target="_blank">goldfire/howler.js</a></span>
-      <span class="lib"><a href="https://github.com/iamkun/dayjs" target="_blank">iamkun/dayjs</a></span>
-      <span class="lib"><a href="https://github.com/chartjs/Chart.js" target="_blank">chartjs/Chart.js</a></span>
-    </div>
-  </section>
-  <footer>
-    <div>NOIR CINEMA · source of truth</div>
-    <div>github.com/4skylr/noir-cinema</div>
-  </footer>
-</div>
-<script src="https://cdn.jsdelivr.net/gh/4skylr/noir-cinema@main/app.js"></script>
+<script>
+const T = {
+  en:{sub:"Halls · vault · candy",n1:"Home",n2:"Halls",n3:"Vault",n4:"Inventory",n5:"Ledger",kick:"Noir Cinema",title:"Four halls. One house.",lede:"A simple operating page for halls, cold storage, candy count and intake. English first. Switch to Arabic anytime.",h2h:"Halls",h1t:"Hall Alpha",h1p:"218 seats · IMAX",h2t:"Hall Beta",h2p:"164 seats · Dolby",h3t:"Hall Gamma",h3p:"96 seats · VIP",h4t:"Hall Delta",h4p:"72 seats · festival",h2v:"Vault",vp:"Keep 15–25°C. Door opens as an event. FIFO on candy. Photo every intake.",h2i:"Inventory",ip:"Hot dog · popcorn · nachos · soda line. Count at open and close.",h2l:"Week signal",days:["Sat","Sun","Mon","Tue","Wed","Thu","Fri"]},
+  ar:{sub:"قاعات · خزنة · حلويات",n1:"الرئيسية",n2:"القاعات",n3:"الخزنة",n4:"الجرد",n5:"السجل",kick:"نوار سينما",title:"أربع قاعات. بيت واحد.",lede:"صفحة تشغيل للقاعات والتخزين البارد وجرد الحلويات والاستلام. الإنجليزي أولاً. حوّله عربي متى ما تبي.",h2h:"القاعات",h1t:"قاعة ألفا",h1p:"٢١٨ مقعد · IMAX",h2t:"قاعة بيتا",h2p:"١٦٤ مقعد · دولبي",h3t:"قاعة جاما",h3p:"٩٦ مقعد · VIP",h4t:"قاعة دلتا",h4p:"٧٢ مقعد · مهرجان",h2v:"الخزنة",vp:"الحرارة ١٥–٢٥°م. فتح الباب حدث. FIFO على الحلويات. صوّر كل استلام.",h2i:"الجرد",ip:"هوت دوق · فشار · ناتشوز · المشروبات. الجرد عند الفتح والإغلاق.",h2l:"إشارة الأسبوع",days:["سبت","أحد","إثنين","ثلاثاء","أربعاء","خميس","جمعة"]}
+};
+let lang = localStorage.getItem("noir-lang") || "en";
+dayjs.extend(window.dayjs_plugin_isoWeek);
+const data = [12,19,15,22,28,24,18];
+function apply(){
+  const p = T[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==="ar"?"rtl":"ltr";
+  document.body.classList.toggle("ar", lang==="ar");
+  document.querySelectorAll("[data-i]").forEach(el=>{ if(p[el.dataset.i]) el.textContent=p[el.dataset.i]; });
+  document.getElementById("enBtn").classList.toggle("on", lang==="en");
+  document.getElementById("arBtn").classList.toggle("on", lang==="ar");
+  dayjs.locale(lang==="ar"?"ar":"en");
+  const now = dayjs();
+  const hijri = new Intl.DateTimeFormat(lang==="ar"?"ar-SA-u-ca-islamic":"en-SA-u-ca-islamic",{day:"numeric",month:"short",year:"numeric"}).format(new Date());
+  document.getElementById("dates").innerHTML =
+    `<span class="chip">${lang==="ar"?"اليوم":"Day"} <b>${now.format("dddd")}</b></span>`+
+    `<span class="chip">${now.format("D MMM YYYY")}</span>`+
+    `<span class="chip">${hijri}</span>`+
+    `<span class="chip">${lang==="ar"?"أسبوع":"Week"} <b>${now.isoWeek()}</b></span>`;
+  document.getElementById("bars").innerHTML = p.days.map((d,i)=>
+    `<div><span>${d}</span><i><b data-w="${Math.round(data[i]/28*100)}"></b></i><span>${data[i]}</span></div>`
+  ).join("");
+  requestAnimationFrame(()=>document.querySelectorAll("#bars b").forEach(el=>el.style.width=el.dataset.w+"%"));
+}
+document.getElementById("enBtn").onclick=()=>{lang="en";localStorage.setItem("noir-lang",lang);apply()};
+document.getElementById("arBtn").onclick=()=>{lang="ar";localStorage.setItem("noir-lang",lang);apply()};
+apply();
+</script>
 </body>
 </html>
