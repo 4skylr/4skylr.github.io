@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240"><image href="https://raw.githubusercontent.com/4skylr/noir-cinema/main/logo.svg" width="240" height="240"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" width="320" height="320">
+  <rect width="320" height="320" rx="36" fill="#7A2A90"/>
+  <circle cx="160" cy="122" r="78" fill="none" stroke="#F4EDE4" stroke-width="5"/>
+  <circle cx="160" cy="122" r="68" fill="none" stroke="#F4EDE4" stroke-width="1.5" stroke-dasharray="3 7"/>
+  <circle cx="160" cy="122" r="58" fill="#4B1150"/>
+  <ellipse cx="160" cy="148" rx="28" ry="22" fill="#F4EDE4"/>
+  <circle cx="160" cy="108" r="20" fill="#F4EDE4"/>
+  <path d="M132 98c8-22 48-22 56 0 2 8-6 12-10 8-10-8-26-8-36 0-4 4-12 0-10-8z" fill="#F4EDE4"/>
+  <path d="M128 168c10 18 54 18 64 0 2 16-10 28-32 28s-34-12-32-28z" fill="#F4EDE4"/>
+  <text x="160" y="236" text-anchor="middle" fill="#F4EDE4" font-family="Georgia, serif" font-size="28">نوار سينما</text>
+  <text x="160" y="268" text-anchor="middle" fill="#F4EDE4" font-family="Arial, sans-serif" font-size="16">Noir Cinema</text>
+</svg>
