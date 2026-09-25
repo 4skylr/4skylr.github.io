@@ -7,29 +7,27 @@
 <link rel="icon" href="logo.svg"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0B0710;--card:#140C18;--line:rgba(244,237,228,.12);--text:#F4EDE4;--mute:#9A938C;--violet:#7A2A90}
+:root{--bg:#0B0710;--text:#F4EDE4;--mute:#9A938C;--violet:#7A2A90;--line:rgba(244,237,228,.12)}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text)}
 body{font-family:"IBM Plex Sans",sans-serif;min-height:100vh}
 body.ar{font-family:"Noto Sans Arabic","IBM Plex Sans",sans-serif}
-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 24px;border-bottom:1px solid var(--line)}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:12px}
 .brand img{width:44px;height:44px;border-radius:12px;background:var(--violet)}
-.brand b{display:block;font-family:Syne,sans-serif;letter-spacing:.08em;font-size:14px}
-.brand small{color:var(--mute);font-size:12px}
+.brand b{font-family:Syne,sans-serif;letter-spacing:.08em;font-size:14px}
 .lang button{border:1px solid var(--line);background:transparent;color:var(--mute);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
 .lang button.on{background:var(--violet);color:#fff;border-color:var(--violet)}
-main{max-width:880px;margin:0 auto;padding:64px 24px}
-.mark{width:96px;height:96px;border-radius:22px;background:var(--violet);display:block;margin-bottom:22px}
-h1{font-family:Syne,sans-serif;font-size:clamp(32px,6vw,56px);line-height:1;margin:0 0 12px}
-p{color:var(--mute);max-width:46ch;margin:0}
-.box{margin-top:36px;border:1px dashed var(--line);border-radius:16px;padding:22px;color:var(--mute);font-size:14px}
+main{min-height:calc(100vh - 81px);display:grid;place-items:center;padding:40px 24px;text-align:center}
+main img{width:112px;height:112px;border-radius:24px;background:var(--violet);margin-bottom:20px}
+h1{font-family:Syne,sans-serif;font-size:clamp(36px,7vw,64px);margin:0 0 10px}
+p{color:var(--mute);margin:0}
 </style>
 </head>
 <body>
 <header>
   <div class="brand">
     <img src="logo.svg" alt="Noir Cinema"/>
-    <div><b>NOIR CINEMA</b><small data-i="sub">Waiting for data</small></div>
+    <b>NOIR CINEMA</b>
   </div>
   <div class="lang">
     <button id="enBtn" class="on">EN</button>
@@ -37,15 +35,16 @@ p{color:var(--mute);max-width:46ch;margin:0}
   </div>
 </header>
 <main>
-  <img class="mark" src="logo.svg" alt="Noir Cinema"/>
-  <h1 data-i="title">Noir Cinema</h1>
-  <p data-i="lede">Empty page on purpose. Send the content and it goes here.</p>
-  <div class="box" data-i="box">No halls, vault, inventory or ledger until you provide the data.</div>
+  <div>
+    <img src="logo.svg" alt="Noir Cinema"/>
+    <h1 data-i="title">Noir Cinema</h1>
+    <p data-i="lede">Content coming next.</p>
+  </div>
 </main>
 <script>
 const T = {
-  en:{sub:"Waiting for data",title:"Noir Cinema",lede:"Empty page on purpose. Send the content and it goes here.",box:"No halls, vault, inventory or ledger until you provide the data."},
-  ar:{sub:"بانتظار البيانات",title:"نوار سينما",lede:"الصفحة فاضية عمد. أرسل المحتوى وأركّبه.",box:"ما فيه قاعات ولا خزنة ولا جرد لحين توصّل البيانات."}
+  en:{title:"Noir Cinema",lede:"Content coming next."},
+  ar:{title:"نوار سينما",lede:"المحتوى جاي بعدين."}
 };
 let lang = localStorage.getItem("noir-lang") || "en";
 function apply(){
