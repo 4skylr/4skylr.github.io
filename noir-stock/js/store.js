@@ -43,7 +43,7 @@ export function onChange(fn) { listeners.add(fn); return () => listeners.delete(
 export function snapshot() { return { products: mem.products, sessions: mem.sessions, activity: mem.activity, mode }; }
 export function getMode() { return mode; }
 
-// ── Local persistence ────────────────────────────────────────
+// ── Local persistence ────────────────────────
 function lsRead() {
   try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
@@ -57,7 +57,7 @@ function seedProducts() {
   return SEED_PRODUCTS.map(p => ({ ...clone(p), createdAt: now, updatedAt: now }));
 }
 
-// ── Init ─────────────────────────────────────────────────────
+// ── Init ─────────────────────────────────
 export async function init() {
   if (firebaseConfig.apiKey) {
     try { await initFirebase(); mode = "firebase"; emit(); return mode; }
@@ -66,7 +66,16 @@ export async function init() {
   mode = "local";
   const saved = lsRead();
   mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [] };
-  if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
+  if (saved && saved.products?.length) {
+    const seedImg = Object.fromEntries(SEED_PRODUCTS.map(p => [p.id, p.image || ""]));
+    let changed = false;
+    mem.products = mem.products.map(p => {
+      const img = seedImg[p.id];
+      if (img && p.image !== img) { changed = true; return { ...p, image: img }; }
+      return p;
+    });
+    if (changed) lsWrite();
+  } else if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
   emit();
   return mode;
 }
@@ -113,7 +122,7 @@ async function initFirebase() {
   ]);
 }
 
-// ── Activity ledger ───────────────────────────────────
+// ── Activity ledger ───────────────────────
 export async function log(type, text) {
   const entry = { id: txHash(), type, text, at: new Date().toISOString() };
   if (mode === "firebase" && fb) {
@@ -124,7 +133,7 @@ export async function log(type, text) {
   }
 }
 
-// ── Products ─────────────────────────────────────────────────
+// ── Products ─────────────────────────────────
 export async function saveProduct(p, { silent = false } = {}) {
   const now = new Date().toISOString();
   const isNew = !mem.products.some(x => x.id === p.id);
@@ -180,9 +189,9 @@ function compressImage(file, size) {
     img.src = URL.createObjectURL(file);
   });
 }
-const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r.fr.result; fr.readAsDataURL(b); });
 
-// ── Count sessions ──────────────────────────────
+// ── Count sessions ──────────────────────────
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
   if (mode === "firebase") {
@@ -222,7 +231,7 @@ export async function commitSession(session) {
   return done;
 }
 
-// ── Import / Export / Reset ──────────────────────────────────
+// ── Import / Export / Reset ──────────────────────
 export function exportAll() { return { exportedAt: new Date().toISOString(), ...clone({ products: mem.products, sessions: mem.sessions }) }; }
 
 export async function importAll(data) {
