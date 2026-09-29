@@ -1,6 +1,7 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
 import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js";
 import { SEED_PRODUCTS } from "./seed-data.js";
+import { CATALOG_PHOTOS } from "./catalog-photos.js";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity" };
@@ -53,7 +54,7 @@ const clone = o => JSON.parse(JSON.stringify(o));
 
 function seedProducts() {
   const now = new Date().toISOString();
-  return SEED_PRODUCTS.map(p => ({ ...clone(p), createdAt: now, updatedAt: now }));
+  return SEED_PRODUCTS.map(p => ({ ...clone(p), image: CATALOG_PHOTOS[p.id] || p.image || "", createdAt: now, updatedAt: now }));
 }
 
 export async function init() {
@@ -65,7 +66,7 @@ export async function init() {
   const saved = lsRead();
   mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [] };
   if (saved && saved.products?.length) {
-    const seedImg = Object.fromEntries(SEED_PRODUCTS.map(p => [p.id, p.image || ""]));
+    const seedImg = Object.fromEntries(SEED_PRODUCTS.map(p => [p.id, CATALOG_PHOTOS[p.id] || p.image || ""]));
     let changed = false;
     mem.products = mem.products.map(p => {
       const img = seedImg[p.id];
