@@ -6,7 +6,7 @@ const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity" };
 
 let mode = "local";
-let fb = null; // { db, storage, fs, st }
+let fb = null;
 let mem = { products: [], sessions: [], activity: [] };
 const listeners = new Set();
 
@@ -183,7 +183,7 @@ function compressImage(file, size) {
     img.src = URL.createObjectURL(file);
   });
 }
-const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r.result; fr.readAsDataURL(b); });
+const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
 
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
