@@ -43,7 +43,6 @@ export function onChange(fn) { listeners.add(fn); return () => listeners.delete(
 export function snapshot() { return { products: mem.products, sessions: mem.sessions, activity: mem.activity, mode }; }
 export function getMode() { return mode; }
 
-// ── Local persistence ────────────────────────
 function lsRead() {
   try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
@@ -57,7 +56,6 @@ function seedProducts() {
   return SEED_PRODUCTS.map(p => ({ ...clone(p), createdAt: now, updatedAt: now }));
 }
 
-// ── Init ─────────────────────────────────
 export async function init() {
   if (firebaseConfig.apiKey) {
     try { await initFirebase(); mode = "firebase"; emit(); return mode; }
@@ -90,12 +88,11 @@ async function initFirebase() {
   ]);
   const app = initializeApp(firebaseConfig);
   const auth = au.getAuth(app);
-  await au.signInAnonymously(auth); // enable Anonymous sign-in under Authentication
+  await au.signInAnonymously(auth);
   const db = fs.getFirestore(app);
   const storage = st.getStorage(app);
   fb = { db, storage, fs, st };
 
-  // first run: upload the report data
   const first = await fs.getDocs(fs.query(fs.collection(db, COL.products), fs.limit(1)));
   if (first.empty) {
     const items = seedProducts();
@@ -122,7 +119,6 @@ async function initFirebase() {
   ]);
 }
 
-// ── Activity ledger ───────────────────────
 export async function log(type, text) {
   const entry = { id: txHash(), type, text, at: new Date().toISOString() };
   if (mode === "firebase" && fb) {
@@ -133,7 +129,6 @@ export async function log(type, text) {
   }
 }
 
-// ── Products ─────────────────────────────────
 export async function saveProduct(p, { silent = false } = {}) {
   const now = new Date().toISOString();
   const isNew = !mem.products.some(x => x.id === p.id);
@@ -160,7 +155,6 @@ export async function deleteProduct(id) {
   await log("delete", `Deleted ${p?.name || id}`);
 }
 
-// compress to a 512px square WebP, then upload
 export async function uploadImage(productId, file) {
   const blob = await compressImage(file, 512);
   if (mode === "firebase") {
@@ -189,9 +183,8 @@ function compressImage(file, size) {
     img.src = URL.createObjectURL(file);
   });
 }
-const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r.fr.result; fr.readAsDataURL(b); });
+const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r.result; fr.readAsDataURL(b); });
 
-// ── Count sessions ──────────────────────────
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
   if (mode === "firebase") {
@@ -210,7 +203,6 @@ export async function deleteSession(id) {
   await log("delete", `Deleted count session ${id.slice(0, 10)}`);
 }
 
-// commit: overwrite system stock with counted quantities
 export async function commitSession(session) {
   const loc = session.location;
   const counted = Object.entries(session.counts || {});
@@ -231,7 +223,6 @@ export async function commitSession(session) {
   return done;
 }
 
-// ── Import / Export / Reset ──────────────────────
 export function exportAll() { return { exportedAt: new Date().toISOString(), ...clone({ products: mem.products, sessions: mem.sessions }) }; }
 
 export async function importAll(data) {
