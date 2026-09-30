@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js";
-import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=4";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=4";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -52,24 +52,35 @@ function lsWrite() {
 }
 const clone = o => JSON.parse(JSON.stringify(o));
 
-// Products added to the seed after the first release, keyed by seed version
+// Products added to / retired from the seed, keyed by seed version
 const ADDED_IN = { 3: ["vimto-blueberry", "hotdog-bun"] };
+const RETIRED_IN = { 4: ["barbican-malt", "barbican-peach", "barbican-pineapple", "barbican-pom", "barbican-raspberry", "coke-light-can", "coke-zero-can", "fanta-citrus-can", "fanta-orange-can", "rani-cocktail", "rani-guava", "rani-mango", "rani-orange", "rani-peach", "rani-pineapple", "schweppes-gingerale", "schweppes-grapefruit", "schweppes-mojito", "schweppes-mojito-red", "schweppes-pom", "sprite-can", "mm-choco-180", "snickers", "twix", "cooking-oil", "nachos-tray", "samosa-tray", "slush-drinks", "ice-cream-cones", "stick-bars", "uur-cream", "cardamom", "cinnamon", "coffee-beans", "coffee-capsules", "cups-3-5", "cups-5", "ginger", "nespresso-lid", "paper-cup-250", "tea-powder", "cups-12", "icecream-spoon", "lids-12", "ptub-130", "ptub-46", "ptub-64", "ptub-85", "spoon", "nachos-removal", "samosas"] };
 const isSeedAsset = img => !img || String(img).startsWith("assets/");
+const stockTotal = p => Object.values(p.stock || {}).reduce((a, n) => a + (Number(n) || 0), 0);
 
-// Changes needed to bring stored products up to the current seed without touching
-// counts, stock levels or photos the user uploaded themselves.
+// Bring stored products in line with the current seed. Idempotent: safe to run on every load.
+// Never touches counts, stock levels, or photos the user uploaded (data: / https: URLs).
 function seedUpgrade(products, fromVersion) {
-  const byId = new Map(products.map(p => [p.id, p]));
-  const updates = [], additions = [];
-  for (const sp of SEED_PRODUCTS) {
-    const cur = byId.get(sp.id);
-    if (cur) {
-      if (isSeedAsset(cur.image) && sp.image && cur.image !== sp.image) updates.push({ id: sp.id, image: sp.image });
-    } else if (Object.entries(ADDED_IN).some(([v, ids]) => Number(v) > fromVersion && ids.includes(sp.id))) {
-      additions.push(sp);
+  const seed = new Map(SEED_PRODUCTS.map(p => [p.id, p]));
+  const have = new Set(products.map(p => p.id));
+  const retired = new Set(Object.entries(RETIRED_IN).filter(([v]) => Number(v) > fromVersion).flatMap(([, ids]) => ids));
+  const updates = [], additions = [], removals = [];
+  for (const cur of products) {
+    const sp = seed.get(cur.id), patch = {};
+    if (sp) {
+      if (isSeedAsset(cur.image) && (cur.image || "") !== (sp.image || "")) patch.image = sp.image || "";
+      if (cur.par == null && sp.par != null) patch.par = sp.par;
+    } else if (retired.has(cur.id) && stockTotal(cur) === 0 && isSeedAsset(cur.image)) {
+      removals.push(cur.id); continue;
+    } else if (isSeedAsset(cur.image) && cur.image) {
+      patch.image = ""; // photo file no longer ships with the app
     }
+    if (Object.keys(patch).length) updates.push({ id: cur.id, ...patch });
   }
-  return { updates, additions };
+  for (const [v, ids] of Object.entries(ADDED_IN)) {
+    if (Number(v) > fromVersion) ids.forEach(id => { if (!have.has(id) && seed.has(id)) additions.push(seed.get(id)); });
+  }
+  return { updates, additions, removals };
 }
 
 function seedProducts() {
@@ -87,15 +98,17 @@ export async function init() {
   const saved = lsRead();
   mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [], seedVersion: SEED_VERSION };
   if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
-  else if ((mem.seedVersion || 2) < SEED_VERSION) {
-    const { updates, additions } = seedUpgrade(mem.products, mem.seedVersion || 2);
-    const now = new Date().toISOString();
-    const patch = new Map(updates.map(u => [u.id, u]));
-    mem.products = mem.products.map(p => patch.has(p.id) ? { ...p, image: patch.get(p.id).image } : p)
-      .concat(additions.map(p => ({ ...clone(p), createdAt: now, updatedAt: now })));
-    mem.seedVersion = SEED_VERSION;
-    lsWrite();
-    if (updates.length || additions.length) log("seed", `Updated ${updates.length} product photos, added ${additions.length} products`);
+  else {
+    const from = mem.seedVersion || 2;
+    const { updates, additions, removals } = seedUpgrade(mem.products, from);
+    if (updates.length || additions.length || removals.length || from < SEED_VERSION) {
+      const now = new Date().toISOString(), patch = new Map(updates.map(u => [u.id, u])), gone = new Set(removals);
+      mem.products = mem.products.filter(p => !gone.has(p.id)).map(p => patch.has(p.id) ? { ...p, ...patch.get(p.id) } : p)
+        .concat(additions.map(p => ({ ...clone(p), createdAt: now, updatedAt: now })));
+      mem.seedVersion = SEED_VERSION;
+      lsWrite();
+      if (from < SEED_VERSION) log("seed", `Catalog updated: ${updates.length} photos refreshed, ${additions.length} added, ${removals.length} retired`);
+    }
   }
   emit();
   return mode;
@@ -133,14 +146,15 @@ async function initFirebase() {
     const from = meta.exists() ? meta.data().version : 2;
     if (from < SEED_VERSION) {
       const all = (await fs.getDocs(fs.collection(db, COL.products))).docs.map(d => ({ id: d.id, ...d.data() }));
-      const { updates, additions } = seedUpgrade(all, from);
+      const { updates, additions, removals } = seedUpgrade(all, from);
       const now = new Date().toISOString();
       const batch = fs.writeBatch(db);
-      updates.forEach(u => batch.update(fs.doc(db, COL.products, u.id), { image: u.image }));
+      updates.forEach(({ id, ...patch }) => batch.update(fs.doc(db, COL.products, id), patch));
+      removals.forEach(id => batch.delete(fs.doc(db, COL.products, id)));
       additions.forEach(p => batch.set(fs.doc(db, COL.products, p.id), { ...p, createdAt: now, updatedAt: now }));
       batch.set(metaRef, { version: SEED_VERSION });
       await batch.commit();
-      if (updates.length || additions.length) await log("seed", `Updated ${updates.length} product photos, added ${additions.length} products`);
+      await log("seed", `Catalog updated: ${updates.length} photos refreshed, ${additions.length} added, ${removals.length} retired`);
     }
   }
 

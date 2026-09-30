@@ -2,8 +2,9 @@
 // Noir Cinema — Othaim Mall, Onaizah · 25/09/2026 4:14 PM
 // stock = System Stock per location · rate = Nett Amount / System Stock (SAR, pre-tax)
 // sku = item name as it appears on the report
-// Product photos: catalog sheet crops + real product photos (PDF, 30/09/2026)
-export const SEED_VERSION = 3;
+// Product photos: supplier PDF (30/09/2026)
+// par = "full" level used for the stock gauge (defaults to the report quantity)
+export const SEED_VERSION = 4;
 export const SEED_DATE = "2026-09-25T16:14:00+03:00";
 export const SEED_PRODUCTS = [
  {
@@ -20,7 +21,8 @@ export const SEED_PRODUCTS = [
    "stores": 20.0
   },
   "min": 0,
-  "rate": 27.102
+  "rate": 27.102,
+  "par": 40
  },
  {
   "id": "bib-coke-zero",
@@ -36,7 +38,8 @@ export const SEED_PRODUCTS = [
    "stores": 10.0
   },
   "min": 0,
-  "rate": 27.1035
+  "rate": 27.1035,
+  "par": 20
  },
  {
   "id": "bib-fanta",
@@ -52,7 +55,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 25.5988
+  "rate": 25.5988,
+  "par": 10
  },
  {
   "id": "lemonade-syrup",
@@ -68,7 +72,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 48.2289
+  "rate": 48.2289,
+  "par": 1
  },
  {
   "id": "mojito-syrup",
@@ -84,7 +89,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 48.5143
+  "rate": 48.5143,
+  "par": 1
  },
  {
   "id": "bib-sprite",
@@ -100,7 +106,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 25.5911
+  "rate": 25.5911,
+  "par": 9
  },
  {
   "id": "arwa-500",
@@ -116,7 +123,8 @@ export const SEED_PRODUCTS = [
    "stores": 528.0
   },
   "min": 0,
-  "rate": 0.53
+  "rate": 0.53,
+  "par": 600
  },
  {
   "id": "arwa-zero",
@@ -132,7 +140,8 @@ export const SEED_PRODUCTS = [
    "stores": 51.0
   },
   "min": 0,
-  "rate": 0.75
+  "rate": 0.75,
+  "par": 90
  },
  {
   "id": "barbican",
@@ -148,151 +157,8 @@ export const SEED_PRODUCTS = [
    "stores": 30.0
   },
   "min": 0,
-  "rate": 2.0
- },
- {
-  "id": "barbican-malt",
-  "name": "Barbican Malt",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/barbican-malt.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "barbican-peach",
-  "name": "Barbican Peach",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/barbican-peach.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "barbican-pineapple",
-  "name": "Barbican Pineapple",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/barbican-pineapple.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "barbican-pom",
-  "name": "Barbican Pomegranate",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/barbican-pom.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "barbican-raspberry",
-  "name": "Barbican Raspberry",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/barbican-raspberry.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "coke-light-can",
-  "name": "Coca-Cola Light Can",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/coke-light-can.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "coke-zero-can",
-  "name": "Coke Zero Can",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/coke-zero-can.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "fanta-citrus-can",
-  "name": "Fanta Citrus Can",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/fanta-citrus-can.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "fanta-orange-can",
-  "name": "Fanta Orange Can",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/fanta-orange-can.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 2.0,
+  "par": 50
  },
  {
   "id": "monster",
@@ -301,14 +167,15 @@ export const SEED_PRODUCTS = [
   "code": "M00000013",
   "category": "drinks",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/monster.webp",
   "stock": {
    "mini": 0,
    "refuel": 22.0,
    "stores": 0
   },
   "min": 0,
-  "rate": 7.66
+  "rate": 7.66,
+  "par": 25
  },
  {
   "id": "rani",
@@ -324,103 +191,8 @@ export const SEED_PRODUCTS = [
    "stores": 64.0
   },
   "min": 0,
-  "rate": 1.92
- },
- {
-  "id": "rani-cocktail",
-  "name": "Rani Cocktail",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-cocktail.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "rani-guava",
-  "name": "Rani Guava",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-guava.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "rani-mango",
-  "name": "Rani Mango",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-mango.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "rani-orange",
-  "name": "Rani Orange",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-orange.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "rani-peach",
-  "name": "Rani Peach",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-peach.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "rani-pineapple",
-  "name": "Rani Pineapple",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/rani-pineapple.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 1.92,
+  "par": 100
  },
  {
   "id": "schweppes",
@@ -436,103 +208,8 @@ export const SEED_PRODUCTS = [
    "stores": 42.0
   },
   "min": 0,
-  "rate": 2.61
- },
- {
-  "id": "schweppes-gingerale",
-  "name": "Schweppes Ginger Ale",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/schweppes-gingerale.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "schweppes-grapefruit",
-  "name": "Schweppes Grapefruit",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/schweppes-grapefruit.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "schweppes-mojito",
-  "name": "Schweppes Mojito",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/schweppes-mojito.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "schweppes-mojito-red",
-  "name": "Schweppes Mojito (Red)",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/schweppes-mojito-red.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "schweppes-pom",
-  "name": "Schweppes Pomegranate",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/schweppes-pom.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "sprite-can",
-  "name": "Sprite Can",
-  "sku": "",
-  "code": "",
-  "category": "drinks",
-  "unit": "pcs",
-  "image": "assets/products/sprite-can.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 2.61,
+  "par": 60
  },
  {
   "id": "vimto-can",
@@ -548,7 +225,8 @@ export const SEED_PRODUCTS = [
    "stores": 15.0
   },
   "min": 0,
-  "rate": 1.8
+  "rate": 1.8,
+  "par": 45
  },
  {
   "id": "vimto-pet",
@@ -564,7 +242,8 @@ export const SEED_PRODUCTS = [
    "stores": 35.0
   },
   "min": 0,
-  "rate": 1.58
+  "rate": 1.58,
+  "par": 70
  },
  {
   "id": "vimto-blueberry",
@@ -580,7 +259,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 0
+  "rate": 0,
+  "par": 0
  },
  {
   "id": "mm-choco-150",
@@ -596,23 +276,8 @@ export const SEED_PRODUCTS = [
    "stores": 45.0
   },
   "min": 0,
-  "rate": 13.5
- },
- {
-  "id": "mm-choco-180",
-  "name": "M&M's Chocolate 180 g",
-  "sku": "",
-  "code": "",
-  "category": "snacks",
-  "unit": "pcs",
-  "image": "assets/products/mm-choco-180.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 13.5,
+  "par": 65
  },
  {
   "id": "mm-choco-45",
@@ -628,7 +293,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 2.29
+  "rate": 2.29,
+  "par": 20
  },
  {
   "id": "mm-peanut-150",
@@ -644,7 +310,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 13.95
+  "rate": 13.95,
+  "par": 20
  },
  {
   "id": "mm-peanut-45",
@@ -660,7 +327,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 2.75
+  "rate": 2.75,
+  "par": 30
  },
  {
   "id": "maltesers-175",
@@ -676,7 +344,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 15.5
+  "rate": 15.5,
+  "par": 15
  },
  {
   "id": "maltesers-37",
@@ -692,39 +361,8 @@ export const SEED_PRODUCTS = [
    "stores": 25.0
   },
   "min": 0,
-  "rate": 2.6
- },
- {
-  "id": "snickers",
-  "name": "Snickers 50 g",
-  "sku": "",
-  "code": "",
-  "category": "snacks",
-  "unit": "pcs",
-  "image": "assets/products/snickers.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "twix",
-  "name": "Twix 50 g",
-  "sku": "",
-  "code": "",
-  "category": "snacks",
-  "unit": "pcs",
-  "image": "assets/products/twix.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 2.6,
+  "par": 55
  },
  {
   "id": "flossine-blue",
@@ -740,7 +378,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 490.7766
+  "rate": 490.7766,
+  "par": 3
  },
  {
   "id": "corn-butterfly",
@@ -756,7 +395,8 @@ export const SEED_PRODUCTS = [
    "stores": 45.36
   },
   "min": 0,
-  "rate": 5.5099
+  "rate": 5.5099,
+  "par": 75
  },
  {
   "id": "caramel",
@@ -772,7 +412,8 @@ export const SEED_PRODUCTS = [
    "stores": 113.5
   },
   "min": 0,
-  "rate": 14.7699
+  "rate": 14.7699,
+  "par": 120
  },
  {
   "id": "cheese-masala",
@@ -788,7 +429,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 53.0639
+  "rate": 53.0639,
+  "par": 8
  },
  {
   "id": "cotton-candy-tub",
@@ -804,7 +446,8 @@ export const SEED_PRODUCTS = [
    "stores": 1172.0
   },
   "min": 0,
-  "rate": 2.2309
+  "rate": 2.2309,
+  "par": 1185
  },
  {
   "id": "corn-mushroom",
@@ -820,7 +463,8 @@ export const SEED_PRODUCTS = [
    "stores": 136.08
   },
   "min": 0,
-  "rate": 5.7301
+  "rate": 5.7301,
+  "par": 160
  },
  {
   "id": "pizza-mix",
@@ -836,7 +480,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 61.0601
+  "rate": 61.0601,
+  "par": 15
  },
  {
   "id": "popcorn-oil",
@@ -852,7 +497,8 @@ export const SEED_PRODUCTS = [
    "stores": 82.38
   },
   "min": 0,
-  "rate": 22.9406
+  "rate": 22.9406,
+  "par": 95
  },
  {
   "id": "tub-130",
@@ -868,7 +514,8 @@ export const SEED_PRODUCTS = [
    "stores": 500.0
   },
   "min": 0,
-  "rate": 1.1
+  "rate": 1.1,
+  "par": 575
  },
  {
   "id": "tub-46",
@@ -884,7 +531,8 @@ export const SEED_PRODUCTS = [
    "stores": 4925.0
   },
   "min": 0,
-  "rate": 0.5751
+  "rate": 0.5751,
+  "par": 5110
  },
  {
   "id": "tub-64",
@@ -900,7 +548,8 @@ export const SEED_PRODUCTS = [
    "stores": 600.0
   },
   "min": 0,
-  "rate": 0.85
+  "rate": 0.85,
+  "par": 670
  },
  {
   "id": "tub-85",
@@ -916,7 +565,8 @@ export const SEED_PRODUCTS = [
    "stores": 1300.0
   },
   "min": 0,
-  "rate": 1.2944
+  "rate": 1.2944,
+  "par": 1355
  },
  {
   "id": "salt",
@@ -925,14 +575,15 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/salt.webp",
   "stock": {
    "mini": 22.35,
    "refuel": 0,
    "stores": 0
   },
   "min": 0,
-  "rate": 9.2282
+  "rate": 9.2282,
+  "par": 25
  },
  {
   "id": "sugar",
@@ -948,7 +599,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 2.8999
+  "rate": 2.8999,
+  "par": 50
  },
  {
   "id": "flossine-pink",
@@ -964,7 +616,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 490.5675
+  "rate": 490.5675,
+  "par": 3
  },
  {
   "id": "hotdog",
@@ -980,7 +633,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 0
+  "rate": 0,
+  "par": 0
  },
  {
   "id": "cheese-sauce",
@@ -996,23 +650,8 @@ export const SEED_PRODUCTS = [
    "stores": 78.0
   },
   "min": 0,
-  "rate": 17.2198
- },
- {
-  "id": "cooking-oil",
-  "name": "Cooking Oil",
-  "sku": "",
-  "code": "",
-  "category": "food",
-  "unit": "pcs",
-  "image": "assets/products/cooking-oil.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 17.2198,
+  "par": 85
  },
  {
   "id": "hotdog-bun",
@@ -1028,7 +667,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 0
+  "rate": 0,
+  "par": 0
  },
  {
   "id": "jalapeno",
@@ -1044,7 +684,8 @@ export const SEED_PRODUCTS = [
    "stores": 24.0
   },
   "min": 0,
-  "rate": 9.7199
+  "rate": 9.7199,
+  "par": 30
  },
  {
   "id": "mustard",
@@ -1060,23 +701,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 35.1263
- },
- {
-  "id": "nachos-tray",
-  "name": "Nachos Tray",
-  "sku": "",
-  "code": "",
-  "category": "food",
-  "unit": "pcs",
-  "image": "assets/products/nachos-tray.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 35.1263,
+  "par": 1
  },
  {
   "id": "salsa",
@@ -1092,23 +718,8 @@ export const SEED_PRODUCTS = [
    "stores": 26.46
   },
   "min": 0,
-  "rate": 19.5073
- },
- {
-  "id": "samosa-tray",
-  "name": "Samosa Tray",
-  "sku": "",
-  "code": "",
-  "category": "food",
-  "unit": "pcs",
-  "image": "assets/products/samosa-tray.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 19.5073,
+  "par": 40
  },
  {
   "id": "nachos-chips",
@@ -1124,7 +735,8 @@ export const SEED_PRODUCTS = [
    "stores": 38.0
   },
   "min": 0,
-  "rate": 27.498
+  "rate": 27.498,
+  "par": 40
  },
  {
   "id": "ketchup",
@@ -1140,7 +752,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 18.3125
+  "rate": 18.3125,
+  "par": 1
  },
  {
   "id": "slush-blue",
@@ -1156,23 +769,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 21.5028
- },
- {
-  "id": "slush-drinks",
-  "name": "Slush Cup (Served)",
-  "sku": "",
-  "code": "",
-  "category": "slush",
-  "unit": "pcs",
-  "image": "assets/products/slush-drinks.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 21.5028,
+  "par": 20
  },
  {
   "id": "slush-glass-12",
@@ -1188,7 +786,8 @@ export const SEED_PRODUCTS = [
    "stores": 5600.0
   },
   "min": 0,
-  "rate": 0.22
+  "rate": 0.22,
+  "par": 5645
  },
  {
   "id": "slush-glass-16",
@@ -1204,7 +803,8 @@ export const SEED_PRODUCTS = [
    "stores": 4200.0
   },
   "min": 0,
-  "rate": 0.29
+  "rate": 0.29,
+  "par": 4265
  },
  {
   "id": "slush-pom",
@@ -1220,7 +820,8 @@ export const SEED_PRODUCTS = [
    "stores": 10.0
   },
   "min": 0,
-  "rate": 23.9922
+  "rate": 23.9922,
+  "par": 15
  },
  {
   "id": "slush-straw",
@@ -1229,62 +830,15 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "slush",
   "unit": "ltr",
-  "image": "assets/products/slush-strawberry.webp",
+  "image": "assets/products/slush-straw.webp",
   "stock": {
    "mini": 12.68,
    "refuel": 0,
    "stores": 5.0
   },
   "min": 0,
-  "rate": 24.0
- },
- {
-  "id": "ice-cream-cones",
-  "name": "Ice Cream Cones",
-  "sku": "",
-  "code": "",
-  "category": "icecream",
-  "unit": "pcs",
-  "image": "assets/products/ice-cream-cones.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "stick-bars",
-  "name": "Ice Cream Stick Bars",
-  "sku": "",
-  "code": "",
-  "category": "icecream",
-  "unit": "pcs",
-  "image": "assets/products/stick-bars.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "uur-cream",
-  "name": "UUR Cream",
-  "sku": "",
-  "code": "",
-  "category": "icecream",
-  "unit": "pcs",
-  "image": "assets/products/uur-cream.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 24.0,
+  "par": 20
  },
  {
   "id": "brown-sugar",
@@ -1300,71 +854,8 @@ export const SEED_PRODUCTS = [
    "stores": 2000.0
   },
   "min": 0,
-  "rate": 0.06
- },
- {
-  "id": "cardamom",
-  "name": "Cardamom Whole",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "kg",
-  "image": "assets/products/cardamom.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "cinnamon",
-  "name": "Cinnamon Stick",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "kg",
-  "image": "assets/products/cinnamon.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "coffee-beans",
-  "name": "Coffee Beans",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "kg",
-  "image": "assets/products/coffee-beans.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "coffee-capsules",
-  "name": "Coffee Capsules",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "pcs",
-  "image": "assets/products/coffee-capsules.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.06,
+  "par": 2000
  },
  {
   "id": "coffee-cup-big",
@@ -1380,7 +871,8 @@ export const SEED_PRODUCTS = [
    "stores": 500.0
   },
   "min": 0,
-  "rate": 0.28
+  "rate": 0.28,
+  "par": 500
  },
  {
   "id": "coffee-cup-small",
@@ -1396,55 +888,8 @@ export const SEED_PRODUCTS = [
    "stores": 1000.0
   },
   "min": 0,
-  "rate": 0.16
- },
- {
-  "id": "cups-3-5",
-  "name": "Cup 3.5 oz",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "pcs",
-  "image": "assets/products/cups-3-5.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "cups-5",
-  "name": "Cup 5 oz",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "pcs",
-  "image": "assets/products/cups-5.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "ginger",
-  "name": "Ginger",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "kg",
-  "image": "assets/products/ginger.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.16,
+  "par": 1000
  },
  {
   "id": "lemon",
@@ -1460,7 +905,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 8.6557
+  "rate": 8.6557,
+  "par": 1
  },
  {
   "id": "mint",
@@ -1476,39 +922,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 8.4483
- },
- {
-  "id": "nespresso-lid",
-  "name": "Nespresso Cup Lid",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "pcs",
-  "image": "assets/products/nespresso-lid.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "paper-cup-250",
-  "name": "Paper Cup 250 ml",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "pcs",
-  "image": "assets/products/paper-cup-250.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 8.4483,
+  "par": 1
  },
  {
   "id": "sugar-sachet",
@@ -1524,7 +939,8 @@ export const SEED_PRODUCTS = [
    "stores": 2000.0
   },
   "min": 0,
-  "rate": 0.02
+  "rate": 0.02,
+  "par": 2000
  },
  {
   "id": "sweet-low",
@@ -1540,39 +956,8 @@ export const SEED_PRODUCTS = [
    "stores": 400.0
   },
   "min": 0,
-  "rate": 0.37
- },
- {
-  "id": "tea-powder",
-  "name": "Tea Powder",
-  "sku": "",
-  "code": "",
-  "category": "hot",
-  "unit": "kg",
-  "image": "assets/products/tea-powder.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "cups-12",
-  "name": "Cup 12 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/cups-12.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.37,
+  "par": 400
  },
  {
   "id": "cups-16",
@@ -1588,7 +973,8 @@ export const SEED_PRODUCTS = [
    "stores": 1575.0
   },
   "min": 0,
-  "rate": 0.01
+  "rate": 0.01,
+  "par": 1625
  },
  {
   "id": "cups-24",
@@ -1604,7 +990,8 @@ export const SEED_PRODUCTS = [
    "stores": 2700.0
   },
   "min": 0,
-  "rate": 0.1619
+  "rate": 0.1619,
+  "par": 2745
  },
  {
   "id": "cups-30",
@@ -1620,7 +1007,8 @@ export const SEED_PRODUCTS = [
    "stores": 150.0
   },
   "min": 0,
-  "rate": 0.4
+  "rate": 0.4,
+  "par": 225
  },
  {
   "id": "dip-cup-4",
@@ -1629,14 +1017,15 @@ export const SEED_PRODUCTS = [
   "code": "D00000002",
   "category": "packaging",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/dip-cup-4.webp",
   "stock": {
    "mini": 0,
    "refuel": 917.0,
    "stores": 0
   },
   "min": 0,
-  "rate": 0.09
+  "rate": 0.09,
+  "par": 920
  },
  {
   "id": "hotdog-tray",
@@ -1652,39 +1041,8 @@ export const SEED_PRODUCTS = [
    "stores": 3075.0
   },
   "min": 0,
-  "rate": 0.4257
- },
- {
-  "id": "icecream-spoon",
-  "name": "Ice Cream Tasting Spoon",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/icecream-spoon.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "lids-12",
-  "name": "Lid 12 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/lids-12.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.4257,
+  "par": 3095
  },
  {
   "id": "lids-16",
@@ -1693,14 +1051,15 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "packaging",
   "unit": "pcs",
-  "image": "assets/products/lids-12.webp",
+  "image": "assets/products/lids-16.webp",
   "stock": {
    "mini": 39.0,
    "refuel": 0,
    "stores": 1700.0
   },
   "min": 0,
-  "rate": 0.0135
+  "rate": 0.0135,
+  "par": 1740
  },
  {
   "id": "lids-24",
@@ -1716,7 +1075,8 @@ export const SEED_PRODUCTS = [
    "stores": 2800.0
   },
   "min": 0,
-  "rate": 0.0718
+  "rate": 0.0718,
+  "par": 3095
  },
  {
   "id": "lids-30",
@@ -1725,14 +1085,15 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "packaging",
   "unit": "pcs",
-  "image": "assets/products/lids-slush-30.webp",
+  "image": "assets/products/lids-30.webp",
   "stock": {
    "mini": 191.0,
    "refuel": 0,
    "stores": 400.0
   },
   "min": 0,
-  "rate": 0.0845
+  "rate": 0.0845,
+  "par": 595
  },
  {
   "id": "nachos-tray-3",
@@ -1748,7 +1109,8 @@ export const SEED_PRODUCTS = [
    "stores": 3610.0
   },
   "min": 0,
-  "rate": 0.6498
+  "rate": 0.6498,
+  "par": 3670
  },
  {
   "id": "nachos-tray-4",
@@ -1764,7 +1126,8 @@ export const SEED_PRODUCTS = [
    "stores": 1922.0
   },
   "min": 0,
-  "rate": 1.35
+  "rate": 1.35,
+  "par": 1970
  },
  {
   "id": "napkin",
@@ -1780,87 +1143,8 @@ export const SEED_PRODUCTS = [
    "stores": 11000.0
   },
   "min": 0,
-  "rate": 0.02
- },
- {
-  "id": "ptub-130",
-  "name": "Plastic Tub 130 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/ptub-130.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "ptub-46",
-  "name": "Plastic Tub 46 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/ptub-46.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "ptub-64",
-  "name": "Plastic Tub 64 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/ptub-64.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "ptub-85",
-  "name": "Plastic Tub 85 oz",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/ptub-85.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "spoon",
-  "name": "Spoon",
-  "sku": "",
-  "code": "",
-  "category": "packaging",
-  "unit": "pcs",
-  "image": "assets/products/spoon.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.02,
+  "par": 12165
  },
  {
   "id": "stirrer",
@@ -1876,7 +1160,8 @@ export const SEED_PRODUCTS = [
    "stores": 5000.0
   },
   "min": 0,
-  "rate": 0.05
+  "rate": 0.05,
+  "par": 5000
  },
  {
   "id": "straw",
@@ -1892,7 +1177,8 @@ export const SEED_PRODUCTS = [
    "stores": 0
   },
   "min": 0,
-  "rate": 0.0688
+  "rate": 0.0688,
+  "par": 3395
  },
  {
   "id": "straw-spoon",
@@ -1908,39 +1194,8 @@ export const SEED_PRODUCTS = [
    "stores": 500.0
   },
   "min": 0,
-  "rate": 0.09
- },
- {
-  "id": "nachos-removal",
-  "name": "Nachos — Removal",
-  "sku": "",
-  "code": "",
-  "category": "removals",
-  "unit": "pcs",
-  "image": "assets/products/nachos.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
- },
- {
-  "id": "samosas",
-  "name": "Samosas — Removal",
-  "sku": "",
-  "code": "",
-  "category": "removals",
-  "unit": "pcs",
-  "image": "assets/products/samosas.webp",
-  "stock": {
-   "mini": 0,
-   "refuel": 0,
-   "stores": 0
-  },
-  "min": 0,
-  "rate": 0
+  "rate": 0.09,
+  "par": 975
  },
  {
   "id": "co2",
@@ -1949,13 +1204,14 @@ export const SEED_PRODUCTS = [
   "code": "C00000014",
   "category": "other",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/co2.webp",
   "stock": {
    "mini": 43.68,
    "refuel": 0,
    "stores": 0
   },
   "min": 0,
-  "rate": 0.0101
+  "rate": 0.0101,
+  "par": 45
  }
 ];

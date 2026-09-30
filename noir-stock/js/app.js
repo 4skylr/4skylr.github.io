@@ -1,6 +1,9 @@
-import * as store from "./store.js";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js";
-import { SEED_DATE } from "./seed-data.js";
+import * as store from "./store.js?v=4";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=4";
+import { SEED_DATE } from "./seed-data.js?v=4";
+
+// bump with each release so browsers fetch fresh photos instead of cached ones
+const ASSET_V = "4";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
@@ -22,9 +25,23 @@ const ago = iso => {
   if (d < 60) return "just now"; if (d < 3600) return `${Math.floor(d / 60)}m ago`;
   if (d < 86400) return `${Math.floor(d / 3600)}h ago`; return when(iso);
 };
+const src = img => String(img).startsWith("assets/") ? `${img}?v=${ASSET_V}` : img;
+const ph = (p, cls) => `<div class="${cls} ph" aria-hidden="true">${esc(initials(p))}</div>`;
+// a photo that fails to load falls back to the initials tile instead of a broken icon
 const pic = (p, cls) => p.image
-  ? `<img class="${cls}" src="${esc(p.image)}" alt="" loading="lazy">`
-  : `<div class="${cls} ph" aria-hidden="true">${esc(initials(p))}</div>`;
+  ? `<img class="${cls}" src="${esc(src(p.image))}" alt="" loading="lazy" data-ph="${esc(initials(p))}" onerror="this.outerHTML='<div class=&quot;'+this.className+' ph&quot; aria-hidden=&quot;true&quot;>'+this.dataset.ph+'</div>'">`
+  : ph(p, cls);
+
+// Stock level against the product's full level (par)
+function level(p, amount = total(p)) {
+  const par = Number(p.par) || 0;
+  if (!par) return { par: 0, pct: 0, left: amount, state: "unset" };
+  const pct = amount / par;
+  const state = amount <= 0 ? "empty" : pct < .25 ? "crit" : pct < .5 ? "low" : pct > 1.001 ? "over" : "ok";
+  return { par, pct, left: amount, state };
+}
+const tank = (lv, cls = "") => `<span class="tank ${cls} s-${lv.state}" style="--lv:${Math.min(Math.max(lv.pct, 0), 1).toFixed(3)}" aria-hidden="true"><i class="liquid"></i></span>`;
+const pctText = lv => lv.state === "unset" ? "—" : `${Math.round(lv.pct * 100)}%`;
 const lsGet = (k, d) => { try { const v = localStorage.getItem("noir-ui2:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem("noir-ui2:" + k, JSON.stringify(v)); } catch {} };
 const splitMoney = n => { const [a, b] = sar(n).split("."); return `${a}<span class="dec">.${b}</span>`; };
@@ -156,7 +173,8 @@ function viewDashboard() {
     .filter(c => c.v > 0.01).sort((a, b) => b.v - a.v);
   const top = [...P].sort((a, b) => value(b) - value(a)).slice(0, 7);
   const out = P.filter(p => Number(p.rate) > 0 && total(p) === 0);
-  const low = P.filter(p => Number(p.min) > 0 && total(p) > 0 && total(p) <= Number(p.min));
+  const low = P.filter(p => total(p) > 0 && ((Number(p.min) > 0 && total(p) <= Number(p.min)) || ["low", "crit"].includes(level(p).state)))
+    .sort((a, b) => level(a).pct - level(b).pct);
   const drafts = data.sessions.filter(s => s.status === "draft");
 
   $("#title-actions").innerHTML = `<button class="btn hot" data-route="count">${icon("count")}Start a count</button>`;
@@ -226,7 +244,7 @@ function viewDashboard() {
       <div class="slab-h"><h2>Signals</h2><span class="tag">${out.length + low.length + drafts.length} open</span></div>
       <div class="alerts">
         ${drafts.map(s => `<div class="alert amber"><span>Unfinished count · ${esc(loc(s.location).name)}</span><button class="btn sm" data-route="count">Resume</button></div>`).join("")}
-        ${low.map(p => `<div class="alert amber"><span>${esc(p.name)} is running low</span><span class="data">${qty(total(p))} / ${qty(p.min)}</span></div>`).join("")}
+        ${low.map(p => { const lv = level(p); return `<div class="alert amber"><span>${esc(p.name)} is running low</span><span class="data">${lv.state === "unset" ? `${qty(total(p))} / ${qty(p.min)}` : `${pctText(lv)} · ${qty(lv.left)} left`}</span></div>`; }).join("")}
         ${out.slice(0, 8).map(p => `<div class="alert"><span>${esc(p.name)}</span><span class="data">OUT</span></div>`).join("")}
         ${!drafts.length && !low.length && !out.length ? `<p class="empty"><span class="voice">All quiet.</span> Set a minimum level on any product to get low-stock signals here.</p>` : ""}
       </div>
@@ -296,13 +314,14 @@ function renderResults() {
   const head = `<p class="count-line">${L.length} items · ${sar(v)} SAR${ui.loc !== "all" ? " · " + esc(loc(ui.loc).name) : ""}</p>`;
   if (ui.view === "list") {
     $("#results").innerHTML = head + `<div class="ledger-wrap"><table class="ledger"><thead><tr>
-      <th>Token</th><th>Product</th><th>Category</th>${LOCATIONS.map(l => `<th class="r">${l.short}</th>`).join("")}<th class="r">Total</th><th class="r">Unit cost</th><th class="r">Value SAR</th></tr></thead>
+      <th>Token</th><th>Product</th><th>Category</th>${LOCATIONS.map(l => `<th class="r">${l.short}</th>`).join("")}<th class="r">Total</th><th>Level</th><th class="r">Unit cost</th><th class="r">Value SAR</th></tr></thead>
       <tbody>${L.map(p => `<tr data-edit="${esc(p.id)}">
         <td class="data" style="color:var(--muted)">${tokenNo(p.id)}</td>
         <td><div class="nm">${pic(p, "pic")}<div><b>${esc(p.name)}</b><span>${esc(p.sku || p.code || "—")}</span></div></div></td>
         <td>${esc(catName(p.category))}</td>
         ${LOCATIONS.map(l => `<td class="r data">${qty(p.stock?.[l.id] || 0)}</td>`).join("")}
         <td class="r data">${qty(total(p))} <span style="color:var(--muted)">${esc(UNITS[p.unit] || "")}</span></td>
+        <td>${(lv => `<span class="lvbar s-${lv.state}"><i style="width:${Math.min(lv.pct, 1) * 100}%"></i></span><span class="data lvpct">${pctText(lv)}</span>`)(level(p))}</td>
         <td class="r data">${Number(p.rate) ? sar(p.rate) : "—"}</td>
         <td class="r data">${sar(value(p))}</td></tr>`).join("")}</tbody></table></div>`;
     return;
@@ -314,11 +333,16 @@ function renderResults() {
 }
 
 function token(p) {
-  const t = total(p), max = Math.max(...LOCATIONS.map(l => Number(p.stock?.[l.id]) || 0), 1);
-  const state = t === 0 ? `<span class="token-state out">Out</span>` : Number(p.min) > 0 && t <= p.min ? `<span class="token-state low">Low</span>` : "";
+  const t = total(p), max = Math.max(...LOCATIONS.map(l => Number(p.stock?.[l.id]) || 0), 1), lv = level(p);
+  const low = (Number(p.min) > 0 && t <= p.min) || lv.state === "low" || lv.state === "crit";
+  const state = t === 0 ? `<span class="token-state out">Out</span>` : low ? `<span class="token-state low">Low</span>` : "";
+  const unit = esc(UNITS[p.unit] || "");
   return `<button class="token" data-edit="${esc(p.id)}">
-    <div class="token-frame">${pic(p, "token-img")}<span class="token-id">${tokenNo(p.id)}</span>${state}</div>
+    <div class="token-frame">${pic(p, "token-img")}<span class="token-id">${tokenNo(p.id)}</span>${state}${tank(lv)}</div>
     <div class="token-body"><span class="token-cat">${esc(catName(p.category))}</span><h3>${esc(p.name)}</h3><span class="token-sku">${esc(p.sku || p.code || "not on report")}</span></div>
+    <div class="level s-${lv.state}">${lv.state === "unset"
+      ? `<span>Level</span><em>set a full level</em>`
+      : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
     <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
     <div class="token-foot"><span class="qty">${qty(t)} ${esc(UNITS[p.unit] || "")}</span><span class="val">${sar(value(p))}<small>SAR</small></span></div>
   </button>`;
@@ -340,7 +364,7 @@ const slug = s => (String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/
 
 function productForm(p) {
   const isNew = !p;
-  const d = p ? JSON.parse(JSON.stringify(p)) : { id: "", name: "", sku: "", code: "", category: ui.cat !== "all" ? ui.cat : "drinks", unit: "pcs", rate: 0, min: 0, image: "", stock: { mini: 0, refuel: 0, stores: 0 } };
+  const d = p ? JSON.parse(JSON.stringify(p)) : { id: "", name: "", sku: "", code: "", category: ui.cat !== "all" ? ui.cat : "drinks", unit: "pcs", rate: 0, min: 0, par: 0, image: "", stock: { mini: 0, refuel: 0, stores: 0 } };
   let file = null;
   const blank = `<div class="drop-cta">${icon("image")}<span class="voice">Drop a photo</span>or click, or paste from clipboard</div>`;
   const m = openModal(`
@@ -348,7 +372,7 @@ function productForm(p) {
     <p class="lede">${isNew ? "Only the name is required. The photo is compressed to WebP automatically." : `${tokenNo(d.id)} · last edited ${d.updatedAt ? when(d.updatedAt) : "—"}`}</p>
     <form id="pf" class="form" novalidate>
       <div>
-        <label class="drop ${d.image ? "" : "blank"}" id="drop" for="pf-img">${d.image ? `<img src="${esc(d.image)}" alt="">` : blank}</label>
+        <label class="drop ${d.image ? "" : "blank"}" id="drop" for="pf-img">${d.image ? `<img src="${esc(src(d.image))}" alt="">` : blank}</label>
         <input id="pf-img" type="file" accept="image/*" hidden>
         ${d.image ? `<button type="button" class="btn sm ghost" id="rm-img" style="margin-top:10px;width:100%">Remove photo</button>` : ""}
       </div>
@@ -359,7 +383,8 @@ function productForm(p) {
         <div class="fl"><label for="pf-sku">Name on stock report</label><input class="input" id="pf-sku" value="${esc(d.sku)}" placeholder="RANI CAN"></div>
         <div class="fl"><label for="pf-code">Item code</label><input class="input" id="pf-code" value="${esc(d.code)}" placeholder="R00000007"></div>
         <div class="fl"><label for="pf-rate">Unit cost · SAR</label><input class="input data" id="pf-rate" type="number" step="0.0001" min="0" value="${Number(d.rate) || 0}"></div>
-        <div class="fl"><label for="pf-min">Low-stock level</label><input class="input data" id="pf-min" type="number" step="any" min="0" value="${Number(d.min) || 0}"></div>
+        <div class="fl"><label for="pf-par">Full level (par)</label><input class="input data" id="pf-par" type="number" step="any" min="0" value="${Number(d.par) || 0}" title="The quantity that counts as 100% on the level gauge"></div>
+        <div class="fl"><label for="pf-min">Low-stock alert at</label><input class="input data" id="pf-min" type="number" step="any" min="0" value="${Number(d.min) || 0}"></div>
         <div class="fl full"><label>On hand</label><div class="trio">
           ${LOCATIONS.map(l => `<div class="fl"><label for="pf-s-${l.id}">${l.name}</label><input class="input data" id="pf-s-${l.id}" type="number" step="any" min="0" value="${Number(d.stock?.[l.id]) || 0}"></div>`).join("")}
         </div></div>
@@ -387,7 +412,7 @@ function productForm(p) {
     try {
       const out = { ...d, name, sku: $("#pf-sku", m).value.trim(), code: $("#pf-code", m).value.trim(),
         category: $("#pf-cat", m).value, unit: $("#pf-unit", m).value,
-        rate: Number($("#pf-rate", m).value) || 0, min: Number($("#pf-min", m).value) || 0,
+        rate: Number($("#pf-rate", m).value) || 0, min: Number($("#pf-min", m).value) || 0, par: Number($("#pf-par", m).value) || 0,
         stock: Object.fromEntries(LOCATIONS.map(l => [l.id, Number($(`#pf-s-${l.id}`, m).value) || 0])) };
       if (!out.id) out.id = slug(name);
       if (file) { const up = await store.uploadImage(out.id, file); out.image = up.url; out.imagePath = up.path; }
@@ -480,12 +505,18 @@ function viewRun() {
   };
 }
 
+// While counting, the gauge shows what's on the shelf against what the system expects
+function stubLevel(sys, counted) {
+  const now = counted == null ? sys : Number(counted);
+  return level({ par: Math.max(sys, 0) || (now > 0 ? now : 0) }, now);
+}
+
 function renderStubs() {
   const s = ui.session, rows = runRows(s);
   $("#stubs").innerHTML = rows.map(p => {
     const c = s.counts[p.id], sys = s.system[p.id] ?? (Number(p.stock?.[s.location]) || 0), d = c == null ? null : Number(c) - sys;
     return `<div class="stub ${c == null ? "" : Math.abs(d) < 1e-9 ? "ok" : "off"}" data-row="${esc(p.id)}">
-      ${pic(p, "pic")}
+      ${pic(p, "pic")}${tank(stubLevel(sys, c), "mini")}
       <div class="nm"><b>${esc(p.name)}</b><span>${esc(p.sku || p.code || catName(p.category))}</span></div>
       <div class="sys"><span>System</span><b>${qty(sys)}</b></div>
       <div class="stepper"><button type="button" data-step="-1" aria-label="Minus one">−</button>
@@ -502,6 +533,8 @@ function renderStubs() {
       const c = s.counts[id], d = c == null ? null : c - (s.system[id] ?? 0);
       row.className = "stub " + (c == null ? "" : Math.abs(d) < 1e-9 ? "ok" : "off");
       row.querySelector(".dv").innerHTML = `<span>Variance</span>${delta(d)}`;
+      const lv = stubLevel(s.system[id] ?? 0, c), t = row.querySelector(".tank");
+      t.className = `tank mini s-${lv.state}`; t.style.setProperty("--lv", Math.min(Math.max(lv.pct, 0), 1).toFixed(3));
       renderHud();
     };
     inp.addEventListener("input", () => set(inp.value));
