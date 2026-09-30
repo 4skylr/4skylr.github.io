@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=4";
-import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=4";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=5";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=5";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -70,6 +70,9 @@ function seedUpgrade(products, fromVersion) {
     if (sp) {
       if (isSeedAsset(cur.image) && (cur.image || "") !== (sp.image || "")) patch.image = sp.image || "";
       if (cur.par == null && sp.par != null) patch.par = sp.par;
+      // v5: units and report names corrected from the Raw Material List
+      if (fromVersion < 5 && sp.unit && cur.unit !== sp.unit) patch.unit = sp.unit;
+      if (!cur.sku && sp.sku) patch.sku = sp.sku;
     } else if (retired.has(cur.id) && stockTotal(cur) === 0 && isSeedAsset(cur.image)) {
       removals.push(cur.id); continue;
     } else if (isSeedAsset(cur.image) && cur.image) {

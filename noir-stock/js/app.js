@@ -1,9 +1,10 @@
-import * as store from "./store.js?v=4";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=4";
-import { SEED_DATE } from "./seed-data.js?v=4";
+import * as store from "./store.js?v=5";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=5";
+import { SEED_DATE } from "./seed-data.js?v=5";
+import { renderYield, productPanel } from "./analytics.js?v=5";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "4";
+const ASSET_V = "5";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
@@ -50,6 +51,7 @@ const ICON = {
   dashboard: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M21 12h-3"/>',
   products: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>',
   count: '<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M8 12h8"/>',
+  yield: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><circle cx="16" cy="8" r="2"/>',
   history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
   settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
@@ -71,6 +73,7 @@ const ROUTES = [
   { id: "dashboard", label: "Overview", kicker: "Treasury", title: 'Stock, <span class="voice">at a glance</span>' },
   { id: "products", label: "Collection", kicker: "Catalog", title: 'The <span class="voice">collection</span>' },
   { id: "count", label: "Count", kicker: "Stocktake", title: 'Count <span class="voice">the room</span>' },
+  { id: "yield", label: "Yield", kicker: "Analytics", title: 'What stock <span class="voice">can sell</span>' },
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
@@ -159,7 +162,7 @@ function render() {
   $("#kicker").textContent = r.kicker;
   $("#page-title").innerHTML = r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, history: viewHistory, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, settings: viewSettings })[r.id]();
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -390,6 +393,7 @@ function productForm(p) {
         </div></div>
       </div>
     </form>
+    ${productPanel(d, helpers())}
     <div class="actions">
       ${isNew ? "" : `<button class="btn warn" id="pf-del">${icon("trash")}Delete</button>`}
       <div class="end"><button class="btn ghost" id="pf-cancel">Cancel</button><button class="btn hot" id="pf-save">${icon("check")}${isNew ? "Mint product" : "Save changes"}</button></div>
@@ -564,6 +568,13 @@ function renderHud() {
     if (!await confirmBox('Commit <span class="voice">this count?</span>', `${loc(s.location).name} stock will be overwritten with your counts for ${st.counted} items. Items you didn't count stay as they are.`, "Commit")) return;
     try { await store.commitSession(s); ui.session = null; toast("Count committed · stock updated"); go("history"); } catch (e) { toast(e.message, true); }
   };
+}
+
+// ── Yield analytics ──────────────────────────────────────────
+const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
+function viewYield() {
+  $("#title-actions").innerHTML = "";
+  renderYield($("#view"), helpers());
 }
 
 // ── Ledger ───────────────────────────────────────────────────

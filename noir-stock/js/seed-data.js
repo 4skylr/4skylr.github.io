@@ -4,7 +4,7 @@
 // sku = item name as it appears on the report
 // Product photos: supplier PDF (30/09/2026)
 // par = "full" level used for the stock gauge (defaults to the report quantity)
-export const SEED_VERSION = 4;
+export const SEED_VERSION = 5;
 export const SEED_DATE = "2026-09-25T16:14:00+03:00";
 export const SEED_PRODUCTS = [
  {
@@ -13,7 +13,7 @@ export const SEED_PRODUCTS = [
   "sku": "BIB COKE",
   "code": "",
   "category": "syrups",
-  "unit": "box",
+  "unit": "ltr",
   "image": "assets/products/bib-coke.webp",
   "stock": {
    "mini": 17.36,
@@ -30,7 +30,7 @@ export const SEED_PRODUCTS = [
   "sku": "BIB Coke Zero",
   "code": "",
   "category": "syrups",
-  "unit": "box",
+  "unit": "ltr",
   "image": "assets/products/bib-coke-zero.webp",
   "stock": {
    "mini": 8.94,
@@ -47,7 +47,7 @@ export const SEED_PRODUCTS = [
   "sku": "BIB FANTA",
   "code": "",
   "category": "syrups",
-  "unit": "box",
+  "unit": "ltr",
   "image": "assets/products/bib-fanta.webp",
   "stock": {
    "mini": 9.67,
@@ -98,7 +98,7 @@ export const SEED_PRODUCTS = [
   "sku": "BIB SPRITE",
   "code": "",
   "category": "syrups",
-  "unit": "box",
+  "unit": "ltr",
   "image": "assets/products/bib-sprite.webp",
   "stock": {
    "mini": 8.78,
@@ -621,8 +621,8 @@ export const SEED_PRODUCTS = [
  },
  {
   "id": "hotdog",
-  "name": "Beef Frankfurter Hot Dog",
-  "sku": "",
+  "name": "Beef Frankfurter",
+  "sku": "BEEF FRANKFURT",
   "code": "",
   "category": "food",
   "unit": "pcs",
@@ -656,7 +656,7 @@ export const SEED_PRODUCTS = [
  {
   "id": "hotdog-bun",
   "name": "Hot Dog Bun",
-  "sku": "",
+  "sku": "HOT DOG BUN",
   "code": "",
   "category": "food",
   "unit": "pcs",
