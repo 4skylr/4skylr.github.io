@@ -2,6 +2,8 @@
 // Noir Cinema — Othaim Mall, Onaizah · 25/09/2026 4:14 PM
 // stock = System Stock per location · rate = Nett Amount / System Stock (SAR, pre-tax)
 // sku = item name as it appears on the report
+// Product photos: catalog sheet crops + real product photos (PDF, 30/09/2026)
+export const SEED_VERSION = 3;
 export const SEED_DATE = "2026-09-25T16:14:00+03:00";
 export const SEED_PRODUCTS = [
  {
@@ -59,7 +61,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "syrups",
   "unit": "ltr",
-  "image": "",
+  "image": "assets/products/lemonade-syrup.webp",
   "stock": {
    "mini": 0.83,
    "refuel": 0,
@@ -75,7 +77,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "syrups",
   "unit": "ltr",
-  "image": "",
+  "image": "assets/products/mojito-syrup.webp",
   "stock": {
    "mini": 0.7,
    "refuel": 0,
@@ -139,7 +141,7 @@ export const SEED_PRODUCTS = [
   "code": "B00000016",
   "category": "drinks",
   "unit": "pcs",
-  "image": "assets/products/barbican-regular.webp",
+  "image": "assets/products/barbican.webp",
   "stock": {
    "mini": 0,
    "refuel": 19.0,
@@ -315,7 +317,7 @@ export const SEED_PRODUCTS = [
   "code": "R00000007",
   "category": "drinks",
   "unit": "pcs",
-  "image": "assets/products/rani-can.webp",
+  "image": "assets/products/rani.webp",
   "stock": {
    "mini": 0,
    "refuel": 32.0,
@@ -427,7 +429,7 @@ export const SEED_PRODUCTS = [
   "code": "S00000025",
   "category": "drinks",
   "unit": "pcs",
-  "image": "assets/products/schweppes-gingerale.webp",
+  "image": "assets/products/schweppes.webp",
   "stock": {
    "mini": 0,
    "refuel": 16.0,
@@ -555,7 +557,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "drinks",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/vimto-pet.webp",
   "stock": {
    "mini": 0,
    "refuel": 31.0,
@@ -563,6 +565,22 @@ export const SEED_PRODUCTS = [
   },
   "min": 0,
   "rate": 1.58
+ },
+ {
+  "id": "vimto-blueberry",
+  "name": "Vimto PET Blueberry 250 ml",
+  "sku": "",
+  "code": "",
+  "category": "drinks",
+  "unit": "pcs",
+  "image": "assets/products/vimto-blueberry.webp",
+  "stock": {
+   "mini": 0,
+   "refuel": 0,
+   "stores": 0
+  },
+  "min": 0,
+  "rate": 0
  },
  {
   "id": "mm-choco-150",
@@ -603,7 +621,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "snacks",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/mm-choco-45.webp",
   "stock": {
    "mini": 0,
    "refuel": 16.0,
@@ -619,7 +637,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "snacks",
   "unit": "pcs",
-  "image": "assets/products/mm-peanut.webp",
+  "image": "assets/products/mm-peanut-150.webp",
   "stock": {
    "mini": 0,
    "refuel": 16.0,
@@ -635,7 +653,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "snacks",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/mm-peanut-45.webp",
   "stock": {
    "mini": 0,
    "refuel": 27.0,
@@ -651,7 +669,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "snacks",
   "unit": "pcs",
-  "image": "assets/products/maltesers.webp",
+  "image": "assets/products/maltesers-175.webp",
   "stock": {
    "mini": 0,
    "refuel": 15.0,
@@ -667,7 +685,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "snacks",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/maltesers-37.webp",
   "stock": {
    "mini": 0,
    "refuel": 27.0,
@@ -715,7 +733,7 @@ export const SEED_PRODUCTS = [
   "code": "B00000021",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/flossine-blue.webp",
   "stock": {
    "mini": 2.91,
    "refuel": 0,
@@ -731,7 +749,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/corn-butterfly.webp",
   "stock": {
    "mini": 28.26,
    "refuel": 0,
@@ -747,7 +765,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/caramel.webp",
   "stock": {
    "mini": 5.46,
    "refuel": 0,
@@ -763,7 +781,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/cheese-masala.webp",
   "stock": {
    "mini": 7.35,
    "refuel": 0,
@@ -795,7 +813,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/corn-mushroom.webp",
   "stock": {
    "mini": 20.4,
    "refuel": 0,
@@ -811,7 +829,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/pizza-mix.webp",
   "stock": {
    "mini": 10.49,
    "refuel": 0,
@@ -939,7 +957,7 @@ export const SEED_PRODUCTS = [
   "code": "V00000003",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/flossine-pink.webp",
   "stock": {
    "mini": 2.89,
    "refuel": 0,
@@ -971,7 +989,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "food",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/cheese-sauce.webp",
   "stock": {
    "mini": 6.77,
    "refuel": 0,
@@ -997,13 +1015,29 @@ export const SEED_PRODUCTS = [
   "rate": 0
  },
  {
+  "id": "hotdog-bun",
+  "name": "Hot Dog Bun",
+  "sku": "",
+  "code": "",
+  "category": "food",
+  "unit": "pcs",
+  "image": "assets/products/hotdog-bun.webp",
+  "stock": {
+   "mini": 0,
+   "refuel": 0,
+   "stores": 0
+  },
+  "min": 0,
+  "rate": 0
+ },
+ {
   "id": "jalapeno",
   "name": "Jalapeño",
   "sku": "NACHOS - JALAPENO",
   "code": "",
   "category": "food",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/jalapeno.webp",
   "stock": {
    "mini": 3.06,
    "refuel": 0,
@@ -1019,7 +1053,7 @@ export const SEED_PRODUCTS = [
   "code": "M00000008",
   "category": "food",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/mustard.webp",
   "stock": {
    "mini": 0.95,
    "refuel": 0,
@@ -1051,7 +1085,7 @@ export const SEED_PRODUCTS = [
   "code": "N00000003",
   "category": "food",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/salsa.webp",
   "stock": {
    "mini": 11.13,
    "refuel": 0,
@@ -1083,7 +1117,7 @@ export const SEED_PRODUCTS = [
   "code": "N00000002",
   "category": "food",
   "unit": "kg",
-  "image": "assets/products/nachos.webp",
+  "image": "assets/products/nachos-chips.webp",
   "stock": {
    "mini": 1.56,
    "refuel": 0,
@@ -1099,7 +1133,7 @@ export const SEED_PRODUCTS = [
   "code": "T00000006",
   "category": "food",
   "unit": "kg",
-  "image": "assets/products/tomato-sachet.webp",
+  "image": "assets/products/ketchup.webp",
   "stock": {
    "mini": 0.16,
    "refuel": 0,
@@ -1179,7 +1213,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "slush",
   "unit": "ltr",
-  "image": "assets/products/slush-pomegranate.webp",
+  "image": "assets/products/slush-pom.webp",
   "stock": {
    "mini": 2.88,
    "refuel": 0,
@@ -1339,7 +1373,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "hot",
   "unit": "pcs",
-  "image": "assets/products/paper-cup-5.webp",
+  "image": "assets/products/coffee-cup-big.webp",
   "stock": {
    "mini": 0,
    "refuel": 0,
@@ -1355,7 +1389,7 @@ export const SEED_PRODUCTS = [
   "code": "C00000024",
   "category": "hot",
   "unit": "pcs",
-  "image": "assets/products/paper-cup-3-5.webp",
+  "image": "assets/products/coffee-cup-small.webp",
   "stock": {
    "mini": 0,
    "refuel": 0,
@@ -1419,7 +1453,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "hot",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/lemon.webp",
   "stock": {
    "mini": 0.61,
    "refuel": 0,
@@ -1611,7 +1645,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "packaging",
   "unit": "pcs",
-  "image": "assets/products/hotdog.webp",
+  "image": "assets/products/hotdog-tray.webp",
   "stock": {
    "mini": 10.0,
    "refuel": 10.0,
@@ -1739,7 +1773,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "packaging",
   "unit": "pcs",
-  "image": "",
+  "image": "assets/products/napkin.webp",
   "stock": {
    "mini": 1161.0,
    "refuel": 0,

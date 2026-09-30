@@ -1,13 +1,12 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
 import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js";
-import { SEED_PRODUCTS } from "./seed-data.js";
-import { CATALOG_PHOTOS } from "./catalog-photos.js";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js";
 
 const LS_KEY = "noir-inventory:v2";
-const COL = { products: "products", sessions: "countSessions", activity: "activity" };
+const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
 
 let mode = "local";
-let fb = null;
+let fb = null; // { db, storage, fs, st }
 let mem = { products: [], sessions: [], activity: [] };
 const listeners = new Set();
 
@@ -44,6 +43,7 @@ export function onChange(fn) { listeners.add(fn); return () => listeners.delete(
 export function snapshot() { return { products: mem.products, sessions: mem.sessions, activity: mem.activity, mode }; }
 export function getMode() { return mode; }
 
+// ── Local persistence ────────────────────────────────────────
 function lsRead() {
   try { const raw = localStorage.getItem(LS_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
@@ -52,11 +52,32 @@ function lsWrite() {
 }
 const clone = o => JSON.parse(JSON.stringify(o));
 
-function seedProducts() {
-  const now = new Date().toISOString();
-  return SEED_PRODUCTS.map(p => ({ ...clone(p), image: CATALOG_PHOTOS[p.id] || p.image || "", createdAt: now, updatedAt: now }));
+// Products added to the seed after the first release, keyed by seed version
+const ADDED_IN = { 3: ["vimto-blueberry", "hotdog-bun"] };
+const isSeedAsset = img => !img || String(img).startsWith("assets/");
+
+// Changes needed to bring stored products up to the current seed without touching
+// counts, stock levels or photos the user uploaded themselves.
+function seedUpgrade(products, fromVersion) {
+  const byId = new Map(products.map(p => [p.id, p]));
+  const updates = [], additions = [];
+  for (const sp of SEED_PRODUCTS) {
+    const cur = byId.get(sp.id);
+    if (cur) {
+      if (isSeedAsset(cur.image) && sp.image && cur.image !== sp.image) updates.push({ id: sp.id, image: sp.image });
+    } else if (Object.entries(ADDED_IN).some(([v, ids]) => Number(v) > fromVersion && ids.includes(sp.id))) {
+      additions.push(sp);
+    }
+  }
+  return { updates, additions };
 }
 
+function seedProducts() {
+  const now = new Date().toISOString();
+  return SEED_PRODUCTS.map(p => ({ ...clone(p), createdAt: now, updatedAt: now }));
+}
+
+// ── Init ─────────────────────────────────────────────────────
 export async function init() {
   if (firebaseConfig.apiKey) {
     try { await initFirebase(); mode = "firebase"; emit(); return mode; }
@@ -64,17 +85,18 @@ export async function init() {
   }
   mode = "local";
   const saved = lsRead();
-  mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [] };
-  if (saved && saved.products?.length) {
-    const seedImg = Object.fromEntries(SEED_PRODUCTS.map(p => [p.id, CATALOG_PHOTOS[p.id] || p.image || ""]));
-    let changed = false;
-    mem.products = mem.products.map(p => {
-      const img = seedImg[p.id];
-      if (img && p.image !== img) { changed = true; return { ...p, image: img }; }
-      return p;
-    });
-    if (changed) lsWrite();
-  } else if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
+  mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [], seedVersion: SEED_VERSION };
+  if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
+  else if ((mem.seedVersion || 2) < SEED_VERSION) {
+    const { updates, additions } = seedUpgrade(mem.products, mem.seedVersion || 2);
+    const now = new Date().toISOString();
+    const patch = new Map(updates.map(u => [u.id, u]));
+    mem.products = mem.products.map(p => patch.has(p.id) ? { ...p, image: patch.get(p.id).image } : p)
+      .concat(additions.map(p => ({ ...clone(p), createdAt: now, updatedAt: now })));
+    mem.seedVersion = SEED_VERSION;
+    lsWrite();
+    if (updates.length || additions.length) log("seed", `Updated ${updates.length} product photos, added ${additions.length} products`);
+  }
   emit();
   return mode;
 }
@@ -89,11 +111,12 @@ async function initFirebase() {
   ]);
   const app = initializeApp(firebaseConfig);
   const auth = au.getAuth(app);
-  await au.signInAnonymously(auth);
+  await au.signInAnonymously(auth); // enable Anonymous sign-in under Authentication
   const db = fs.getFirestore(app);
   const storage = st.getStorage(app);
   fb = { db, storage, fs, st };
 
+  // first run: upload the report data
   const first = await fs.getDocs(fs.query(fs.collection(db, COL.products), fs.limit(1)));
   if (first.empty) {
     const items = seedProducts();
@@ -103,6 +126,22 @@ async function initFirebase() {
       await batch.commit();
     }
     await log("seed", `Loaded ${items.length} products from the stock report`);
+    await fs.setDoc(fs.doc(db, COL.meta, "seed"), { version: SEED_VERSION });
+  } else {
+    const metaRef = fs.doc(db, COL.meta, "seed");
+    const meta = await fs.getDoc(metaRef);
+    const from = meta.exists() ? meta.data().version : 2;
+    if (from < SEED_VERSION) {
+      const all = (await fs.getDocs(fs.collection(db, COL.products))).docs.map(d => ({ id: d.id, ...d.data() }));
+      const { updates, additions } = seedUpgrade(all, from);
+      const now = new Date().toISOString();
+      const batch = fs.writeBatch(db);
+      updates.forEach(u => batch.update(fs.doc(db, COL.products, u.id), { image: u.image }));
+      additions.forEach(p => batch.set(fs.doc(db, COL.products, p.id), { ...p, createdAt: now, updatedAt: now }));
+      batch.set(metaRef, { version: SEED_VERSION });
+      await batch.commit();
+      if (updates.length || additions.length) await log("seed", `Updated ${updates.length} product photos, added ${additions.length} products`);
+    }
   }
 
   const live = (name, key, order) => new Promise(resolve => {
@@ -120,6 +159,7 @@ async function initFirebase() {
   ]);
 }
 
+// ── Activity ledger ───────────────────────────────────
 export async function log(type, text) {
   const entry = { id: txHash(), type, text, at: new Date().toISOString() };
   if (mode === "firebase" && fb) {
@@ -130,6 +170,7 @@ export async function log(type, text) {
   }
 }
 
+// ── Products ─────────────────────────────────────────────────
 export async function saveProduct(p, { silent = false } = {}) {
   const now = new Date().toISOString();
   const isNew = !mem.products.some(x => x.id === p.id);
@@ -156,6 +197,7 @@ export async function deleteProduct(id) {
   await log("delete", `Deleted ${p?.name || id}`);
 }
 
+// compress to a 512px square WebP, then upload
 export async function uploadImage(productId, file) {
   const blob = await compressImage(file, 512);
   if (mode === "firebase") {
@@ -186,6 +228,7 @@ function compressImage(file, size) {
 }
 const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
 
+// ── Count sessions ──────────────────────────────
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
   if (mode === "firebase") {
@@ -204,6 +247,7 @@ export async function deleteSession(id) {
   await log("delete", `Deleted count session ${id.slice(0, 10)}`);
 }
 
+// commit: overwrite system stock with counted quantities
 export async function commitSession(session) {
   const loc = session.location;
   const counted = Object.entries(session.counts || {});
@@ -224,6 +268,7 @@ export async function commitSession(session) {
   return done;
 }
 
+// ── Import / Export / Reset ──────────────────────────────────
 export function exportAll() { return { exportedAt: new Date().toISOString(), ...clone({ products: mem.products, sessions: mem.sessions }) }; }
 
 export async function importAll(data) {
@@ -235,7 +280,7 @@ export async function importAll(data) {
 
 export async function resetLocal() {
   if (mode !== "local") throw new Error("Reset is only available in local mode");
-  mem = { products: seedProducts(), sessions: [], activity: [] };
+  mem = { products: seedProducts(), sessions: [], activity: [], seedVersion: SEED_VERSION };
   lsWrite();
   await log("seed", "Reloaded the original report data");
 }
