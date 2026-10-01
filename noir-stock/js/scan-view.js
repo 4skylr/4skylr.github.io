@@ -60,7 +60,7 @@ export async function renderScanCard(root, p, ctx) {
       return `<div class="pc-barline"><span>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} · ${H.qty(x.n)}</span><b>${Math.round(pct * 100)}%</b><i data-bar="${pct.toFixed(3)}"></i></div>`;
     }).join("")}</div>
     <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
-    <p class="pc-cost">${lang === "ar" ? "التكلفة" : "Cost"} ${Number(p.rate || 0).toFixed(2)} SAR · ${lang === "ar" ? "سعر البيع غير موجود" : "Sell price missing"}</p>
+    <p class="pc-sold">${lang === "ar" ? "مباع من بداية السنة" : "Sold this year"} ${H.qty(soldOf(p.id))}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
     ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
     <div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="recipe">${L.recipe}</button></div>`}

@@ -366,7 +366,8 @@ function token(p) {
       ? `<span>Level</span><em>set a full level</em>`
       : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
     <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
-    <div class="token-foot"><span class="qty">${qty(t)} ${esc(UNITS[p.unit] || "")}</span><span class="val">${sar(value(p))}<small>SAR</small></span></div>
+    <div class="token-foot"><span class="qty">${qty(t)} ${unit}</span><span class="val">${Number(p.rate || 0).toFixed(2)}<small>/${unit}</small></span></div>
+    <p class="token-sold">مباع من بداية السنة ${qty(soldOf(p.id))}</p>
   </button>`;
 }
 
@@ -672,18 +673,20 @@ function exportSession(s) {
 // ── Settings ─────────────────────────────────────────────────
 function viewSettings() {
   const live = data.mode === "firebase";
+  if (sessionStorage.getItem("noir-admin") !== "1") {
+    $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>دخول الماستر</h2><input class="input" name="pin" inputmode="numeric" placeholder="899" autocomplete="off"><button class="btn hot" type="submit">دخول</button></form>`;
+    $("#master-gate").onsubmit = e => { e.preventDefault(); if (e.target.pin.value.trim() !== "899") { toast("الرقم غلط", true); return; } sessionStorage.setItem("noir-admin", "1"); viewSettings(); };
+    return;
+  }
   $("#view").innerHTML = `
   <div class="settings">
     <section class="slab">
-      <div class="slab-h"><h2>Connection</h2><span class="net ${live ? "live" : ""}"><i></i><span>${live ? "Firebase" : "Local"}</span></span></div>
-      ${live ? `<p style="margin:0;color:var(--ink-2)">Products and counts live in Firestore, photos in Storage. Every device sees changes instantly.</p>` : `
-      <p style="margin:0 0 16px;color:var(--ink-2)">Right now everything is saved in this browser only. To sync across devices:</p>
-      <ol class="steps">
-        <li>Create a project at <code>console.firebase.google.com</code> and add a Web app.</li>
-        <li>Enable Firestore, Storage, and Anonymous sign-in under Authentication.</li>
-        <li>Paste the config into <code>js/firebase-config.js</code>.</li>
-        <li>Run <code>firebase deploy</code>. The report data uploads on first launch.</li>
-      </ol>`}
+      <div class="slab-h"><h2>الماستر</h2><span class="tag">${SALES_FROM} → ${SALES_TO}</span></div>
+      <div class="btns">
+        <label class="btn hot" for="up-stock-master">رفع تقرير الجرد</label><input id="up-stock-master" type="file" accept="application/pdf,.pdf" hidden>
+        <label class="btn" for="up-sales">رفع المبيعات</label><input id="up-sales" type="file" accept="application/pdf,.pdf" hidden>
+      </div>
+      <canvas id="sales-chart" height="120"></canvas>
     </section>
     <section class="slab">
       <div class="slab-h"><h2>Backup &amp; export</h2></div>
@@ -715,6 +718,30 @@ function viewSettings() {
     e.target.value = "";
   };
   renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") });
+  $("#up-stock-master")?.addEventListener("change", async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const { parseStockPdf } = await import("./sync-admin.js?v=35");
+    const found = await parseStockPdf(f, data.products);
+    const byId = {};
+    found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
+    for (const doc of Object.values(byId)) await store.saveProduct(doc, { silent: true });
+    localStorage.setItem("noir-sync-at", new Date().toISOString());
+    toast("تحديث الجرد " + Object.keys(byId).length);
+  });
+  $("#up-sales")?.addEventListener("change", async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const pdfjs = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js");
+    pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+    let text = "";
+    for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
+    const sales = {};
+    data.products.forEach(p => { const i = text.toLowerCase().indexOf(String(p.sku || "").toLowerCase()); if (i < 0) return; const m = text.slice(i, i + 80).match(/[\d,]+\.\d{2}/); if (m) sales[p.id] = Number(m[0].replace(/,/g, "")); });
+    localStorage.setItem("noir-sales-ytd", JSON.stringify(sales));
+    toast("مبيعات محفوظة " + Object.keys(sales).length);
+    viewSettings();
+  });
+  loadChart();
   $("#reset")?.addEventListener("click", async () => {
     if (await confirmBox('Reload <span class="voice">report data?</span>', "Every edit and count saved in this browser will be wiped and replaced with the original report.", "Reload", true)) { await store.resetLocal(); toast("Report data reloaded"); }
   });
@@ -749,3 +776,10 @@ grain();
 render();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
+
+async function loadChart() {
+  if (!document.getElementById("sales-chart")) return;
+  if (!window.Chart) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"; s.onload = res; s.onerror = rej; document.head.append(s); });
+  const top = data.products.map(p => ({ name: p.name, sold: soldOf(p.id), cost: soldOf(p.id) * Number(p.rate || 0) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 8);
+  new window.Chart(document.getElementById("sales-chart"), { type: "bar", data: { labels: top.map(x => x.name), datasets: [{ label: "مباع من بداية السنة", data: top.map(x => x.sold), backgroundColor: "#9b6bff" }] }, options: { plugins: { legend: { labels: { color: "#f4ede4" } } }, scales: { x: { ticks: { color: "#a4a4a4" } }, y: { ticks: { color: "#a4a4a4" } } } } });
+}
