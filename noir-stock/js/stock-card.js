@@ -230,10 +230,10 @@ function recipeBlock(p) {
   if (!hits.length) return `<p class="note">لا توجد وصفة مربوطة بهذا الاسم · No recipe is tied to this name.</p>`;
   return hits.map(r => `<article class="recipe-card"><h3>${H.esc(r.name)}</h3><ol>${r.lines.map((l,i) => `<li><span>${i+1}</span><b>${H.esc(l.rm)}</b><em>${H.esc(String(l.qty))} ${H.esc(l.uom)}</em></li>`).join("")}</ol></article>`).join("");
 }
-export function mountProductPage(root, p, helpers) {
+export async function mountProductPage(root, p, helpers) {
   H = helpers;
+  await loadScript("vendor/decimal.min.js").catch(() => {});
   renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff });
-  loadScript("vendor/decimal.min.js").catch(() => {});
 }
 
 async function paintOps(host, p) {
