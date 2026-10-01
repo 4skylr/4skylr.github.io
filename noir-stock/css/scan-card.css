@@ -42,3 +42,15 @@ body.card-only .stage { padding: 0; max-width: 430px; margin: 0 auto; }
 .pc-over small { display: block; font-size: 13px; color: #f4ede4; }
 .pc-note { color: #a4a4a4; margin: 14px 0; }
 .pc-when { margin: 6px 0 0; color: #f4ede4; font-size: 13px; text-align: center; }
+
+.phone-card h1 { margin: 14px 0 0; }
+.pc-en { margin: 6px 0 0; }
+.pc-qty { margin: 16px 0 0; }
+.pc-desc { margin: 8px 16px 0; line-height: 1.5; }
+.pc-dash { margin: 18px 0 0; padding: 12px; border: 1px solid rgba(244,237,228,.16); border-radius: 16px; }
+.pc-dash h2 { text-align: center; margin: 0 0 10px; }
+.pc-dates { list-style: none; margin: 12px 0 0; padding: 0; }
+.pc-dates li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(244,237,228,.12); }
+.pc-actions { margin-top: 16px; }
+.pc-over { text-align: center; background: #7c2280; border-radius: 16px; padding: 12px; }
+.pc-over b { font-size: 40px; display: block; line-height: 1; }

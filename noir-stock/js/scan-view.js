@@ -1,7 +1,7 @@
 // Phone product card. FlipDown: github.com/PButcher/flipdown
 // Rings: github.com/kimmobrunfeldt/progressbar.js
-import { AR, LOC_AR } from "./names-ar.js?v=23";
-import { RECIPES } from "./recipes-data.js?v=23";
+import { AR, LOC_AR } from "./names-ar.js?v=24";
+import { RECIPES } from "./recipes-data.js?v=24";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -38,8 +38,7 @@ export async function renderScanCard(root, p, ctx) {
     <p class="pc-en">${H.esc(p.name)}</p>
     <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · الكمية الحالية</span></p>
     <p class="pc-desc">${locRows.map(x => `${H.esc(LOC_AR[x.l.id] || x.l.name)} ${H.qty(x.n)}`).join(" · ")}</p>
-    ${dated.length ? `<section class="pc-dash"><h2>${expired ? "منتهي" : "حتى الانتهاء"}</h2><div id="flip" class="flipdown"></div><p class="pc-when">${first ? groupName(first.n) + " · " + H.esc(fmtDate(first.date)) : ""}</p></section>
-    <div class="pc-rings">${rings}</div>
+    ${dated.length ? `<section class="pc-dash"><h2>${expired ? "منتهي الصلاحية" : "حتى الانتهاء"}</h2><div id="flip" class="flipdown"></div><ul class="pc-dates">${dated.slice(0,3).map(b => `<li><b>${groupName(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span></li>`).join("")}</ul></section>
     <div class="pc-actions"><button type="button" data-open="batch">المجموعات</button><button type="button" data-open="recipe">الوصفة</button></div>` : `<p class="pc-note">بدون تاريخ · الكمية فقط</p><div class="pc-actions"><button type="button" data-open="recipe">الوصفة</button></div>`}
     <section class="pc-sheet" id="sheet-batch" hidden>
       <h2>المجموعات</h2>
@@ -80,6 +79,7 @@ export async function renderScanCard(root, p, ctx) {
       new window.FlipDown(stamp, "flip", { theme: "dark", headings: ["يوم", "ساعة", "دقيقة", "ثانية"] }).start();
     }
   } else if (expired && root.querySelector("#flip")) {
-    root.querySelector("#flip").outerHTML = `<div class="pc-over">${Math.abs(first.left)}<small>يوم منتهي</small></div>`;
+    const n = Math.abs(first.left);
+    root.querySelector("#flip").outerHTML = `<div class="pc-over" aria-label="${n} يوم منتهي"><b>${n}</b><small>يوم منذ الانتهاء</small></div>`;
   }
 }
