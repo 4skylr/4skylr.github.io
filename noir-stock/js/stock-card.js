@@ -238,7 +238,7 @@ export async function mountLabelSheet(root, products, helpers) {
     const m = savedMark(p.id);
     const img = p.image ? H.src(p.image) : "";
     const sum = batchSummary(p.id);
-    return `<article class="cut"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><img class="logo" alt="" src="${H.esc(img)}"><b>${H.esc(p.name)}</b><img class="bar" alt="" src="${H.esc(m.barcode)}"><small>${H.esc(m.code)} · ${sum.count} batches</small></article>`;
+    return `<article class="cut"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><b>${H.esc(p.name)}</b></article>`;
   }).join("");
 }
 function arName(p) { return AR[p.id] || p.name; }
@@ -336,8 +336,7 @@ export async function exportLabelsPdf(products) {
       page.drawImage(img, { x: x + 28, y: y + 52, width: 62, height: 62 });
     }
     const name = String(p.name || p.id).slice(0, 28);
-    page.drawText(name, { x: x + 6, y: y + 28, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
-    page.drawText(m.code || p.id, { x: x + 6, y: y + 14, size: 7, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(name, { x: x + 6, y: y + 16, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
     x += size + gap;
   }
   const blob = new Blob([await pdf.save()], { type: "application/pdf" });
