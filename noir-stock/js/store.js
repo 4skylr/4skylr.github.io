@@ -1,5 +1,5 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=9";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=45";
 import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=9";
 
 const LS_KEY = "noir-inventory:v2";
