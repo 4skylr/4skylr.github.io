@@ -73,6 +73,9 @@ export async function renderScanCard(root, p, ctx) {
     </section>
   </article>`;
   mountGauges(root);
+  const age = root.querySelector(".pc-age");
+  if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
+  else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
   root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = () => {
     const sheet = root.querySelector("#sheet-" + btn.dataset.open);
     if (!sheet) return;
