@@ -1,13 +1,11 @@
 // Yield analytics: how many of each menu item the current stock can sell.
-// Libraries (loaded on demand from jsDelivr, published from GitHub):
-//   Apache ECharts — github.com/apache/echarts                 (charts)
-//   Fuse.js        — github.com/krisk/Fuse                     (fuzzy menu search)
-//   simple-statistics — github.com/simple-statistics/simple-statistics (median, quartiles)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "./recipes-data.js?v=6";
+// Libraries (loaded on demand from jsDelivr):
+//   Apache ECharts — github.com/apache/echarts  (charts)
+//   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "./recipes-data.js?v=7";
 
 const ECHARTS_URL = "https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js";
 const FUSE_URL = "https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.mjs";
-const STATS_URL = "https://cdn.jsdelivr.net/npm/simple-statistics@7.8.8/+esm";
 
 export const MENU_CATS = [
   { id: "popcorn", name: "Popcorn" }, { id: "combo", name: "Combos" }, { id: "fountain", name: "Fountain drinks" },
@@ -46,8 +44,6 @@ function loadECharts() {
 }
 let fuseP = null;
 const loadFuse = () => (fuseP ??= import(FUSE_URL).then(m => m.default).catch(() => null));
-let statsP = null;
-const loadStats = () => (statsP ??= import(STATS_URL).catch(() => null));
 
 // ── Core maths ───────────────────────────────────────────────
 const rmKey = new Map(Object.keys(RAW_MATERIALS).map(k => [k.toLowerCase(), k]));
@@ -128,49 +124,15 @@ export function renderYield(root, helpers) {
       <p class="count-line" style="margin:0">Recipes as of ${H.when(RECIPE_SOURCE_DATE)} · ${RECIPES.length} menu items · each number assumes the stock goes to that item alone</p>
     </div>
     <div class="yield">
-      <section class="slab" id="pulse"></section>
       <section class="slab pop-board" id="pop-board"></section>
       <section class="slab" id="runway"></section>
       <section class="slab span-7" id="chart-pop-wrap"><div class="slab-h"><h2>Popcorn you can sell</h2><span class="voice">by size and flavour</span></div><div class="chart" id="chart-pop"></div></section>
       <section class="slab span-5" id="chart-bn-wrap"><div class="slab-h"><h2>What runs out first</h2><span class="voice">items each ingredient caps</span></div><div class="chart" id="chart-bn"></div></section>
-      <section class="slab" id="chart-cat-wrap"><div class="slab-h"><h2>Menu readiness</h2><span class="voice">what each category can still sell</span></div><div class="chart" id="chart-cat"></div></section>
       <section class="slab" id="menu"></section>
     </div>`;
   root.querySelectorAll("[data-scope]").forEach(b => b.onclick = () => { scope = b.dataset.scope; renderYield(root, H); });
-  renderPulse(); renderPopBoard(); renderRunway(); renderMenu(); renderCharts();
+  renderPopBoard(); renderRunway(); renderMenu(); renderCharts();
   loadFuse().then(F => { if (F) { fuse = new F(RECIPES, { keys: ["name", "lines.rm"], threshold: 0.38, ignoreLocation: true }); } });
-}
-
-
-function scoredMenu() {
-  return RECIPES.filter(r => r.cat !== "refill").map(evaluate);
-}
-async function renderPulse() {
-  const el = document.getElementById("pulse");
-  if (!el) return;
-  const rows = scoredMenu();
-  const sellable = rows.map(e => e.sellable).filter(n => Number.isFinite(n));
-  const blocked = rows.filter(e => e.sellable === 0).length;
-  const ready = rows.length - blocked;
-  const ss = await loadStats();
-  const med = ss ? ss.median(sellable) : sellable.slice().sort((a, b) => a - b)[Math.floor(sellable.length / 2)] || 0;
-  const p25 = ss ? ss.quantile(sellable, 0.25) : med;
-  const tight = rows.filter(e => e.sellable > 0 && e.sellable <= p25).length;
-  const byCat = MENU_CATS.map(c => {
-    const list = rows.filter(e => e.recipe.cat === c.id);
-    const off = list.filter(e => e.sellable === 0).length;
-    return { ...c, n: list.length, off, on: list.length - off };
-  }).filter(c => c.n);
-  const worst = byCat.slice().sort((a, b) => (b.off / b.n) - (a.off / a.n))[0];
-  el.innerHTML = `<div class="slab-h"><h2>Stock pulse</h2><span class="voice">simple-statistics</span></div>
-    <div class="pulse">
-      <article class="ok"><span>Can be made</span><b data-count="${ready}">${H.nf0.format(ready)}</b><em>of ${H.nf0.format(rows.length)} menu items</em></article>
-      <article class="${blocked ? "hot" : "ok"}"><span>Blocked now</span><b data-count="${blocked}">${H.nf0.format(blocked)}</b><em>zero servings from current stock</em></article>
-      <article><span>Median servings</span><b data-count="${Math.round(med)}">${H.nf0.format(Math.round(med))}</b><em>typical item, not the biggest</em></article>
-      <article><span>Tight quarter</span><b data-count="${tight}">${H.nf0.format(tight)}</b><em>at or under ${H.nf0.format(Math.round(p25))} servings</em></article>
-    </div>
-    <p class="lib-note">Readiness from simple-statistics (median and lower quartile). Tightest category: ${worst ? H.esc(worst.name) + " · " + worst.off + " blocked" : "—"}. Charts below are Apache ECharts. Search uses Fuse.js.</p>`;
-  countUp(el);
 }
 
 function popRecipe(size, flavor) {
@@ -280,10 +242,10 @@ async function renderCharts() {
   const popEl = document.getElementById("chart-pop"), bnEl = document.getElementById("chart-bn");
   if (!popEl || !bnEl) return;
   const css = getComputedStyle(document.documentElement);
-  const ink2 = css.getPropertyValue("--ink-2").trim() || "#d7cbb6", muted = css.getPropertyValue("--muted").trim() || "#9c9182", line = "rgba(231,194,122,.16)";
+  const ink2 = css.getPropertyValue("--ink-2").trim() || "#bdb6d8", muted = css.getPropertyValue("--muted").trim() || "#7f789c", line = "rgba(190,170,255,.12)";
   const font = "Martian Mono, ui-monospace, monospace";
   const base = { backgroundColor: "transparent", textStyle: { fontFamily: font, color: ink2 }, animationDuration: 1100, animationEasing: "cubicOut" };
-  const tip = { backgroundColor: "rgba(18,14,10,.96)", borderColor: "rgba(231,194,122,.35)", textStyle: { color: "#f7f1e6", fontFamily: font, fontSize: 11 } };
+  const tip = { backgroundColor: "rgba(14,11,26,.95)", borderColor: "rgba(200,180,255,.3)", textStyle: { color: "#f2efff", fontFamily: font, fontSize: 11 } };
 
   const pop = ec.init(popEl, null, { renderer: "canvas" }); charts.push(pop);
   pop.setOption({
@@ -312,32 +274,11 @@ async function renderCharts() {
     yAxis: { type: "category", data: rows.map(r => r[0]), axisLine: { lineStyle: { color: line } }, axisTick: { show: false }, axisLabel: { color: ink2, fontSize: 10, formatter: clip } },
     series: [
       { name: "Out of stock", type: "bar", stack: "t", data: rows.map(r => r[1].zero), itemStyle: { color: "#ff5c7a", borderRadius: 0 }, barMaxWidth: 16 },
-      { name: "Limits the item", type: "bar", stack: "t", data: rows.map(r => r[1].n - r[1].zero), itemStyle: { color: "#e7c27a", borderRadius: [0, 6, 6, 0] }, barMaxWidth: 16 }
+      { name: "Limits the item", type: "bar", stack: "t", data: rows.map(r => r[1].n - r[1].zero), itemStyle: { color: "#9b6bff", borderRadius: [0, 6, 6, 0] }, barMaxWidth: 16 }
     ]
   });
   const ro = new ResizeObserver(() => charts.forEach(c => c.resize()));
   ro.observe(popEl); ro.observe(bnEl);
-  const catEl = document.getElementById("chart-cat");
-  if (catEl) {
-    const cats = MENU_CATS.map(c => {
-      const list = RECIPES.filter(r => r.cat === c.id && r.cat !== "refill");
-      const off = list.filter(r => evaluate(r).sellable === 0).length;
-      return { name: c.name, on: list.length - off, off };
-    }).filter(c => c.on + c.off);
-    const cat = ec.init(catEl, null, { renderer: "canvas" }); charts.push(cat);
-    cat.setOption({
-      ...base, tooltip: { ...tip, trigger: "axis", axisPointer: { type: "shadow" } },
-      legend: { top: 0, textStyle: { color: ink2, fontFamily: font, fontSize: 10 }, icon: "roundRect", itemWidth: 10, itemHeight: 10 },
-      grid: { left: 8, right: 8, top: 36, bottom: 4, containLabel: true },
-      xAxis: { type: "category", data: cats.map(c => c.name), axisLine: { lineStyle: { color: line } }, axisLabel: { color: ink2, fontSize: 10, interval: 0, rotate: cats.length > 6 ? 28 : 0 }, axisTick: { show: false } },
-      yAxis: { type: "value", minInterval: 1, splitLine: { lineStyle: { color: line } }, axisLabel: { color: muted, fontSize: 10 } },
-      series: [
-        { name: "Can sell", type: "bar", stack: "c", data: cats.map(c => c.on), itemStyle: { color: "#8ee0a8" }, barMaxWidth: 28 },
-        { name: "Blocked", type: "bar", stack: "c", data: cats.map(c => c.off), itemStyle: { color: "#ff6d6d", borderRadius: [6, 6, 0, 0] }, barMaxWidth: 28 }
-      ]
-    });
-    ro.observe(catEl);
-  }
 }
 
 // ── Count-up for big numbers ─────────────────────────────────

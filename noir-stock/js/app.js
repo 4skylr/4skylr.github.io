@@ -1,7 +1,8 @@
-import * as store from "./store.js?v=6";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=6";
-import { SEED_DATE } from "./seed-data.js?v=6";
-import { renderYield, productPanel } from "./analytics.js?v=6";
+import * as store from "./store.js?v=7";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=7";
+import { SEED_DATE } from "./seed-data.js?v=7";
+import { renderYield, productPanel } from "./analytics.js?v=7";
+import { mountGithubDash } from "./gh-dash.js?v=7";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -263,7 +264,14 @@ function viewDashboard() {
           <div class="no"><span>${ago(a.at)}</span></div></div>`).join("") || '<p class="empty">No activity yet.</p>'}
       </div>
     </section>
+
+    <section class="slab span-5" id="gh-count"></section>
+    <section class="slab span-7" id="gh-stock-bar"></section>
+    <section class="slab span-5" id="gh-apex"></section>
+    <section class="slab span-7" id="gh-loc"></section>
+    <section class="slab" id="gh-grid"></section>
   </div>`;
+  mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 });
 }
 
 // ── Collection ───────────────────────────────────────────────
