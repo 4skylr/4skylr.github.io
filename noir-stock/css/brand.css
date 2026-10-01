@@ -1,0 +1,25 @@
+/* Noir Cinema brand book: purple #7C2280, silver #A4A4A4, beige #F4EDE4. */
+:root {
+  --void: #1a0d22;
+  --deep: #240f2e;
+  --plate: #2c1438;
+  --glass: rgba(124, 34, 128, 0.18);
+  --glass-hi: rgba(124, 34, 128, 0.28);
+  --line: rgba(244, 237, 228, 0.16);
+  --line-hi: rgba(244, 237, 228, 0.34);
+  --ink: #ffffff;
+  --ink-2: #f4ede4;
+  --muted: #a4a4a4;
+  --violet: #7c2280;
+  --magenta: #7a2a90;
+  --cyan: #f4ede4;
+  --holo: linear-gradient(115deg, #7c2280, #7a2a90 70%, #f4ede4);
+  --beam: linear-gradient(90deg, #7c2280, #7a2a90);
+}
+.aura i:nth-child(1) { background: #7c2280; }
+.aura i:nth-child(2) { background: #7a2a90; }
+.aura i:nth-child(3) { background: #4a1458; }
+.mark .lens, .mark .word { display: none; }
+.mark { gap: 0; }
+.brand-logo { height: 54px; width: auto; display: block; }
+.btn { text-transform: none; }
