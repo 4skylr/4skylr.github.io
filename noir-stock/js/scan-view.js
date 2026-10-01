@@ -55,7 +55,10 @@ export async function renderScanCard(root, p, ctx) {
     <h1>${H.esc(lang === "ar" ? (AR[p.id] || p.name) : p.name)}</h1>
     <p class="pc-en">${H.esc(lang === "ar" ? p.name : (AR[p.id] || ""))}</p>
     <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
-    <div class="pc-wh">${locRows.filter(x => x.n > 0).map(x => `<span><img src="${H.esc(H.src(p.image || ""))}" alt=""><i>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} ${H.qty(x.n)}</i><b>✓</b></span>`).join("") || `<span><i>${lang === "ar" ? "غير موجود في المستودعات" : "Not in a warehouse"}</i></span>`}</div>
+    <div class="pc-bars">${locRows.map(x => {
+      const pct = total ? x.n / total : 0;
+      return `<div class="pc-barline"><span>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} · ${H.qty(x.n)}</span><b>${Math.round(pct * 100)}%</b><i data-bar="${pct.toFixed(3)}"></i></div>`;
+    }).join("")}</div>
     <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
     <p class="pc-cost">${lang === "ar" ? "التكلفة" : "Cost"} ${Number(p.rate || 0).toFixed(2)} SAR · ${lang === "ar" ? "سعر البيع غير موجود" : "Sell price missing"}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
@@ -76,6 +79,7 @@ export async function renderScanCard(root, p, ctx) {
     </section>
   </article>`;
   mountGauges(root);
+  mountBars(root);
   mountMood(mood);
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
@@ -147,5 +151,13 @@ async function mountMood(mood) {
       move: { enable: true, direction: cold ? "bottom" : "top", speed: cold ? 1.1 : 0.7, outModes: "out" }
     },
     detectRetina: true
+  });
+}
+
+function mountBars(root) {
+  if (!window.ProgressBar) return;
+  root.querySelectorAll("[data-bar]").forEach(el => {
+    const bar = new window.ProgressBar.Line(el, { color: "#9b6bff", trailColor: "rgba(255,255,255,.08)", strokeWidth: 3, trailWidth: 3, svgStyle: { width: "100%", height: "8px" } });
+    bar.animate(Number(el.dataset.bar) || 0, { duration: 700 });
   });
 }
