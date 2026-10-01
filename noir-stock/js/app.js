@@ -1,10 +1,10 @@
-import * as store from "./store.js?v=27";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=27";
-import { SEED_DATE } from "./seed-data.js?v=27";
-import { renderYield, productPanel } from "./analytics.js?v=27";
-import { mountGithubDash } from "./gh-dash.js?v=27";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=27";
-import { downloadCountCsv } from "./export-count.js?v=27";
+import * as store from "./store.js?v=28";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=28";
+import { SEED_DATE } from "./seed-data.js?v=28";
+import { renderYield, productPanel } from "./analytics.js?v=28";
+import { mountGithubDash } from "./gh-dash.js?v=28";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=28";
+import { downloadCountCsv } from "./export-count.js?v=28";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "18";
@@ -695,6 +695,7 @@ function viewSettings() {
       </div>
       <p class="note">Import adds or updates products by ID. It never deletes anything.</p>
     </section>
+    <div id="sync-admin"></div>
     <section class="slab">
       <div class="slab-h"><h2>Genesis data</h2><span class="voice">where it started</span></div>
       <p style="margin:0;color:var(--ink-2);font-size:14px">Current Stock Position Report · Noir Cinema, Othaim Mall, Onaizah · <span class="data" style="font-size:12px">${when(SEED_DATE)}</span>. Three locations: Mini Store, Refuel, Main Stores. Unit cost is net amount ÷ system stock, before VAT.</p>
@@ -713,6 +714,7 @@ function viewSettings() {
     try { await store.importAll(JSON.parse(await f.text())); toast("Import complete"); } catch (err) { toast(err.message || "That file isn't a valid backup", true); }
     e.target.value = "";
   };
+  renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") });
   $("#reset")?.addEventListener("click", async () => {
     if (await confirmBox('Reload <span class="voice">report data?</span>', "Every edit and count saved in this browser will be wiped and replaced with the original report.", "Reload", true)) { await store.resetLocal(); toast("Report data reloaded"); }
   });

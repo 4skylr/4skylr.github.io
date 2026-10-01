@@ -38,7 +38,7 @@ export async function renderScanCard(root, p, ctx) {
   const gname = n => lang === "en" ? "Group " + n : groupName(n);
   const products = H.data?.().products || [];
   const dated = noDate(p) ? [] : rowsFor(p.id)
-    .flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date) })))
+    .flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date), row: r.row })))
     .filter(b => b.left != null && Number(b.qty) > 0);
   dated.sort((a, b) => a.left - b.left);
   const next = dated.find(b => b.left >= 0) || null;
@@ -49,7 +49,7 @@ export async function renderScanCard(root, p, ctx) {
   const hits = recipesFor(p);
   root.innerHTML = `<article class="phone-card shield" dir="${lang === "ar" ? "rtl" : "ltr"}">
     <div class="lang-switch"><button type="button" data-lang="ar" aria-pressed="${lang === "ar"}">عربي</button><button type="button" data-lang="en" aria-pressed="${lang === "en"}">English</button></div>
-    <div class="pc-shot">${H.pic(p, "pic")}</div>
+    <div class="pc-shot">${H.pic(p, "pic")}<small class="pc-age" data-age="${H.esc(localStorage.getItem("noir-sync-at") || p.updatedAt || "")}"></small></div>
     <h1>${H.esc(lang === "ar" ? (AR[p.id] || p.name) : p.name)}</h1>
     <p class="pc-en">${H.esc(lang === "ar" ? p.name : (AR[p.id] || ""))}</p>
     <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
@@ -57,7 +57,7 @@ export async function renderScanCard(root, p, ctx) {
     <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
     ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
-    <div class="pc-actions"><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" data-open="recipe">${L.recipe}</button></div>`}
+    <div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="recipe">${L.recipe}</button></div>`}
     <section class="pc-sheet" id="sheet-batch" hidden>
       <h2>المجموعات</h2>
       ${dated.map(b => `<p><b>${groupName(b.n)}</b> · ${H.esc(b.location)} · ${H.esc(fmtDate(b.date))} · ${H.esc(b.qty ?? "—")}</p>`).join("")}
@@ -81,6 +81,20 @@ export async function renderScanCard(root, p, ctx) {
     root.querySelectorAll("[data-open]").forEach(b => b.setAttribute("aria-pressed", "false"));
     sheet.hidden = !open;
     btn.setAttribute("aria-pressed", String(open));
+  });
+  root.querySelector("#edit-card")?.addEventListener("click", async () => {
+    const ok = await ctx.requirePin?.();
+    if (!ok) return;
+    const row = dated[0];
+    const qty = prompt(lang === "ar" ? "كمية المجموعة" : "Group quantity", row?.qty ?? "");
+    if (qty == null) return;
+    const date = prompt(lang === "ar" ? "تاريخ الانتهاء" : "Expiry date", row?.date ?? "");
+    if (date == null) return;
+    const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
+    if (row?.row) { all[String(row.row)] = all[String(row.row)] || {}; all[String(row.row)]["q" + row.n] = qty; all[String(row.row)]["d" + row.n] = date; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
+    ctx.rotatePin?.();
+    H.toast(lang === "ar" ? "انحفظ وتغير الرقم" : "Saved. Pin changed");
+    renderScanCard(root, p, ctx);
   });
   root.querySelectorAll("[data-lang]").forEach(btn => btn.onclick = () => {
     sessionStorage.setItem(LANG_KEY, btn.dataset.lang);

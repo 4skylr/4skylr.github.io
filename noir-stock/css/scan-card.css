@@ -54,3 +54,6 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .pc-wh img { width: 28px; height: 28px; object-fit: contain; background: #fff; border-radius: 50%; }
 .pc-wh b, .fifo b { width: 18px; height: 18px; border-radius: 4px; background: #7c2280; color: #fff; display: inline-grid; place-items: center; font-size: 12px; }
 .fifo { margin: 10px 0 0; color: #f4ede4; font-size: 13px; }
+
+.pc-shot { position: relative; }
+.pc-age { position: absolute; top: 8px; inset-inline-start: 8px; background: #7c2280; color: #fff; border-radius: 999px; padding: 3px 8px; font-size: 11px; }

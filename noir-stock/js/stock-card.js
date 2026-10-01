@@ -37,6 +37,17 @@ const loadScript = src => loading.get(src) || loading.set(src, new Promise((res,
 let H = null;
 const edits = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; } };
 const saveEdits = e => localStorage.setItem(KEY, JSON.stringify(e));
+export function livePin() {
+  let pin = localStorage.getItem("noir-live-pin");
+  if (!pin) { pin = String(Math.floor(100000 + Math.random() * 900000)); localStorage.setItem("noir-live-pin", pin); }
+  return pin;
+}
+export function rotatePin() {
+  const pin = String(Math.floor(100000 + Math.random() * 900000));
+  localStorage.setItem("noir-live-pin", pin);
+  localStorage.removeItem(UNLOCK);
+  return pin;
+}
 export const pinUnlocked = () => Number(localStorage.getItem(UNLOCK) || 0) > Date.now();
 export const pinLeft = () => Math.max(0, Number(localStorage.getItem(UNLOCK) || 0) - Date.now());
 
@@ -105,7 +116,7 @@ export function requirePin() {
     root.querySelectorAll("[data-close]").forEach(n => n.onclick = e => { if (e.target === n || n.hasAttribute("data-close")) close(false); });
     root.querySelector("#pin-form").onsubmit = e => {
       e.preventDefault();
-      if (root.querySelector("#pin").value.trim() !== EDIT_PIN) { const n=root.querySelector(".lede"); if(n) n.textContent="Wrong pin."; return; }
+      if (root.querySelector("#pin").value.trim() !== livePin()) { const n=root.querySelector(".lede"); if(n) n.textContent="Wrong pin."; return; }
       localStorage.setItem(UNLOCK, String(Date.now() + PIN_HOURS * 3600000));
       H?.toast?.(`Unlocked for ${PIN_HOURS} hours`);
       close(true);
@@ -166,7 +177,7 @@ function editBatches(p) {
       const row = inp.dataset.row; all[row] = all[row] || {}; all[row][inp.dataset.k] = inp.value.trim();
     });
     saveEdits(all);
-    H.toast("Sheet updated · download Excel anytime");
+    rotatePin(); H.toast("انحفظ وتغير الرقم السري");
     openProductCard(p, H);
   });
 }
@@ -238,7 +249,7 @@ function recipeBlock(p) {
 export async function mountProductPage(root, p, helpers) {
   H = helpers;
   await loadScript("vendor/decimal.min.js").catch(() => {});
-  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff });
+  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff, requirePin, rotatePin });
 }
 
 async function paintOps(host, p) {
