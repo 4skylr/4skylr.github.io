@@ -25,12 +25,12 @@
   --f-data: "JetBrains Mono Web", "Martian Mono", ui-monospace, monospace;
 }
 
-.label-sheet { display: grid; grid-template-columns: repeat(auto-fill, 5cm); gap: 0; justify-content: start; }
-.cut { width: 5cm; height: 5cm; box-sizing: border-box; border: 0.25mm dashed rgba(190,170,255,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1mm; padding: 2mm; background: #fff; color: #111; break-inside: avoid; page-break-inside: avoid; }
-.cut .qr { width: 2.2cm; height: 2.2cm; background:#fff; }
+.label-sheet { display: grid; grid-template-columns: repeat(auto-fill, 8cm); gap: 0; justify-content: start; }
+.cut { width: 8cm; height: 8cm; box-sizing: border-box; border: 0.6mm dashed #7c2280; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; padding: 3mm; background: #fff; color: #111; break-inside: avoid; page-break-inside: avoid; }
+.cut .qr { width: 3.4cm; height: 3.4cm; background:#fff; }
 .cut .bar { width: 4.4cm; height: 0.9cm; object-fit: contain; background:#fff; }
-.cut .logo { width: 1.05cm; height: 1.05cm; object-fit: contain; }
-.cut b { font-size: 8pt; line-height: 1.15; text-align: center; max-width: 4.6cm; }
+.cut .logo { width: 2.4cm; height: 2.4cm; object-fit: contain; background:#fff; }
+.cut b { font-size: 11pt; line-height: 1.15; text-align: center; max-width: 7.2cm; }
 .cut small { font-size: 7pt; color: #444; }
 .scan-page .scan-qr, .card-top .scan-qr { width: 112px; height: 112px; background: #fff; border-radius: 8px; margin-top: 8px; }
 @media print {

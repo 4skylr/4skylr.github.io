@@ -238,7 +238,7 @@ export async function mountLabelSheet(root, products, helpers) {
     const m = savedMark(p.id);
     const img = p.image ? H.src(p.image) : "";
     const sum = batchSummary(p.id);
-    return `<article class="cut"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><b>${H.esc(p.name)}</b></article>`;
+    return `<article class="cut"><img class="logo" alt="" src="${H.esc(img)}"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><b>${H.esc(p.name)}</b></article>`;
   }).join("");
 }
 function arName(p) { return AR[p.id] || p.name; }
@@ -321,7 +321,7 @@ export async function exportLabelsPdf(products) {
   const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const size = 5 / 2.54 * 72;
+  const size = 8 / 2.54 * 72;
   const pageW = 595.28, pageH = 841.89, gap = 6, cols = 3;
   let page = pdf.addPage([pageW, pageH]);
   let x = 28, y = pageH - 28 - size;

@@ -74,5 +74,5 @@ body.card-only #modal-root { display: block; position: relative; z-index: 40; }
 .pc-barline b { float: inline-end; }
 .pc-barline i { display: block; height: 8px; clear: both; }
 
-.cut .bar, .cut .logo, .cut small { display: none !important; }
+.cut .bar, .cut small { display: none !important; }
 .cut b { display: block; margin-top: 6px; font-size: 12px; text-align: center; }
