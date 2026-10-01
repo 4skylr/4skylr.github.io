@@ -68,7 +68,21 @@ export function reviewGaps(products) {
   }).filter(Boolean);
 }
 
+const ADMIN = "899";
+function gate(root, H) {
+  root.innerHTML = `<section class="slab"><h2>خانة الأدمن</h2><form id="adm"><input class="input" name="pin" inputmode="numeric" placeholder="رقم الأدمن"><button class="btn" type="submit">دخول</button></form></section>`;
+  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (e.target.pin.value.trim() !== ADMIN) { H.toast("الرقم غلط"); return; } sessionStorage.setItem("noir-admin", "1"); draw(root, H); };
+}
+async function keepFile(key, file) {
+  const buf = await file.arrayBuffer();
+  const db = await new Promise((res, rej) => { const r = indexedDB.open("noir-uploads", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  await new Promise((res, rej) => { const tx = db.transaction("files", "readwrite"); tx.objectStore("files").put({ name: file.name, type: file.type, at: new Date().toISOString(), buf }, key); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+}
 export function renderAdmin(root, H) {
+  if (sessionStorage.getItem("noir-admin") !== "1") return gate(root, H);
+  draw(root, H);
+}
+function draw(root, H) {
   const pin = livePin();
   const at = localStorage.getItem(SYNC_AT);
   root.innerHTML = `<section class="slab">
@@ -92,6 +106,7 @@ export function renderAdmin(root, H) {
   root.querySelector("#dl-dates").onclick = () => downloadSheet().then(() => H.toast("ملف التواريخ نزل بالتعديلات")).catch(e => H.toast(e.message, true));
   root.querySelector("#up-dates").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
+    await keepFile("dates", f);
     await H.loadExcel();
     const wb = new window.ExcelJS.Workbook();
     await wb.xlsx.load(await f.arrayBuffer());
@@ -114,6 +129,7 @@ export function renderAdmin(root, H) {
   };
   root.querySelector("#up-stock").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
+    await keepFile("stock", f);
     const products = H.data().products;
     const found = await parseStockPdf(f, products);
     const byId = {};

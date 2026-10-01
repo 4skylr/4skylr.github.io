@@ -61,3 +61,8 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .phone-card { position: relative; }
 .card-fx { position: absolute; inset: 0 0 auto 0; height: 220px; pointer-events: none; z-index: 2; }
 .card-fx canvas { width: 100% !important; height: 100% !important; }
+
+body.card-only #modal-root { display: block; position: relative; z-index: 40; }
+.pc-cost { margin: 8px 0 0; color: #f4ede4; font-size: 13px; }
+.pc-edit { margin-top: 10px; text-align: start; }
+.pc-edit input { width: 100%; margin: 4px 0 8px; }

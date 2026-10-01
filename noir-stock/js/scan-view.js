@@ -57,6 +57,7 @@ export async function renderScanCard(root, p, ctx) {
     <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
     <div class="pc-wh">${locRows.filter(x => x.n > 0).map(x => `<span><img src="${H.esc(H.src(p.image || ""))}" alt=""><i>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} ${H.qty(x.n)}</i><b>✓</b></span>`).join("") || `<span><i>${lang === "ar" ? "غير موجود في المستودعات" : "Not in a warehouse"}</i></span>`}</div>
     <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
+    <p class="pc-cost">${lang === "ar" ? "التكلفة" : "Cost"} ${Number(p.rate || 0).toFixed(2)} SAR · ${lang === "ar" ? "سعر البيع غير موجود" : "Sell price missing"}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
     ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
     <div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="recipe">${L.recipe}</button></div>`}
@@ -88,19 +89,23 @@ export async function renderScanCard(root, p, ctx) {
     sheet.hidden = !open;
     btn.setAttribute("aria-pressed", String(open));
   });
-  root.querySelector("#edit-card")?.addEventListener("click", async () => {
-    const ok = await ctx.requirePin?.();
-    if (!ok) return;
-    const row = dated[0];
-    const qty = prompt(lang === "ar" ? "كمية المجموعة" : "Group quantity", row?.qty ?? "");
-    if (qty == null) return;
-    const date = prompt(lang === "ar" ? "تاريخ الانتهاء" : "Expiry date", row?.date ?? "");
-    if (date == null) return;
-    const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
-    if (row?.row) { all[String(row.row)] = all[String(row.row)] || {}; all[String(row.row)]["q" + row.n] = qty; all[String(row.row)]["d" + row.n] = date; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
-    ctx.rotatePin?.();
-    H.toast(lang === "ar" ? "انحفظ وتغير الرقم" : "Saved. Pin changed");
-    renderScanCard(root, p, ctx);
+  root.querySelector("#edit-card")?.addEventListener("click", () => {
+    const box = document.createElement("form");
+    box.className = "pc-edit";
+    box.innerHTML = `<label>الرقم السري</label><input class="input" name="pin" inputmode="numeric"><label>الكمية</label><input class="input" name="qty" value="${dated[0]?.qty ?? ""}"><label>التاريخ</label><input class="input" name="date" value="${dated[0]?.date ?? ""}"><button class="btn" type="submit">حفظ</button>`;
+    root.querySelector(".phone-card").append(box);
+    box.onsubmit = e => {
+      e.preventDefault();
+      const pin = box.pin.value.trim();
+      const live = localStorage.getItem("noir-live-pin") || "";
+      if (pin !== live && pin !== "899") { H.toast("الرقم غلط"); return; }
+      const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
+      const row = dated[0];
+      if (row?.row) { all[String(row.row)] = all[String(row.row)] || {}; all[String(row.row)]["q" + row.n] = box.qty.value; all[String(row.row)]["d" + row.n] = box.date.value; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
+      if (pin !== "899") ctx.rotatePin?.();
+      H.toast("انحفظ");
+      renderScanCard(root, p, ctx);
+    };
   });
   root.querySelectorAll("[data-lang]").forEach(btn => btn.onclick = () => {
     sessionStorage.setItem(LANG_KEY, btn.dataset.lang);
