@@ -11,6 +11,8 @@ import { servingsFor } from "./servings.js?v=13";
 import { lastCount } from "./last-count.js?v=13";
 import { mountGauges } from "./indicators.js?v=13";
 import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
+import { RECIPES } from "./recipes-data.js?v=16";
+import { AR, LOC_AR } from "./names-ar.js?v=16";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -220,18 +222,24 @@ export async function mountLabelSheet(root, products, helpers) {
     return `<article class="cut"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><img class="logo" alt="" src="${H.esc(img)}"><b>${H.esc(p.name)}</b><img class="bar" alt="" src="${H.esc(m.barcode)}"><small>${H.esc(m.code)} · ${sum.count} batches</small></article>`;
   }).join("");
 }
+function arName(p) { return AR[p.id] || p.name; }
+function recipeBlock(p) {
+  const key = (p.sku || p.name || "").toLowerCase();
+  const hits = RECIPES.filter(r => r.lines.some(l => l.rm.toLowerCase() === key)).slice(0, 4);
+  if (!hits.length) return `<p class="note">لا توجد وصفة مربوطة بهذا الاسم · No recipe is tied to this name.</p>`;
+  return hits.map(r => `<article class="recipe-card"><h3>${H.esc(r.name)}</h3><ol>${r.lines.map((l,i) => `<li><span>${i+1}</span><b>${H.esc(l.rm)}</b><em>${H.esc(String(l.qty))} ${H.esc(l.uom)}</em></li>`).join("")}</ol></article>`).join("");
+}
 export function mountProductPage(root, p, helpers) {
   H = helpers;
   const { rows, batches } = batchSummary(p.id);
   const locRows = H.LOCATIONS.map(l => ({ l, n: Number(p.stock?.[l.id]) || 0 }));
   root.innerHTML = `<article class="slab scan-page">
-    <div class="card-top">${H.pic(p, "pic")}<div>
-      <p class="kicker">Scanned label</p><h2>${H.esc(p.name)}</h2>
-      <p class="lede">${H.esc(p.sku || "")} · ${batches.length} batches on the September sheet</p>
+    <header class="id-head"><img class="id-logo" src="assets/brand/logo-tile.png?v=16" alt="Noir Cinema"><div><p class="kicker">بطاقة منتج · Product card</p><h2>${H.esc(arName(p))}</h2><p class="lede">${H.esc(p.name)} · ${H.esc(p.sku || "")}</p></div></header>
+    <div class="card-top id-hero">${H.pic(p, "pic")}<div>
       <img class="scan-qr" alt="QR" id="scan-qr">
     </div></div>
     <section class="yield-panel"><div class="slab-h"><h2>Current count</h2><span class="tag">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")}</span></div>
-      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(x.l.name)}</span><span class="u-per">on hand</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
+      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(LOC_AR[x.l.id] || x.l.name)}<i>${H.esc(x.l.name)}</i></span><span class="u-per">العدد الحالي · on hand</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
       <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
     <section class="yield-panel"><div class="slab-h"><h2>Batches</h2><span class="tag">${batches.length} with a quantity</span></div>
       ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)}</p><div class="uses">${(r.batches.length ? r.batches : [{ n: "—", qty: "—", date: "" }]).map(b => {
@@ -240,6 +248,7 @@ export function mountProductPage(root, p, helpers) {
       }).join("")}</div>`).join("") : `<p class="note">No batches on the expiry sheet.</p>`}
     </section>
     ${productPanel(p, H)}
+    <section class="yield-panel"><div class="slab-h"><h2>الوصفة · Recipe</h2><span class="tag">للموظف</span></div>${recipeBlock(p)}</section>
   </article>`;
   const mark = savedMark(p.id); const img = root.querySelector("#scan-qr"); if (img) img.src = mark.qr;
   const ops = document.createElement("div");
