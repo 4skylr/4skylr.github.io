@@ -1,4 +1,3 @@
-/* Phone scan card. Logo centered, brand clear space, rings instead of day text. */
 body.card-only .marquee,
 body.card-only .head,
 body.card-only .title-row,
@@ -6,51 +5,31 @@ body.card-only .dock-nav,
 body.card-only .aura,
 body.card-only .grain { display: none !important; }
 body.card-only { background: #1a0d22; }
-body.card-only .stage { padding: 0; max-width: 430px; margin: 0 auto; }
-.phone-card { max-width: 430px; margin: 0 auto; min-height: 100dvh; padding: 18px 16px 28px; background: #1a0d22; color: #fff; text-align: center; }
-.pc-shot { background: #fff; border-radius: 22px; display: grid; place-items: center; height: 220px; margin-bottom: 14px; }
-.pc-shot .pic { width: 180px; height: 180px; object-fit: contain; object-position: center; background: transparent; padding: 0; }
-.phone-card h1 { margin: 0; font-size: 30px; line-height: 1.15; }
-.pc-en { margin: 4px 0 0; color: #f4ede4; }
+body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
+.phone-card { max-width: 390px; margin: 0 auto; padding: 16px 16px 28px; background: #1a0d22; color: #fff; text-align: center; }
+.shield, .shield * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pc-shot { background: #fff; border-radius: 18px; display: grid; place-items: center; height: 148px; margin: 0 auto 12px; }
+.pc-shot .pic { width: 112px; height: 112px; object-fit: contain; object-position: center; background: transparent; padding: 0; }
+.phone-card h1 { margin: 8px 0 0; font-size: 28px; line-height: 1.15; }
+.pc-en { margin: 4px 0 0; color: #f4ede4; font-size: 15px; }
 .pc-qty { margin: 12px 0 0; }
-.pc-qty b { font-size: 34px; display: block; }
-.pc-qty span, .pc-desc { color: #a4a4a4; font-size: 13px; }
-.pc-desc { margin: 6px 0 0; }
-.pc-rings { display: flex; justify-content: center; gap: 14px; margin: 16px 0; }
-.pc-ring { width: 84px; }
-.pc-ring .gauge { width: 84px; height: 84px; margin: 0 auto; }
-.pc-ring small { display: block; margin-top: 4px; color: #f4ede4; font-size: 11px; }
-.pc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.pc-actions button { background: transparent; color: #fff; border: 1px solid #f4ede4; border-radius: 999px; padding: 12px 8px; font: inherit; }
+.pc-qty b { font-size: 32px; }
+.pc-qty span, .pc-desc, .pc-note { color: #a4a4a4; font-size: 13px; }
+.pc-desc { margin: 6px 0 0; line-height: 1.45; }
+.pc-dash { margin: 14px 0 0; padding: 12px 8px; border: 1px solid rgba(244,237,228,.16); border-radius: 16px; }
+.pc-dash h2 { margin: 0 0 8px; font-size: 14px; color: #f4ede4; }
+.pc-when { margin: 8px 0 0; color: #f4ede4; font-size: 12px; }
+.pc-dates { list-style: none; margin: 12px 0 0; padding: 0; text-align: start; }
+.pc-dates li { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 2px; border-top: 1px solid rgba(244,237,228,.12); }
+.pc-dates .past { color: #a4a4a4; }
+.pc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.pc-actions button { background: transparent; color: #fff; border: 1px solid #f4ede4; border-radius: 999px; padding: 11px 8px; font: inherit; }
 .pc-actions button[aria-pressed="true"] { background: #7c2280; border-color: #7c2280; }
 .pc-sheet { margin-top: 12px; padding: 12px; border-radius: 16px; background: #2c1438; text-align: start; }
 .pc-sheet h2, .pc-sheet h3 { margin: 0 0 8px; font-size: 16px; }
 .pc-ings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pc-ings figure { margin: 0; background: #fff; color: #1a0d22; border-radius: 14px; overflow: hidden; }
-.pc-ings img, .pc-ings span { width: 100%; height: 88px; object-fit: contain; display: grid; place-items: center; background: #fff; }
+.pc-ings img, .pc-ings span { width: 100%; height: 72px; object-fit: contain; display: grid; place-items: center; background: #fff; }
 .pc-ings figcaption { padding: 6px 8px 8px; font-size: 12px; }
 .pc-ings i { display: block; color: #7c2280; font-style: normal; }
-
-.pc-dash { margin: 14px 0; text-align: start; }
-.pc-dash h2 { font-size: 14px; margin: 0 0 8px; color: #f4ede4; }
-.pc-barline { margin: 8px 0; }
-.pc-barline span { display: block; font-size: 12px; color: #f4ede4; margin-bottom: 4px; }
-.pc-barline i { display: block; height: 10px; }
-.flipdown { margin: 8px auto; }
-
-.pc-over { font-size: 42px; line-height: 1; color: #fff; }
-.pc-over small { display: block; font-size: 13px; color: #f4ede4; }
-.pc-note { color: #a4a4a4; margin: 14px 0; }
-.pc-when { margin: 6px 0 0; color: #f4ede4; font-size: 13px; text-align: center; }
-
-.phone-card h1 { margin: 14px 0 0; }
-.pc-en { margin: 6px 0 0; }
-.pc-qty { margin: 16px 0 0; }
-.pc-desc { margin: 8px 16px 0; line-height: 1.5; }
-.pc-dash { margin: 18px 0 0; padding: 12px; border: 1px solid rgba(244,237,228,.16); border-radius: 16px; }
-.pc-dash h2 { text-align: center; margin: 0 0 10px; }
-.pc-dates { list-style: none; margin: 12px 0 0; padding: 0; }
-.pc-dates li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(244,237,228,.12); }
-.pc-actions { margin-top: 16px; }
-.pc-over { text-align: center; background: #7c2280; border-radius: 16px; padding: 12px; }
-.pc-over b { font-size: 40px; display: block; line-height: 1; }
+.flipdown { font-size: 12px; }
