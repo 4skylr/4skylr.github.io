@@ -1,0 +1,208 @@
+// Product card, barcode labels, scanner, 3-hour edit pin, Excel write-back.
+// Libraries (jsDelivr builds of GitHub repos):
+//   JsBarcode     github.com/lindell/JsBarcode
+//   html5-qrcode  github.com/mebjas/html5-qrcode
+//   ExcelJS       github.com/exceljs/exceljs
+import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=8";
+import { productPanel } from "./analytics.js?v=8";
+
+const KEY = "noir-expiry-edits-v1";
+const UNLOCK = "noir-edit-until";
+const LIB = {
+  bar: "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
+  scan: "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js",
+  xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
+};
+const loading = new Map();
+const loadScript = src => loading.get(src) || loading.set(src, new Promise((res, rej) => {
+  const s = document.createElement("script"); s.src = src; s.async = true;
+  s.onload = () => res(); s.onerror = () => { loading.delete(src); rej(new Error(src)); };
+  document.head.append(s);
+})).get(src);
+
+let H = null;
+const edits = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; } };
+const saveEdits = e => localStorage.setItem(KEY, JSON.stringify(e));
+export const pinUnlocked = () => Number(localStorage.getItem(UNLOCK) || 0) > Date.now();
+export const pinLeft = () => Math.max(0, Number(localStorage.getItem(UNLOCK) || 0) - Date.now());
+
+export function codeFor(id) { return `NC-${id}`; }
+export function idFromCode(raw) {
+  const s = String(raw || "").trim();
+  const m = s.match(/^NC-(.+)$/i);
+  return m ? m[1] : s;
+}
+
+function rowsFor(id) {
+  const over = edits();
+  return EXPIRY_SHEET.rows.filter(r => r.productId === id).map(r => {
+    const o = over[String(r.row)] || {};
+    return { ...r, batches: r.batches.map(b => ({ ...b, qty: o[`q${b.n}`] ?? b.qty, date: o[`d${b.n}`] ?? b.date })) };
+  });
+}
+function fmtDate(v) {
+  if (!v) return "—";
+  if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) {
+    const [y, m, d] = String(v).slice(0, 10).split("-");
+    return `${d}/${m}/${y}`;
+  }
+  return String(v);
+}
+function daysLeft(v) {
+  if (!v) return null;
+  const iso = /^\d{4}-\d{2}-\d{2}/.test(String(v)) ? String(v).slice(0, 10) : null;
+  let dt = iso ? new Date(iso + "T00:00:00") : null;
+  if (!dt && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(v))) {
+    const [d, m, y] = String(v).split("/"); dt = new Date(`${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}T00:00:00`);
+  }
+  if (!dt || isNaN(dt)) return null;
+  return Math.round((dt - new Date()) / 86400000);
+}
+
+export function requirePin() {
+  if (pinUnlocked()) return Promise.resolve(true);
+  return new Promise(resolve => {
+    const root = document.getElementById("modal-root");
+    root.innerHTML = `<div class="modal-back" data-close><div class="sheet" role="dialog" aria-modal="true">
+      <h2>Edit <span class="voice">lock</span></h2>
+      <p class="lede">A pin opens edits for ${PIN_HOURS} hours. Scanning a barcode never changes stock.</p>
+      <form id="pin-form" class="form"><div class="fields"><div class="fl full"><label for="pin">Secret pin</label>
+        <input class="input data" id="pin" inputmode="numeric" autocomplete="off" placeholder="6 digits"></div></div>
+        <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn hot" type="submit">Unlock</button></div></form>
+    </div></div>`;
+    const close = ok => { root.innerHTML = ""; resolve(ok); };
+    root.querySelectorAll("[data-close]").forEach(n => n.onclick = e => { if (e.target === n || n.hasAttribute("data-close")) close(false); });
+    root.querySelector("#pin-form").onsubmit = e => {
+      e.preventDefault();
+      if (root.querySelector("#pin").value.trim() !== EDIT_PIN) { const n=root.querySelector(".lede"); if(n) n.textContent="Wrong pin."; return; }
+      localStorage.setItem(UNLOCK, String(Date.now() + PIN_HOURS * 3600000));
+      H?.toast?.(`Unlocked for ${PIN_HOURS} hours`);
+      close(true);
+    };
+  });
+}
+
+export function openProductCard(p, helpers) {
+  H = helpers;
+  if (!p) return;
+  const rows = rowsFor(p.id);
+  const locRows = H.LOCATIONS.map(l => {
+    const n = Number(p.stock?.[l.id]) || 0;
+    const sheet = rows.find(r => r.loc === l.id);
+    return { l, n, sheet };
+  });
+  const soon = rows.flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date) }))).filter(b => b.left != null && b.left <= 45);
+  const html = `<div class="card-top">${H.pic(p, "pic")}<div>
+      <p class="kicker">${H.esc(p.sku || "")}</p><h2>${H.esc(p.name)}</h2>
+      <p class="lede">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")} across all warehouses · barcode ${codeFor(p.id)}</p>
+      <svg class="barcode" data-code="${codeFor(p.id)}"></svg>
+    </div></div>
+    <section class="yield-panel"><div class="slab-h"><h2>On hand</h2><span class="tag">does not rename the product</span></div>
+      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(x.l.name)}</span><span class="u-per">${x.sheet ? H.esc(x.sheet.location) : ""}</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
+      <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
+    <section class="yield-panel"><div class="slab-h"><h2>Expiry batches</h2><span class="tag">${soon.length ? soon.length + " inside 45 days" : "from the September sheet"}</span></div>
+      ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)} · row ${r.sr}</p><div class="uses">${r.batches.map(b => {
+        const left = daysLeft(b.date);
+        return `<div class="use"><span class="u-name">Batch ${b.n}</span><span class="u-per data">${H.esc(fmtDate(b.date))}${left == null ? "" : ` · ${left < 0 ? "expired" : left + "d"}`}</span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
+      }).join("") || `<p class="note">No batch on file.</p>`}</div>`).join("") : `<p class="note">This item is not on the September expiry sheet.</p>`}
+      ${pinUnlocked() ? `<div class="form-actions" style="margin-top:12px"><button class="btn sm" id="edit-exp" type="button">Edit batches</button></div>` : `<p class="note">Batch edits need the pin. Unlock lasts ${PIN_HOURS} hours.</p><button class="btn sm" id="unlock" type="button">Unlock edits</button>`}
+    </section>
+    ${productPanel(p, H)}
+    <div class="form-actions"><button class="btn ghost" data-close type="button">Close</button><button class="btn" id="print-one" type="button">Print this barcode</button></div>`;
+  H.openModal(html, "wide");
+  loadScript(LIB.bar).then(() => {
+    document.querySelectorAll(".barcode").forEach(svg => window.JsBarcode(svg, svg.dataset.code, { format: "CODE128", height: 54, width: 1.6, margin: 0, background: "transparent", lineColor: "#f2efff", font: "JetBrains Mono Web", fontSize: 12 }));
+  }).catch(() => {});
+  document.getElementById("print-one")?.addEventListener("click", () => printBarcodes([p], H));
+  document.getElementById("unlock")?.addEventListener("click", async () => { if (await requirePin()) openProductCard(p, H); });
+  document.getElementById("edit-exp")?.addEventListener("click", () => editBatches(p));
+}
+
+function editBatches(p) {
+  const rows = rowsFor(p.id);
+  const fields = rows.flatMap(r => r.batches.map(b => `<div class="fl"><label>Batch ${b.n} qty · ${H.esc(r.location)}</label><input class="input data" data-row="${r.row}" data-k="q${b.n}" value="${H.esc(b.qty ?? "")}"></div>
+    <div class="fl"><label>Batch ${b.n} expiry</label><input class="input data" data-row="${r.row}" data-k="d${b.n}" value="${H.esc(b.date ?? "")}" placeholder="2027-04-19"></div>`)).join("");
+  H.openModal(`<h2>Batches · ${H.esc(p.name)}</h2><p class="lede">Saved into the September sheet and included in the next Excel download.</p>
+    <form id="bf" class="form"><div class="fields">${fields || `<p class="note">No batches to edit.</p>`}</div>
+    <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn hot" type="submit">Save to sheet</button></div></form>`, "wide");
+  document.getElementById("bf")?.addEventListener("submit", e => {
+    e.preventDefault();
+    const all = edits();
+    document.querySelectorAll("#bf [data-row]").forEach(inp => {
+      const row = inp.dataset.row; all[row] = all[row] || {}; all[row][inp.dataset.k] = inp.value.trim();
+    });
+    saveEdits(all);
+    H.toast("Sheet updated · download Excel anytime");
+    openProductCard(p, H);
+  });
+}
+
+export async function applyCountToSheet(locationId, counts) {
+  const all = edits();
+  Object.entries(counts || {}).forEach(([id, qty]) => {
+    const row = EXPIRY_SHEET.rows.find(r => r.productId === id && r.loc === locationId);
+    if (!row) return;
+    all[String(row.row)] = all[String(row.row)] || {};
+    all[String(row.row)].q1 = qty;
+  });
+  saveEdits(all);
+}
+
+export async function downloadSheet() {
+  await loadScript(LIB.xlsx);
+  const res = await fetch("assets/expiry-template.xlsx");
+  if (!res.ok) throw new Error("Expiry template missing");
+  const wb = new window.ExcelJS.Workbook();
+  await wb.xlsx.load(await res.arrayBuffer());
+  const ws = wb.getWorksheet(EXPIRY_SHEET.sheet) || wb.worksheets[0];
+  const all = edits();
+  EXPIRY_SHEET.rows.forEach(r => {
+    const o = all[String(r.row)]; if (!o) return;
+    r.batches.forEach(b => {
+      if (o[`q${b.n}`] != null && o[`q${b.n}`] !== "") {
+        const raw = o[`q${b.n}`];
+        const num = Number(String(raw).replace(/g$/i, ""));
+        ws.getCell(r.row, b.qtyCol).value = Number.isFinite(num) && String(raw).trim() !== "" && !/[a-z]/i.test(String(raw)) ? num : raw;
+      }
+      if (o[`d${b.n}`]) {
+        const v = o[`d${b.n}`];
+        ws.getCell(r.row, b.dateCol).value = /^\d{4}-\d{2}-\d{2}/.test(v) ? new Date(v.slice(0, 10) + "T00:00:00") : v;
+      }
+    });
+  });
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  a.download = "MONTHLY EXPIRY MONITORING SHEET September 2026.xlsx";
+  a.click();
+}
+
+export async function printBarcodes(products, helpers) {
+  H = helpers;
+  await loadScript(LIB.bar);
+  const w = window.open("", "labels", "width=900,height=700");
+  if (!w) { H.toast("Allow pop-ups to print labels", true); return; }
+  w.document.write(`<!doctype html><title>Noir stock labels</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><style>
+    @page { size: A4; margin: 12mm; } body { margin: 0; font-family: Inter, sans-serif; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
+    .lab { border: 1px solid #111; border-radius: 8px; padding: 8px 10px; break-inside: avoid; }
+    b { display: block; font-size: 14px; } small { color: #444; } svg { width: 100%; height: 58px; }
+  </style><div class="grid">${products.map(p => `<div class="lab"><b>${H.esc(p.name)}</b><small>${H.esc(p.sku || "")}</small><svg id="b-${H.esc(p.id)}"></svg></div>`).join("")}</div>`);
+  w.document.close();
+  products.forEach(p => w.JsBarcode(w.document.getElementById("b-" + p.id), codeFor(p.id), { format: "CODE128", height: 46, margin: 0, fontSize: 11 }));
+  setTimeout(() => w.print(), 300);
+}
+
+let scanner = null;
+export async function openScanner(helpers, onId) {
+  H = helpers;
+  await loadScript(LIB.scan);
+  H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">Opens that product card only. It does not change stock.</p><div id="qr" style="min-height:260px"></div><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
+  const Q = window.Html5Qrcode;
+  scanner = new Q("qr");
+  await scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 220 }, text => {
+    const id = idFromCode(text);
+    scanner.stop().catch(() => {}).finally(() => { scanner = null; onId(id); });
+  });
+  document.querySelector("#modal-root [data-close]")?.addEventListener("click", () => scanner?.stop().catch(() => {}));
+}

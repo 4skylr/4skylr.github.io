@@ -1,8 +1,9 @@
-import * as store from "./store.js?v=7";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=7";
-import { SEED_DATE } from "./seed-data.js?v=7";
-import { renderYield, productPanel } from "./analytics.js?v=7";
-import { mountGithubDash } from "./gh-dash.js?v=7";
+import * as store from "./store.js?v=8";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=8";
+import { SEED_DATE } from "./seed-data.js?v=8";
+import { renderYield, productPanel } from "./analytics.js?v=8";
+import { mountGithubDash } from "./gh-dash.js?v=8";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode } from "./stock-card.js?v=8";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -72,7 +73,7 @@ const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 
 const ROUTES = [
   { id: "dashboard", label: "Overview", kicker: "Treasury", title: 'Stock, <span class="voice">at a glance</span>' },
-  { id: "products", label: "Collection", kicker: "Catalog", title: 'The <span class="voice">collection</span>' },
+  { id: "products", label: "Stock", kicker: "Stock", title: 'The <span class="voice">stock</span>' },
   { id: "count", label: "Count", kicker: "Stocktake", title: 'Count <span class="voice">the room</span>' },
   { id: "yield", label: "Yield", kicker: "Analytics", title: 'What stock <span class="voice">can sell</span>' },
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
@@ -148,8 +149,7 @@ function renderTicker() {
 }
 document.addEventListener("click", e => {
   const r = e.target.closest("[data-route]"); if (r) return go(r.dataset.route);
-  const ed = e.target.closest("[data-edit]"); if (ed) return productForm(data.products.find(p => p.id === ed.dataset.edit));
-  if (e.target.closest("[data-new]")) return productForm(null);
+  const ed = e.target.closest("[data-edit]"); if (ed) return openProductCard(data.products.find(p => p.id === ed.dataset.edit), cardHelpers());
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
@@ -292,7 +292,10 @@ function filtered() {
 }
 
 function viewProducts() {
-  $("#title-actions").innerHTML = `<button class="btn hot" data-new>${icon("plus")}New product</button>`;
+  $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button>`;
+  $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); openProductCard(p, cardHelpers()); });
+  $("#print-codes").onclick = () => printBarcodes(data.products, cardHelpers());
+  $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
   $("#view").innerHTML = `
     <div class="controls">
@@ -338,7 +341,6 @@ function renderResults() {
     return;
   }
   $("#results").innerHTML = head + `<div class="collection">
-    <button class="mint" data-new><span><span class="plus">${icon("plus")}</span></span><span><b>Mint a product</b><span class="voice">drop a photo, give it a name</span></span></button>
     ${L.map(token).join("")}</div>`;
   bindTilt();
 }
@@ -573,13 +575,15 @@ function renderHud() {
     try { await store.saveSession(s); await store.log("draft", `Saved ${loc(s.location).name} draft · ${st.counted} items`); toast("Draft saved"); } catch (e) { toast(e.message, true); }
   };
   $("#commit").onclick = async () => {
-    if (!await confirmBox('Commit <span class="voice">this count?</span>', `${loc(s.location).name} stock will be overwritten with your counts for ${st.counted} items. Items you didn't count stay as they are.`, "Commit")) return;
-    try { await store.commitSession(s); ui.session = null; toast("Count committed · stock updated"); go("history"); } catch (e) { toast(e.message, true); }
+    if (!pinUnlocked() && !await requirePin()) return;
+    if (!await confirmBox('Commit <span class="voice">this count?</span>', `${loc(s.location).name} stock will be overwritten with your counts for ${st.counted} items. The September expiry sheet batch 1 quantity is updated too.`, "Commit")) return;
+    try { await store.commitSession(s); applyCountToSheet(s.location, s.counts); ui.session = null; toast("Count committed · sheet updated"); go("history"); } catch (e) { toast(e.message, true); }
   };
 }
 
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
+const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast });
 function viewYield() {
   $("#title-actions").innerHTML = "";
   renderYield($("#view"), helpers());
@@ -702,7 +706,11 @@ store.onChange(snap => {
   if (ui.route === "count" && ui.session) { renderNet(); renderTicker(); return; }
   render();
 });
-window.addEventListener("hashchange", () => { const r = location.hash.slice(1); if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r); });
+window.addEventListener("hashchange", () => {
+  const r = location.hash.slice(1);
+  if (r.startsWith("p/")) { const p = data.products.find(x => x.id === r.slice(2)); if (p) openProductCard(p, cardHelpers()); return; }
+  if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
+});
 grain();
 render();
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

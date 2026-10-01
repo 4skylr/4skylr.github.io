@@ -1,0 +1,26 @@
+/* Fonts from GitHub, loaded as published webfonts.
+   Inter — github.com/rsms/inter
+   JetBrains Mono — github.com/JetBrains/JetBrainsMono */
+@font-face {
+  font-family: "Inter Var";
+  src: url("https://cdn.jsdelivr.net/gh/rsms/inter@v4.1/docs/font-files/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono Web";
+  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono Web";
+  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+:root {
+  --f-display: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
+  --f-text: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
+  --f-data: "JetBrains Mono Web", "Martian Mono", ui-monospace, monospace;
+}
