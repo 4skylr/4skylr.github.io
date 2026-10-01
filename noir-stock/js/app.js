@@ -9,7 +9,7 @@ import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "18";
+const ASSET_V = "46";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
