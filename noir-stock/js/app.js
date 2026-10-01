@@ -1,7 +1,7 @@
-import * as store from "./store.js?v=5";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=5";
-import { SEED_DATE } from "./seed-data.js?v=5";
-import { renderYield, productPanel } from "./analytics.js?v=5";
+import * as store from "./store.js?v=6";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=6";
+import { SEED_DATE } from "./seed-data.js?v=6";
+import { renderYield, productPanel } from "./analytics.js?v=6";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
