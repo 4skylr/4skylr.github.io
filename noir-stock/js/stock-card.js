@@ -11,7 +11,10 @@ const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
 const LIB = {
   bar: "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
-  scan: "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js",
+  zxing: "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm",
+  dayjs: "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/+esm",
+  relative: "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/relativeTime.js/+esm",
+  pdf: "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js",
   xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
 };
 const SITE = "https://4skylr.github.io/noir-stock/";
@@ -52,15 +55,26 @@ function fmtDate(v) {
   }
   return String(v);
 }
-function daysLeft(v) {
+let dayjsP = null;
+function loadDayjs() {
+  dayjsP ??= Promise.all([import(LIB.dayjs), import(LIB.relative)]).then(([d, r]) => { d.default.extend(r.default); return d.default; }).catch(() => null);
+  return dayjsP;
+}
+function asDate(v) {
   if (!v) return null;
-  const iso = /^\d{4}-\d{2}-\d{2}/.test(String(v)) ? String(v).slice(0, 10) : null;
-  let dt = iso ? new Date(iso + "T00:00:00") : null;
-  if (!dt && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(v))) {
-    const [d, m, y] = String(v).split("/"); dt = new Date(`${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}T00:00:00`);
-  }
+  if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) return new Date(String(v).slice(0, 10) + "T00:00:00");
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(v))) { const [d, m, y] = String(v).split("/"); return new Date(`${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}T00:00:00`); }
+  return null;
+}
+function daysLeft(v) {
+  const dt = asDate(v);
   if (!dt || isNaN(dt)) return null;
   return Math.round((dt - new Date()) / 86400000);
+}
+function expiryPhrase(v) {
+  const dt = asDate(v);
+  if (!dt) return "";
+  return window.__dayjs ? window.__dayjs(dt).fromNow() : "";
 }
 
 export function requirePin() {
@@ -107,7 +121,7 @@ export function openProductCard(p, helpers) {
     <section class="yield-panel"><div class="slab-h"><h2>Expiry batches</h2><span class="tag">${soon.length ? soon.length + " inside 45 days" : "from the September sheet"}</span></div>
       ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)} · row ${r.sr}</p><div class="uses">${r.batches.map(b => {
         const left = daysLeft(b.date);
-        return `<div class="use"><span class="u-name">Batch ${b.n}</span><span class="u-per data">${H.esc(fmtDate(b.date))}${left == null ? "" : ` · ${left < 0 ? "expired" : left + "d"}`}</span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
+        return `<div class="use"><span class="u-name">Batch ${b.n}</span><span class="u-per data">${H.esc(fmtDate(b.date))}<i data-exp="${H.esc(asDate(b.date)?.toISOString() || "")}"></i></span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
       }).join("") || `<p class="note">No batch on file.</p>`}</div>`).join("") : `<p class="note">This item is not on the September expiry sheet.</p>`}
       ${pinUnlocked() ? `<div class="form-actions" style="margin-top:12px"><button class="btn sm" id="edit-exp" type="button">Edit batches</button></div>` : `<p class="note">Batch edits need the pin. Unlock lasts ${PIN_HOURS} hours.</p><button class="btn sm" id="unlock" type="button">Unlock edits</button>`}
     </section>
@@ -212,25 +226,59 @@ export function mountProductPage(root, p, helpers) {
     <section class="yield-panel"><div class="slab-h"><h2>Batches</h2><span class="tag">${batches.length} with a quantity</span></div>
       ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)}</p><div class="uses">${(r.batches.length ? r.batches : [{ n: "—", qty: "—", date: "" }]).map(b => {
         const left = daysLeft(b.date);
-        return `<div class="use"><span class="u-name">Batch ${H.esc(b.n)}</span><span class="u-per data">${H.esc(fmtDate(b.date))}${left == null ? "" : ` · ${left < 0 ? "expired" : left + "d"}`}</span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
+        return `<div class="use"><span class="u-name">Batch ${H.esc(b.n)}</span><span class="u-per data">${H.esc(fmtDate(b.date))}<i data-exp="${H.esc(asDate(b.date)?.toISOString() || "")}"></i></span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
       }).join("")}</div>`).join("") : `<p class="note">No batches on the expiry sheet.</p>`}
     </section>
     ${productPanel(p, H)}
   </article>`;
   const mark = savedMark(p.id); const img = root.querySelector("#scan-qr"); if (img) img.src = mark.qr;
+  loadDayjs().then(d => { if (!d) return; window.__dayjs = d; root.querySelectorAll("[data-exp]").forEach(n => { n.textContent = d(n.dataset.exp).fromNow(); }); });
 }
 export async function printBarcodes() { location.hash = "labels"; }
 
 let scanner = null;
 export async function openScanner(helpers, onId) {
   H = helpers;
-  await loadScript(LIB.scan);
-  H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">Opens that product card only. It does not change stock.</p><div id="qr" style="min-height:260px"></div><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
-  const Q = window.Html5Qrcode;
-  scanner = new Q("qr");
-  await scanner.start({ facingMode: "environment" }, { fps: 8, qrbox: 220 }, text => {
-    const id = idFromCode(text);
-    scanner.stop().catch(() => {}).finally(() => { scanner = null; onId(id); });
+  const zx = await import(LIB.zxing);
+  H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">ZXing reads the saved barcode. It opens that card only.</p><video id="zx" style="width:100%;border-radius:16px;background:#000" playsinline></video><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
+  const reader = new zx.BrowserMultiFormatReader();
+  let done = false;
+  const controls = await reader.decodeFromVideoDevice(undefined, "zx", (result) => {
+    if (done || !result) return;
+    done = true;
+    controls.stop();
+    onId(idFromCode(result.getText()));
   });
-  document.querySelector("#modal-root [data-close]")?.addEventListener("click", () => scanner?.stop().catch(() => {}));
+  scanner = controls;
+  document.querySelector("#modal-root [data-close]")?.addEventListener("click", () => controls.stop());
+}
+export async function exportLabelsPdf(products) {
+  await loadScript(LIB.pdf);
+  const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const size = 5 / 2.54 * 72;
+  const pageW = 595.28, pageH = 841.89, gap = 6, cols = 3;
+  let page = pdf.addPage([pageW, pageH]);
+  let x = 28, y = pageH - 28 - size;
+  for (const p of products) {
+    const m = savedMark(p.id);
+    if (x + size > pageW - 20) { x = 28; y -= size + gap; }
+    if (y < 28) { page = pdf.addPage([pageW, pageH]); x = 28; y = pageH - 28 - size; }
+    page.drawRectangle({ x, y, width: size, height: size, borderColor: rgb(0.7, 0.7, 0.7), borderWidth: 0.4 });
+    if (m.qr) {
+      const bytes = await fetch(m.qr).then(r => r.arrayBuffer());
+      const img = await pdf.embedPng(bytes);
+      page.drawImage(img, { x: x + 28, y: y + 52, width: 62, height: 62 });
+    }
+    const name = String(p.name || p.id).slice(0, 28);
+    page.drawText(name, { x: x + 6, y: y + 28, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
+    page.drawText(m.code || p.id, { x: x + 6, y: y + 14, size: 7, font, color: rgb(0.3, 0.3, 0.3) });
+    x += size + gap;
+  }
+  const blob = new Blob([await pdf.save()], { type: "application/pdf" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "noir-stock-labels.pdf";
+  a.click();
 }

@@ -1,9 +1,9 @@
-import * as store from "./store.js?v=10";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=10";
-import { SEED_DATE } from "./seed-data.js?v=10";
-import { renderYield, productPanel } from "./analytics.js?v=10";
-import { mountGithubDash } from "./gh-dash.js?v=10";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage } from "./stock-card.js?v=10";
+import * as store from "./store.js?v=11";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=11";
+import { SEED_DATE } from "./seed-data.js?v=11";
+import { renderYield, productPanel } from "./analytics.js?v=11";
+import { mountGithubDash } from "./gh-dash.js?v=11";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=11";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -596,10 +596,11 @@ function viewLabels() {
   renderNav(); renderNet();
   $("#kicker").textContent = "Labels";
   $("#page-title").innerHTML = 'Cut <span class="voice">sheet</span>';
-  $("#title-actions").innerHTML = `<button class="btn hot" id="do-print">Print</button><button class="btn ghost" data-route="products">Back</button>`;
+  $("#title-actions").innerHTML = `<button class="btn hot" id="do-print">Print</button><button class="btn" id="do-pdf">PDF</button><button class="btn ghost" data-route="products">Back</button>`;
   $("#view").innerHTML = `<div id="labels"></div>`;
   mountLabelSheet($("#labels"), data.products, cardHelpers());
   $("#do-print").onclick = () => window.print();
+  $("#do-pdf").onclick = () => exportLabelsPdf(data.products).then(() => toast("Label PDF downloaded")).catch(e => toast(e.message, true));
 }
 function viewScanProduct(p) {
   document.body.classList.add("card-only");
