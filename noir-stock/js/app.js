@@ -1,13 +1,13 @@
-import * as store from "./store.js?v=13";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=13";
-import { SEED_DATE } from "./seed-data.js?v=13";
-import { renderYield, productPanel } from "./analytics.js?v=13";
-import { mountGithubDash } from "./gh-dash.js?v=13";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=13";
-import { downloadCountCsv } from "./export-count.js?v=13";
+import * as store from "./store.js?v=14";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=14";
+import { SEED_DATE } from "./seed-data.js?v=14";
+import { renderYield, productPanel } from "./analytics.js?v=14";
+import { mountGithubDash } from "./gh-dash.js?v=14";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=14";
+import { downloadCountCsv } from "./export-count.js?v=14";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "5";
+const ASSET_V = "14";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
