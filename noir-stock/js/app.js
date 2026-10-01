@@ -7,7 +7,7 @@ import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, a
 import { downloadCountCsv } from "./export-count.js?v=16";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "14";
+const ASSET_V = "17";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
