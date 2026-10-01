@@ -442,12 +442,12 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/cotton-candy-tub.webp",
   "stock": {
    "mini": 0,
-   "refuel": 10.0,
-   "stores": 1172.0
+   "refuel": 27,
+   "stores": 1152
   },
   "min": 0,
-  "rate": 2.2309,
-  "par": 1185
+  "rate": 2.10,
+  "par": 1179
  },
  {
   "id": "corn-mushroom",
