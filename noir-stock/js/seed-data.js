@@ -4,7 +4,7 @@
 // sku = item name as it appears on the report
 // Product photos: supplier PDF (30/09/2026)
 // par = "full" level used for the stock gauge (defaults to the report quantity)
-export const SEED_VERSION = 5;
+export const SEED_VERSION = 6;
 export const SEED_DATE = "2026-09-25T16:14:00+03:00";
 export const SEED_PRODUCTS = [
  {
@@ -16,9 +16,9 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/bib-coke.webp",
   "stock": {
-   "mini": 17.36,
+   "mini": 8.72,
    "refuel": 0,
-   "stores": 20.0
+   "stores": 10.0
   },
   "min": 0,
   "rate": 27.102,
@@ -33,9 +33,9 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/bib-coke-zero.webp",
   "stock": {
-   "mini": 8.94,
+   "mini": 0,
    "refuel": 0,
-   "stores": 10.0
+   "stores": 0
   },
   "min": 0,
   "rate": 27.1035,
@@ -50,7 +50,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/bib-fanta.webp",
   "stock": {
-   "mini": 9.67,
+   "mini": 9.54,
    "refuel": 0,
    "stores": 0
   },
@@ -67,7 +67,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/lemonade-syrup.webp",
   "stock": {
-   "mini": 0.83,
+   "mini": 0.81,
    "refuel": 0,
    "stores": 0
   },
@@ -84,7 +84,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/mojito-syrup.webp",
   "stock": {
-   "mini": 0.7,
+   "mini": 0.68,
    "refuel": 0,
    "stores": 0
   },
@@ -101,7 +101,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/bib-sprite.webp",
   "stock": {
-   "mini": 8.78,
+   "mini": 8.56,
    "refuel": 0,
    "stores": 0
   },
@@ -119,8 +119,8 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/arwa-500.webp",
   "stock": {
    "mini": 21.0,
-   "refuel": 50.0,
-   "stores": 528.0
+   "refuel": 36.0,
+   "stores": 408.0
   },
   "min": 0,
   "rate": 0.53,
@@ -136,7 +136,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/arwa-zero.webp",
   "stock": {
    "mini": 0,
-   "refuel": 38.0,
+   "refuel": 34.0,
    "stores": 51.0
   },
   "min": 0,
@@ -153,8 +153,8 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/barbican.webp",
   "stock": {
    "mini": 0,
-   "refuel": 19.0,
-   "stores": 30.0
+   "refuel": 16.0,
+   "stores": 6.0
   },
   "min": 0,
   "rate": 2.0,
@@ -187,7 +187,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/rani.webp",
   "stock": {
    "mini": 0,
-   "refuel": 32.0,
+   "refuel": 29.0,
    "stores": 64.0
   },
   "min": 0,
@@ -204,7 +204,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/schweppes.webp",
   "stock": {
    "mini": 0,
-   "refuel": 16.0,
+   "refuel": 14.0,
    "stores": 42.0
   },
   "min": 0,
@@ -221,7 +221,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/vimto-can.webp",
   "stock": {
    "mini": 0,
-   "refuel": 26.0,
+   "refuel": 20.0,
    "stores": 15.0
   },
   "min": 0,
@@ -238,7 +238,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/vimto-pet.webp",
   "stock": {
    "mini": 0,
-   "refuel": 31.0,
+   "refuel": 29.0,
    "stores": 35.0
   },
   "min": 0,
@@ -289,7 +289,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/mm-choco-45.webp",
   "stock": {
    "mini": 0,
-   "refuel": 16.0,
+   "refuel": 21.0,
    "stores": 0
   },
   "min": 0,
@@ -306,7 +306,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/mm-peanut-150.webp",
   "stock": {
    "mini": 0,
-   "refuel": 16.0,
+   "refuel": 15.0,
    "stores": 0
   },
   "min": 0,
@@ -323,7 +323,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/mm-peanut-45.webp",
   "stock": {
    "mini": 0,
-   "refuel": 27.0,
+   "refuel": 22.0,
    "stores": 0
   },
   "min": 0,
@@ -340,7 +340,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/maltesers-175.webp",
   "stock": {
    "mini": 0,
-   "refuel": 15.0,
+   "refuel": 14.0,
    "stores": 0
   },
   "min": 0,
@@ -357,8 +357,8 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/maltesers-37.webp",
   "stock": {
    "mini": 0,
-   "refuel": 27.0,
-   "stores": 25.0
+   "refuel": 41.0,
+   "stores": 0
   },
   "min": 0,
   "rate": 2.6,
@@ -390,9 +390,9 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/corn-butterfly.webp",
   "stock": {
-   "mini": 28.26,
+   "mini": 11.27,
    "refuel": 0,
-   "stores": 45.36
+   "stores": 22.68
   },
   "min": 0,
   "rate": 5.5099,
@@ -407,9 +407,9 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/caramel.webp",
   "stock": {
-   "mini": 5.46,
+   "mini": 20.16,
    "refuel": 0,
-   "stores": 113.5
+   "stores": 90.8
   },
   "min": 0,
   "rate": 14.7699,
@@ -424,7 +424,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/cheese-masala.webp",
   "stock": {
-   "mini": 7.35,
+   "mini": 5.91,
    "refuel": 0,
    "stores": 0
   },
@@ -442,8 +442,8 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/cotton-candy-tub.webp",
   "stock": {
    "mini": 0,
-   "refuel": 27,
-   "stores": 1152
+   "refuel": 26.0,
+   "stores": 1152.0
   },
   "min": 0,
   "rate": 2.10,
@@ -458,7 +458,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/corn-mushroom.webp",
   "stock": {
-   "mini": 20.4,
+   "mini": 25.77,
    "refuel": 0,
    "stores": 136.08
   },
@@ -475,7 +475,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/pizza-mix.webp",
   "stock": {
-   "mini": 10.49,
+   "mini": 10.19,
    "refuel": 0,
    "stores": 0
   },
@@ -492,7 +492,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/popcorn-oil.webp",
   "stock": {
-   "mini": 10.62,
+   "mini": 7.37,
    "refuel": 0,
    "stores": 82.38
   },
@@ -510,7 +510,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/tub-130.webp",
   "stock": {
    "mini": 60.0,
-   "refuel": 14.0,
+   "refuel": 9.0,
    "stores": 500.0
   },
   "min": 0,
@@ -526,8 +526,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/tub-46.webp",
   "stock": {
-   "mini": 180.0,
-   "refuel": 3.0,
+   "mini": 75.0,
+   "refuel": 30.0,
    "stores": 4925.0
   },
   "min": 0,
@@ -543,8 +543,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/tub-64.webp",
   "stock": {
-   "mini": 51.0,
-   "refuel": 16.0,
+   "mini": 26.0,
+   "refuel": 11.0,
    "stores": 600.0
   },
   "min": 0,
@@ -560,8 +560,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/tub-85.webp",
   "stock": {
-   "mini": 38.0,
-   "refuel": 14.0,
+   "mini": 13.0,
+   "refuel": 26.0,
    "stores": 1300.0
   },
   "min": 0,
@@ -577,7 +577,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/salt.webp",
   "stock": {
-   "mini": 22.35,
+   "mini": 22.32,
    "refuel": 0,
    "stores": 0
   },
@@ -594,9 +594,9 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/sugar.webp",
   "stock": {
-   "mini": 48.77,
+   "mini": 48.67,
    "refuel": 0,
-   "stores": 0
+   "stores": 2000.0
   },
   "min": 0,
   "rate": 2.8999,
@@ -628,7 +628,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/hotdog.webp",
   "stock": {
-   "mini": 0,
+   "mini": 6.0,
    "refuel": 0,
    "stores": 0
   },
@@ -645,7 +645,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/cheese-sauce.webp",
   "stock": {
-   "mini": 6.77,
+   "mini": 4.3,
    "refuel": 0,
    "stores": 78.0
   },
@@ -662,7 +662,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/hotdog-bun.webp",
   "stock": {
-   "mini": 0,
+   "mini": 2.0,
    "refuel": 0,
    "stores": 0
   },
@@ -679,7 +679,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/jalapeno.webp",
   "stock": {
-   "mini": 3.06,
+   "mini": 2.76,
    "refuel": 0,
    "stores": 24.0
   },
@@ -696,7 +696,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/mustard.webp",
   "stock": {
-   "mini": 0.95,
+   "mini": 0.4,
    "refuel": 0,
    "stores": 0
   },
@@ -713,7 +713,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/salsa.webp",
   "stock": {
-   "mini": 11.13,
+   "mini": 9.56,
    "refuel": 0,
    "stores": 26.46
   },
@@ -730,7 +730,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/nachos-chips.webp",
   "stock": {
-   "mini": 1.56,
+   "mini": 0.82,
    "refuel": 0,
    "stores": 38.0
   },
@@ -747,7 +747,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/ketchup.webp",
   "stock": {
-   "mini": 0.16,
+   "mini": 0.14,
    "refuel": 0,
    "stores": 0
   },
@@ -764,7 +764,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/slush-blue.webp",
   "stock": {
-   "mini": 15.83,
+   "mini": 16.91,
    "refuel": 0,
    "stores": 0
   },
@@ -781,8 +781,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/slush-glass-12.webp",
   "stock": {
-   "mini": 25.0,
-   "refuel": 17.0,
+   "mini": 15.0,
+   "refuel": 13.0,
    "stores": 5600.0
   },
   "min": 0,
@@ -798,8 +798,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/slush-glass-16.webp",
   "stock": {
-   "mini": 50.0,
-   "refuel": 14.0,
+   "mini": 40.0,
+   "refuel": 18.0,
    "stores": 4200.0
   },
   "min": 0,
@@ -815,7 +815,7 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/slush-pom.webp",
   "stock": {
-   "mini": 2.88,
+   "mini": 12.52,
    "refuel": 0,
    "stores": 10.0
   },
@@ -832,9 +832,9 @@ export const SEED_PRODUCTS = [
   "unit": "ltr",
   "image": "assets/products/slush-straw.webp",
   "stock": {
-   "mini": 12.68,
+   "mini": 0.42,
    "refuel": 0,
-   "stores": 5.0
+   "stores": 0
   },
   "min": 0,
   "rate": 24.0,
@@ -851,7 +851,7 @@ export const SEED_PRODUCTS = [
   "stock": {
    "mini": 0,
    "refuel": 0,
-   "stores": 2000.0
+   "stores": 0
   },
   "min": 0,
   "rate": 0.06,
@@ -900,7 +900,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/lemon.webp",
   "stock": {
-   "mini": 0.61,
+   "mini": 0.59,
    "refuel": 0,
    "stores": 0
   },
@@ -917,7 +917,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/mint.webp",
   "stock": {
-   "mini": 0.29,
+   "mini": 0.28,
    "refuel": 0,
    "stores": 0
   },
@@ -936,7 +936,7 @@ export const SEED_PRODUCTS = [
   "stock": {
    "mini": 0,
    "refuel": 0,
-   "stores": 2000.0
+   "stores": 0
   },
   "min": 0,
   "rate": 0.02,
@@ -953,7 +953,7 @@ export const SEED_PRODUCTS = [
   "stock": {
    "mini": 0,
    "refuel": 0,
-   "stores": 400.0
+   "stores": 0
   },
   "min": 0,
   "rate": 0.37,
@@ -969,7 +969,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/cups-16.webp",
   "stock": {
    "mini": 20.0,
-   "refuel": 28.0,
+   "refuel": 25.0,
    "stores": 1575.0
   },
   "min": 0,
@@ -986,7 +986,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/cups-24.webp",
   "stock": {
    "mini": 25.0,
-   "refuel": 20.0,
+   "refuel": 15.0,
    "stores": 2700.0
   },
   "min": 0,
@@ -1003,7 +1003,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/cups-30.webp",
   "stock": {
    "mini": 50.0,
-   "refuel": 23.0,
+   "refuel": 15.0,
    "stores": 150.0
   },
   "min": 0,
@@ -1037,8 +1037,8 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/hotdog-tray.webp",
   "stock": {
    "mini": 10.0,
-   "refuel": 10.0,
-   "stores": 3075.0
+   "refuel": 6.0,
+   "stores": 3053.0
   },
   "min": 0,
   "rate": 0.4257,
@@ -1053,7 +1053,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/lids-16.webp",
   "stock": {
-   "mini": 39.0,
+   "mini": 36.0,
    "refuel": 0,
    "stores": 1700.0
   },
@@ -1070,7 +1070,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/lids-24.webp",
   "stock": {
-   "mini": 292.0,
+   "mini": 287.0,
    "refuel": 0,
    "stores": 2800.0
   },
@@ -1087,7 +1087,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/lids-30.webp",
   "stock": {
-   "mini": 191.0,
+   "mini": 183.0,
    "refuel": 0,
    "stores": 400.0
   },
@@ -1105,7 +1105,7 @@ export const SEED_PRODUCTS = [
   "image": "assets/products/nachos-tray-3.webp",
   "stock": {
    "mini": 35.0,
-   "refuel": 23.0,
+   "refuel": 21.0,
    "stores": 3610.0
   },
   "min": 0,
@@ -1121,8 +1121,8 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/nachos-tray-4.webp",
   "stock": {
-   "mini": 35.0,
-   "refuel": 11.0,
+   "mini": 23.0,
+   "refuel": 6.0,
    "stores": 1922.0
   },
   "min": 0,
@@ -1138,7 +1138,7 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/napkin.webp",
   "stock": {
-   "mini": 1161.0,
+   "mini": 783.0,
    "refuel": 0,
    "stores": 11000.0
   },
@@ -1172,9 +1172,9 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/straw.webp",
   "stock": {
-   "mini": 3391.0,
+   "mini": 3349.0,
    "refuel": 0,
-   "stores": 0
+   "stores": 500.0
   },
   "min": 0,
   "rate": 0.0688,
@@ -1189,9 +1189,9 @@ export const SEED_PRODUCTS = [
   "unit": "pcs",
   "image": "assets/products/straw-spoon.webp",
   "stock": {
-   "mini": 472.0,
+   "mini": 0,
    "refuel": 0,
-   "stores": 500.0
+   "stores": 0
   },
   "min": 0,
   "rate": 0.09,
@@ -1206,7 +1206,7 @@ export const SEED_PRODUCTS = [
   "unit": "kg",
   "image": "assets/products/co2.webp",
   "stock": {
-   "mini": 43.68,
+   "mini": 43.67,
    "refuel": 0,
    "stores": 0
   },

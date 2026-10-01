@@ -73,6 +73,7 @@ function seedUpgrade(products, fromVersion) {
       // v5: units and report names corrected from the Raw Material List
       if (fromVersion < 5 && sp.unit && cur.unit !== sp.unit) patch.unit = sp.unit;
       if (!cur.sku && sp.sku) patch.sku = sp.sku;
+      if (fromVersion < 6 && sp.stock) { patch.stock = sp.stock; patch.rate = sp.rate; patch.sku = sp.sku; patch.name = sp.name; }
     } else if (retired.has(cur.id) && stockTotal(cur) === 0 && isSeedAsset(cur.image)) {
       removals.push(cur.id); continue;
     } else if (isSeedAsset(cur.image) && cur.image) {
