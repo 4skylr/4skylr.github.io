@@ -57,3 +57,7 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 
 .pc-shot { position: relative; }
 .pc-age { position: absolute; top: 8px; inset-inline-start: 8px; background: #7c2280; color: #fff; border-radius: 999px; padding: 3px 8px; font-size: 11px; }
+
+.phone-card { position: relative; }
+.card-fx { position: absolute; inset: 0 0 auto 0; height: 220px; pointer-events: none; z-index: 2; }
+.card-fx canvas { width: 100% !important; height: 100% !important; }
