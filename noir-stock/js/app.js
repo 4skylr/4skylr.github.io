@@ -1,9 +1,9 @@
-import * as store from "./store.js?v=11";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=11";
-import { SEED_DATE } from "./seed-data.js?v=11";
-import { renderYield, productPanel } from "./analytics.js?v=11";
-import { mountGithubDash } from "./gh-dash.js?v=11";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=11";
+import * as store from "./store.js?v=12";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=12";
+import { SEED_DATE } from "./seed-data.js?v=12";
+import { renderYield, productPanel } from "./analytics.js?v=12";
+import { mountGithubDash } from "./gh-dash.js?v=12";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=12";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";

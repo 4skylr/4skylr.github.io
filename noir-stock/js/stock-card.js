@@ -10,11 +10,12 @@ import { BARCODES } from "./barcodes.js?v=10";
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
 const LIB = {
-  bar: "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
-  zxing: "https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm",
-  dayjs: "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/+esm",
-  relative: "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/relativeTime.js/+esm",
-  pdf: "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js",
+  bar: "vendor/jsbarcode.all.min.js",
+  zxingLib: "vendor/zxing-library.js",
+  zxing: "vendor/zxing-browser.js",
+  dayjs: "vendor/dayjs.min.js",
+  relative: "vendor/relativeTime.js",
+  pdf: "vendor/pdf-lib.min.js",
   xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
 };
 const SITE = "https://4skylr.github.io/noir-stock/";
@@ -57,7 +58,11 @@ function fmtDate(v) {
 }
 let dayjsP = null;
 function loadDayjs() {
-  dayjsP ??= Promise.all([import(LIB.dayjs), import(LIB.relative)]).then(([d, r]) => { d.default.extend(r.default); return d.default; }).catch(() => null);
+  dayjsP ??= loadScript(LIB.dayjs).then(() => loadScript(LIB.relative)).then(() => {
+    const d = window.dayjs;
+    if (d && window.dayjs_plugin_relativeTime) d.extend(window.dayjs_plugin_relativeTime);
+    return d || null;
+  }).catch(() => null);
   return dayjsP;
 }
 function asDate(v) {
@@ -239,9 +244,12 @@ export async function printBarcodes() { location.hash = "labels"; }
 let scanner = null;
 export async function openScanner(helpers, onId) {
   H = helpers;
-  const zx = await import(LIB.zxing);
+  await loadScript(LIB.zxingLib);
+  await loadScript(LIB.zxing);
   H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">ZXing reads the saved barcode. It opens that card only.</p><video id="zx" style="width:100%;border-radius:16px;background:#000" playsinline></video><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
-  const reader = new zx.BrowserMultiFormatReader();
+  const Reader = window.ZXingBrowser?.BrowserMultiFormatReader;
+  if (!Reader) throw new Error("ZXing missing");
+  const reader = new Reader();
   let done = false;
   const controls = await reader.decodeFromVideoDevice(undefined, "zx", (result) => {
     if (done || !result) return;
