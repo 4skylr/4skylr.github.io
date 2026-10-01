@@ -1,9 +1,9 @@
-import * as store from "./store.js?v=9";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=9";
-import { SEED_DATE } from "./seed-data.js?v=9";
-import { renderYield, productPanel } from "./analytics.js?v=9";
-import { mountGithubDash } from "./gh-dash.js?v=9";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage } from "./stock-card.js?v=9";
+import * as store from "./store.js?v=10";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=10";
+import { SEED_DATE } from "./seed-data.js?v=10";
+import { renderYield, productPanel } from "./analytics.js?v=10";
+import { mountGithubDash } from "./gh-dash.js?v=10";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage } from "./stock-card.js?v=10";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -158,6 +158,7 @@ function go(route) {
   render(); window.scrollTo(0, 0);
 }
 function render() {
+  document.body.classList.remove("card-only");
   const hash = location.hash.slice(1);
   if (hash === "labels" && data.products?.length) return viewLabels();
   if (hash.startsWith("p/") && data.products?.length) {
@@ -299,7 +300,7 @@ function filtered() {
 
 function viewProducts() {
   $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button>`;
-  $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); openProductCard(p, cardHelpers()); });
+  $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); location.hash = "p/" + p.id; });
   $("#print-codes").onclick = () => { location.hash = "labels"; };
   $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
@@ -591,6 +592,7 @@ function renderHud() {
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
 function viewLabels() {
+  document.body.classList.remove("card-only");
   renderNav(); renderNet();
   $("#kicker").textContent = "Labels";
   $("#page-title").innerHTML = 'Cut <span class="voice">sheet</span>';
@@ -600,10 +602,10 @@ function viewLabels() {
   $("#do-print").onclick = () => window.print();
 }
 function viewScanProduct(p) {
-  renderNav(); renderNet();
-  $("#kicker").textContent = "Product";
-  $("#page-title").innerHTML = `${esc(p.name)}`;
-  $("#title-actions").innerHTML = `<button class="btn ghost" data-route="products">Stock</button>`;
+  document.body.classList.add("card-only");
+  $("#kicker").textContent = "";
+  $("#page-title").innerHTML = "";
+  $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="scan-root"></div>`;
   mountProductPage($("#scan-root"), p, cardHelpers());
 }

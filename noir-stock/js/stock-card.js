@@ -3,13 +3,14 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=8";
-import { productPanel } from "./analytics.js?v=8";
+import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=10";
+import { productPanel } from "./analytics.js?v=10";
+import { BARCODES } from "./barcodes.js?v=10";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
 const LIB = {
-  qr: "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.js",
+  bar: "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
   scan: "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js",
   xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
 };
@@ -113,7 +114,7 @@ export function openProductCard(p, helpers) {
     ${productPanel(p, H)}
     <div class="form-actions"><button class="btn ghost" data-close type="button">Close</button><button class="btn" id="print-one" type="button">Print this barcode</button></div>`;
   H.openModal(html, "wide");
-  qrDataUrl(p.id).then(url => { const img = document.getElementById("card-qr"); if (img) img.src = url; }).catch(() => {});
+  const mark = savedMark(p.id); const img = document.getElementById("card-qr"); if (img) img.src = mark.qr;
   document.getElementById("print-one")?.addEventListener("click", () => { location.hash = "labels"; });
   document.getElementById("unlock")?.addEventListener("click", async () => { if (await requirePin()) openProductCard(p, H); });
   document.getElementById("edit-exp")?.addEventListener("click", () => editBatches(p));
@@ -183,19 +184,16 @@ function batchSummary(id) {
   const batches = rows.flatMap(r => r.batches.filter(b => b.qty != null && b.qty !== "" && Number(b.qty) !== 0).map(b => ({ ...b, location: r.location })));
   return { rows, batches, count: batches.length };
 }
-export async function qrDataUrl(id) {
-  await loadScript(LIB.qr);
-  return window.QRCode.toDataURL(productUrl(id), { errorCorrectionLevel: "M", margin: 1, width: 320, color: { dark: "#111111", light: "#ffffff" } });
-}
+export function savedMark(id) { return BARCODES[id] || { code: `NC-${id}`, url: productUrl(id), barcode: "", qr: "" }; }
 export async function mountLabelSheet(root, products, helpers) {
   H = helpers;
-  root.innerHTML = `<p class="note">One sheet. Each label is 5 × 5 cm: phone QR, product logo, name, batch count. Cut on the dashed line.</p><div class="label-sheet" id="label-sheet"></div>`;
+  root.innerHTML = `<p class="note no-print">Saved barcodes. Phone scan opens only that product card. Cut on the dashed line, 5 × 5 cm.</p><div class="label-sheet" id="label-sheet"></div>`;
   const box = root.querySelector("#label-sheet");
-  const urls = await Promise.all(products.map(p => qrDataUrl(p.id).catch(() => "")));
-  box.innerHTML = products.map((p, i) => {
-    const sum = batchSummary(p.id);
+  box.innerHTML = products.map(p => {
+    const m = savedMark(p.id);
     const img = p.image ? H.src(p.image) : "";
-    return `<article class="cut"><img class="qr" alt="QR ${H.esc(p.name)}" src="${urls[i]}"><img class="logo" alt="" src="${H.esc(img)}"><b>${H.esc(p.name)}</b><small>${sum.count} batch${sum.count === 1 ? "" : "es"} · ${H.qty(H.total(p))}</small></article>`;
+    const sum = batchSummary(p.id);
+    return `<article class="cut"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><img class="logo" alt="" src="${H.esc(img)}"><b>${H.esc(p.name)}</b><img class="bar" alt="" src="${H.esc(m.barcode)}"><small>${H.esc(m.code)} · ${sum.count} batches</small></article>`;
   }).join("");
 }
 export function mountProductPage(root, p, helpers) {
@@ -219,7 +217,7 @@ export function mountProductPage(root, p, helpers) {
     </section>
     ${productPanel(p, H)}
   </article>`;
-  qrDataUrl(p.id).then(url => { const img = root.querySelector("#scan-qr"); if (img) img.src = url; }).catch(() => {});
+  const mark = savedMark(p.id); const img = root.querySelector("#scan-qr"); if (img) img.src = mark.qr;
 }
 export async function printBarcodes() { location.hash = "labels"; }
 
