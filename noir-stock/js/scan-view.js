@@ -1,6 +1,7 @@
 // Phone scan card. Countdown: github.com/PButcher/flipdown
 import { AR, LOC_AR } from "./names-ar.js?v=27";
-import { RECIPES } from "./recipes-data.js?v=27";
+import { RECIPES } from "./recipes-data.js?v=36";
+import { soldOf } from "./sales-data.js?v=36";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);

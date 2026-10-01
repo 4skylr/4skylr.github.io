@@ -4,7 +4,9 @@ import { SEED_DATE } from "./seed-data.js?v=34";
 import { renderYield, productPanel } from "./analytics.js?v=34";
 import { mountGithubDash } from "./gh-dash.js?v=34";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=34";
-import { downloadCountCsv } from "./export-count.js?v=34";
+import { downloadCountCsv } from "./export-count.js?v=36";
+import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=36";
+import { renderAdmin } from "./sync-admin.js?v=36";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "18";
