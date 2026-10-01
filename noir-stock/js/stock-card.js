@@ -3,9 +3,14 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=10";
-import { productPanel } from "./analytics.js?v=10";
-import { BARCODES } from "./barcodes.js?v=10";
+import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=13";
+import { productPanel } from "./analytics.js?v=13";
+import { BARCODES } from "./barcodes.js?v=13";
+import { fefoReport } from "./fefo.js?v=13";
+import { servingsFor } from "./servings.js?v=13";
+import { lastCount } from "./last-count.js?v=13";
+import { mountGauges } from "./indicators.js?v=13";
+import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -237,7 +242,51 @@ export function mountProductPage(root, p, helpers) {
     ${productPanel(p, H)}
   </article>`;
   const mark = savedMark(p.id); const img = root.querySelector("#scan-qr"); if (img) img.src = mark.qr;
-  loadDayjs().then(d => { if (!d) return; window.__dayjs = d; root.querySelectorAll("[data-exp]").forEach(n => { n.textContent = d(n.dataset.exp).fromNow(); }); });
+  const ops = document.createElement("div");
+  root.querySelector(".scan-page")?.prepend(ops);
+  paintOps(ops, p);
+  loadDayjs().then(d => { if (!d) return; window.__dayjs = d; root.querySelectorAll("[data-exp]").forEach(n => { n.textContent = " · " + d(n.dataset.exp).fromNow(); }); });
+}
+async function paintOps(host, p) {
+  const rows = rowsFor(p.id);
+  const report = await fefoReport(rows, Number(p.rate) || 0);
+  const first = report.first;
+  const pct = first && first.left != null ? Math.max(0, Math.min(1, first.left / 30)) : 0;
+  const color = !first ? "#7f789c" : first.left < 0 ? "#ff5c7a" : first.left <= 7 ? "#ffc857" : "#4cf0a8";
+  const serves = servingsFor(p);
+  const last = lastCount(H.data().sessions, p.id);
+  host.innerHTML = `<section class="ops">
+      <div class="gauge" data-gauge="${pct}" data-color="${color}" data-label="${first && first.left != null ? first.left + "d" : "—"}"></div>
+      <div class="ops-copy"><h3>${first ? "Use batch " + first.n + " first" : "No open batch"}</h3>
+        <p class="note" style="margin:0">${first ? H.esc(first.location) + " · " + H.qty(first.qty) + " · " + H.esc(fmtDate(first.date)) : "Nothing dated on the September sheet."}</p></div>
+    </section>
+    <div class="risk">
+      <div><span>Expired</span><b>${report.expired} SAR</b></div>
+      <div><span>7 days</span><b>${report.d7} SAR</b></div>
+      <div><span>14 days</span><b>${report.d14} SAR</b></div>
+      <div><span>30 days</span><b>${report.d30} SAR</b></div>
+    </div>
+    <section class="yield-panel"><div class="slab-h"><h2>This stock can sell</h2></div>
+      ${serves.length ? `<div class="uses">${serves.map(u => `<div class="use"><span class="u-name">${H.esc(u.name)}</span><span class="u-per">alone</span><b class="data">${H.nf0.format(u.sellable)}</b></div>`).join("")}</div>` : `<p class="note">No recipe is tied to this report name.</p>`}
+    </section>
+    <section class="yield-panel"><div class="slab-h"><h2>Last count</h2></div>
+      ${last ? `<p class="note" style="margin:0">${H.esc(last.by)} · ${H.when(last.at)} · system ${H.qty(last.system)} · counted ${H.qty(last.counted)} · variance ${last.diff > 0 ? "+" : ""}${H.qty(last.diff)}</p>` : `<p class="note" style="margin:0">No committed count for this item yet.</p>`}
+    </section>
+    ${first ? `<button class="btn warn" id="write-off" type="button">Write off batch ${first.n}</button>` : ""}`;
+  mountGauges(host);
+  host.querySelector("#write-off")?.addEventListener("click", () => writeOff(p, first));
+}
+async function writeOff(p, batch) {
+  if (!await requirePin()) return;
+  const all = edits();
+  const row = rowsFor(p.id).find(r => r.location === batch.location);
+  if (!row) return;
+  all[String(row.row)] = all[String(row.row)] || {};
+  all[String(row.row)][`q${batch.n}`] = 0;
+  saveEdits(all);
+  await saveEditsDb(all);
+  H.toast("Batch written off · Excel download includes it");
+  mountProductPage(document.getElementById("scan-root") || document.getElementById("view"), p, H);
 }
 export async function printBarcodes() { location.hash = "labels"; }
 

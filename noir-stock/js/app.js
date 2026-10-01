@@ -1,9 +1,10 @@
-import * as store from "./store.js?v=12";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=12";
-import { SEED_DATE } from "./seed-data.js?v=12";
-import { renderYield, productPanel } from "./analytics.js?v=12";
-import { mountGithubDash } from "./gh-dash.js?v=12";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=12";
+import * as store from "./store.js?v=13";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=13";
+import { SEED_DATE } from "./seed-data.js?v=13";
+import { renderYield, productPanel } from "./analytics.js?v=13";
+import { mountGithubDash } from "./gh-dash.js?v=13";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=13";
+import { downloadCountCsv } from "./export-count.js?v=13";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -299,10 +300,11 @@ function filtered() {
 }
 
 function viewProducts() {
-  $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button>`;
+  $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button><button class="btn ghost" id="dl-csv">CSV</button>`;
   $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); location.hash = "p/" + p.id; });
   $("#print-codes").onclick = () => { location.hash = "labels"; };
   $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
+  $("#dl-csv").onclick = () => exportLedger();
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
   $("#view").innerHTML = `
     <div class="controls">
@@ -717,6 +719,10 @@ function viewSettings() {
 }
 
 // ── Film grain ───────────────────────────────────────────────
+function exportLedger() {
+  const rows = data.products.map(p => ({ sku: p.sku, name: p.name, unit: p.unit, mini: p.stock?.mini || 0, refuel: p.stock?.refuel || 0, stores: p.stock?.stores || 0, total: total(p), value: value(p).toFixed(2) }));
+  downloadCountCsv(rows, "noir-stock-count.csv").then(() => toast("CSV exported")).catch(e => toast(e.message, true));
+}
 function grain() {
   const el = $("#grain"); if (!el) return;
   const c = document.createElement("canvas"), S = 220; c.width = c.height = S;
@@ -739,4 +745,5 @@ window.addEventListener("hashchange", () => {
 });
 grain();
 render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
