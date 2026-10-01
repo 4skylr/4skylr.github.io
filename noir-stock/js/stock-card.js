@@ -13,7 +13,7 @@ import { mountGauges } from "./indicators.js?v=13";
 import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
 import { RECIPES } from "./recipes-data.js?v=16";
 import { AR, LOC_AR } from "./names-ar.js?v=16";
-import { renderScanCard } from "./scan-view.js?v=22";
+import { renderScanCard } from "./scan-view.js?v=23";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -116,6 +116,11 @@ export function requirePin() {
 export function openProductCard(p, helpers) {
   H = helpers;
   if (!p) return;
+  const host = document.createElement("div");
+  H.openModal("", "wide");
+  const sheet = document.querySelector("#modal-root .sheet");
+  if (sheet) { sheet.innerHTML = ""; sheet.append(host); renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff }); return; }
+
   const rows = rowsFor(p.id);
   const locRows = H.LOCATIONS.map(l => {
     const n = Number(p.stock?.[l.id]) || 0;
