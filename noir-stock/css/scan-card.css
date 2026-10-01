@@ -1,0 +1,31 @@
+/* Scan card. Brand book colors. Countdown is FlipDown (github.com/PButcher/flipdown).
+   Pace uses decimal.js (github.com/MikeMcl/decimal.js). Ring uses progressbar.js. */
+.scan-page { background: #1a0d22; color: #fff; border: 0; padding: 0; overflow: hidden; }
+.id-top { display: flex; align-items: center; gap: 12px; padding: 16px 16px 0; }
+.id-top img { width: 56px; height: 56px; object-fit: contain; }
+.id-top p { margin: 0; color: #a4a4a4; font-size: 12px; }
+.id-plate { margin: 14px 16px; background: #fff; border-radius: 22px; display: grid; place-items: center; min-height: 240px; }
+.id-plate .pic { width: min(260px, 72vw); height: min(260px, 72vw); object-fit: contain; object-position: center; background: transparent; padding: 8px; }
+.id-name { padding: 0 16px 8px; }
+.id-name h2 { margin: 0; font-size: 32px; line-height: 1.15; color: #fff; }
+.id-name .en { margin: 4px 0 0; color: #f4ede4; font-size: 16px; }
+.id-name .sku { margin: 2px 0 0; color: #a4a4a4; font-size: 13px; }
+.clock-box, .pace, .id-block { margin: 10px 16px; padding: 14px; border: 1px solid rgba(244,237,228,.16); border-radius: 18px; }
+.clock-box { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: center; }
+.clock-box .gauge { width: 92px; height: 92px; }
+.clock-box h3 { margin: 0 0 4px; font-size: 18px; }
+.clock-box p { margin: 0; color: #f4ede4; }
+.expired-seal { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 999px; background: #7c2280; color: #fff; letter-spacing: .04em; }
+.flipdown { margin-top: 10px; --flip-bg: #7c2280; }
+.pace b { font-size: 28px; display: block; }
+.pace span { color: #a4a4a4; }
+.wh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.wh-grid div { background: rgba(124,34,128,.28); border-radius: 14px; padding: 10px; }
+.wh-grid b { display: block; font-size: 22px; }
+.wh-grid i { color: #a4a4a4; font-style: normal; font-size: 11px; }
+.batch-row, .recipe-card li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid rgba(244,237,228,.12); }
+.batch-row em, .recipe-card em { color: #f4ede4; font-style: normal; }
+.recipe-card { border: 0; padding: 0; margin: 0; }
+.recipe-card ol { list-style: none; margin: 0; padding: 0; }
+.recipe-card li span { width: 22px; height: 22px; border-radius: 50%; background: #7c2280; display: inline-grid; place-items: center; margin-inline-end: 8px; font-size: 12px; }
+.id-block h3 { margin: 0 0 8px; font-size: 16px; }

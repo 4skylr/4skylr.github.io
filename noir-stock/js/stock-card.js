@@ -13,6 +13,7 @@ import { mountGauges } from "./indicators.js?v=13";
 import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
 import { RECIPES } from "./recipes-data.js?v=16";
 import { AR, LOC_AR } from "./names-ar.js?v=16";
+import { renderScanCard } from "./scan-view.js?v=18";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -231,31 +232,10 @@ function recipeBlock(p) {
 }
 export function mountProductPage(root, p, helpers) {
   H = helpers;
-  const { rows, batches } = batchSummary(p.id);
-  const locRows = H.LOCATIONS.map(l => ({ l, n: Number(p.stock?.[l.id]) || 0 }));
-  root.innerHTML = `<article class="slab scan-page">
-    <header class="id-head"><img class="id-logo" src="assets/brand/logo-tile.png?v=16" alt="Noir Cinema"><div><p class="kicker">بطاقة منتج · Product card</p><h2>${H.esc(arName(p))}</h2><p class="lede">${H.esc(p.name)} · ${H.esc(p.sku || "")}</p></div></header>
-    <div class="card-top id-hero">${H.pic(p, "pic")}<div>
-      <img class="scan-qr" alt="QR" id="scan-qr">
-    </div></div>
-    <section class="yield-panel"><div class="slab-h"><h2>Current count</h2><span class="tag">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")}</span></div>
-      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(LOC_AR[x.l.id] || x.l.name)}<i>${H.esc(x.l.name)}</i></span><span class="u-per">العدد الحالي · on hand</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
-      <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
-    <section class="yield-panel"><div class="slab-h"><h2>Batches</h2><span class="tag">${batches.length} with a quantity</span></div>
-      ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)}</p><div class="uses">${(r.batches.length ? r.batches : [{ n: "—", qty: "—", date: "" }]).map(b => {
-        const left = daysLeft(b.date);
-        return `<div class="use"><span class="u-name">Batch ${H.esc(b.n)}</span><span class="u-per data">${H.esc(fmtDate(b.date))}<i data-exp="${H.esc(asDate(b.date)?.toISOString() || "")}"></i></span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
-      }).join("")}</div>`).join("") : `<p class="note">No batches on the expiry sheet.</p>`}
-    </section>
-    ${productPanel(p, H)}
-    <section class="yield-panel"><div class="slab-h"><h2>الوصفة · Recipe</h2><span class="tag">للموظف</span></div>${recipeBlock(p)}</section>
-  </article>`;
-  const mark = savedMark(p.id); const img = root.querySelector("#scan-qr"); if (img) img.src = mark.qr;
-  const ops = document.createElement("div");
-  root.querySelector(".scan-page")?.prepend(ops);
-  paintOps(ops, p);
-  loadDayjs().then(d => { if (!d) return; window.__dayjs = d; root.querySelectorAll("[data-exp]").forEach(n => { n.textContent = " · " + d(n.dataset.exp).fromNow(); }); });
+  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff });
+  loadScript("vendor/decimal.min.js").catch(() => {});
 }
+
 async function paintOps(host, p) {
   const rows = rowsFor(p.id);
   const report = await fefoReport(rows, Number(p.rate) || 0);
