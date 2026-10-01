@@ -592,7 +592,7 @@ export const SEED_PRODUCTS = [
   "code": "",
   "category": "popcorn",
   "unit": "kg",
-  "image": "",
+  "image": "assets/products/sugar.webp",
   "stock": {
    "mini": 48.77,
    "refuel": 0,
