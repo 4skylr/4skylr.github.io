@@ -9,10 +9,11 @@ import { productPanel } from "./analytics.js?v=8";
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
 const LIB = {
-  bar: "https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js",
+  qr: "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.js",
   scan: "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js",
   xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
 };
+const SITE = "https://4skylr.github.io/noir-stock/";
 const loading = new Map();
 const loadScript = src => loading.get(src) || loading.set(src, new Promise((res, rej) => {
   const s = document.createElement("script"); s.src = src; s.async = true;
@@ -26,9 +27,11 @@ const saveEdits = e => localStorage.setItem(KEY, JSON.stringify(e));
 export const pinUnlocked = () => Number(localStorage.getItem(UNLOCK) || 0) > Date.now();
 export const pinLeft = () => Math.max(0, Number(localStorage.getItem(UNLOCK) || 0) - Date.now());
 
-export function codeFor(id) { return `NC-${id}`; }
+export function productUrl(id) { return `${SITE}#p/${id}`; }
 export function idFromCode(raw) {
   const s = String(raw || "").trim();
+  const hash = s.match(/#p\/([a-z0-9-]+)/i);
+  if (hash) return hash[1];
   const m = s.match(/^NC-(.+)$/i);
   return m ? m[1] : s;
 }
@@ -94,8 +97,8 @@ export function openProductCard(p, helpers) {
   const soon = rows.flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date) }))).filter(b => b.left != null && b.left <= 45);
   const html = `<div class="card-top">${H.pic(p, "pic")}<div>
       <p class="kicker">${H.esc(p.sku || "")}</p><h2>${H.esc(p.name)}</h2>
-      <p class="lede">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")} across all warehouses · barcode ${codeFor(p.id)}</p>
-      <svg class="barcode" data-code="${codeFor(p.id)}"></svg>
+      <p class="lede">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")} across all warehouses · phone QR</p>
+      <img class="scan-qr" alt="" id="card-qr">
     </div></div>
     <section class="yield-panel"><div class="slab-h"><h2>On hand</h2><span class="tag">does not rename the product</span></div>
       <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(x.l.name)}</span><span class="u-per">${x.sheet ? H.esc(x.sheet.location) : ""}</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
@@ -110,10 +113,8 @@ export function openProductCard(p, helpers) {
     ${productPanel(p, H)}
     <div class="form-actions"><button class="btn ghost" data-close type="button">Close</button><button class="btn" id="print-one" type="button">Print this barcode</button></div>`;
   H.openModal(html, "wide");
-  loadScript(LIB.bar).then(() => {
-    document.querySelectorAll(".barcode").forEach(svg => window.JsBarcode(svg, svg.dataset.code, { format: "CODE128", height: 54, width: 1.6, margin: 0, background: "transparent", lineColor: "#f2efff", font: "JetBrains Mono Web", fontSize: 12 }));
-  }).catch(() => {});
-  document.getElementById("print-one")?.addEventListener("click", () => printBarcodes([p], H));
+  qrDataUrl(p.id).then(url => { const img = document.getElementById("card-qr"); if (img) img.src = url; }).catch(() => {});
+  document.getElementById("print-one")?.addEventListener("click", () => { location.hash = "labels"; });
   document.getElementById("unlock")?.addEventListener("click", async () => { if (await requirePin()) openProductCard(p, H); });
   document.getElementById("edit-exp")?.addEventListener("click", () => editBatches(p));
 }
@@ -177,21 +178,50 @@ export async function downloadSheet() {
   a.click();
 }
 
-export async function printBarcodes(products, helpers) {
-  H = helpers;
-  await loadScript(LIB.bar);
-  const w = window.open("", "labels", "width=900,height=700");
-  if (!w) { H.toast("Allow pop-ups to print labels", true); return; }
-  w.document.write(`<!doctype html><title>Noir stock labels</title><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><style>
-    @page { size: A4; margin: 12mm; } body { margin: 0; font-family: Inter, sans-serif; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; }
-    .lab { border: 1px solid #111; border-radius: 8px; padding: 8px 10px; break-inside: avoid; }
-    b { display: block; font-size: 14px; } small { color: #444; } svg { width: 100%; height: 58px; }
-  </style><div class="grid">${products.map(p => `<div class="lab"><b>${H.esc(p.name)}</b><small>${H.esc(p.sku || "")}</small><svg id="b-${H.esc(p.id)}"></svg></div>`).join("")}</div>`);
-  w.document.close();
-  products.forEach(p => w.JsBarcode(w.document.getElementById("b-" + p.id), codeFor(p.id), { format: "CODE128", height: 46, margin: 0, fontSize: 11 }));
-  setTimeout(() => w.print(), 300);
+function batchSummary(id) {
+  const rows = rowsFor(id);
+  const batches = rows.flatMap(r => r.batches.filter(b => b.qty != null && b.qty !== "" && Number(b.qty) !== 0).map(b => ({ ...b, location: r.location })));
+  return { rows, batches, count: batches.length };
 }
+export async function qrDataUrl(id) {
+  await loadScript(LIB.qr);
+  return window.QRCode.toDataURL(productUrl(id), { errorCorrectionLevel: "M", margin: 1, width: 320, color: { dark: "#111111", light: "#ffffff" } });
+}
+export async function mountLabelSheet(root, products, helpers) {
+  H = helpers;
+  root.innerHTML = `<p class="note">One sheet. Each label is 5 × 5 cm: phone QR, product logo, name, batch count. Cut on the dashed line.</p><div class="label-sheet" id="label-sheet"></div>`;
+  const box = root.querySelector("#label-sheet");
+  const urls = await Promise.all(products.map(p => qrDataUrl(p.id).catch(() => "")));
+  box.innerHTML = products.map((p, i) => {
+    const sum = batchSummary(p.id);
+    const img = p.image ? H.src(p.image) : "";
+    return `<article class="cut"><img class="qr" alt="QR ${H.esc(p.name)}" src="${urls[i]}"><img class="logo" alt="" src="${H.esc(img)}"><b>${H.esc(p.name)}</b><small>${sum.count} batch${sum.count === 1 ? "" : "es"} · ${H.qty(H.total(p))}</small></article>`;
+  }).join("");
+}
+export function mountProductPage(root, p, helpers) {
+  H = helpers;
+  const { rows, batches } = batchSummary(p.id);
+  const locRows = H.LOCATIONS.map(l => ({ l, n: Number(p.stock?.[l.id]) || 0 }));
+  root.innerHTML = `<article class="slab scan-page">
+    <div class="card-top">${H.pic(p, "pic")}<div>
+      <p class="kicker">Scanned label</p><h2>${H.esc(p.name)}</h2>
+      <p class="lede">${H.esc(p.sku || "")} · ${batches.length} batches on the September sheet</p>
+      <img class="scan-qr" alt="QR" id="scan-qr">
+    </div></div>
+    <section class="yield-panel"><div class="slab-h"><h2>Current count</h2><span class="tag">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")}</span></div>
+      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(x.l.name)}</span><span class="u-per">on hand</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
+      <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
+    <section class="yield-panel"><div class="slab-h"><h2>Batches</h2><span class="tag">${batches.length} with a quantity</span></div>
+      ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)}</p><div class="uses">${(r.batches.length ? r.batches : [{ n: "—", qty: "—", date: "" }]).map(b => {
+        const left = daysLeft(b.date);
+        return `<div class="use"><span class="u-name">Batch ${H.esc(b.n)}</span><span class="u-per data">${H.esc(fmtDate(b.date))}${left == null ? "" : ` · ${left < 0 ? "expired" : left + "d"}`}</span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
+      }).join("")}</div>`).join("") : `<p class="note">No batches on the expiry sheet.</p>`}
+    </section>
+    ${productPanel(p, H)}
+  </article>`;
+  qrDataUrl(p.id).then(url => { const img = root.querySelector("#scan-qr"); if (img) img.src = url; }).catch(() => {});
+}
+export async function printBarcodes() { location.hash = "labels"; }
 
 let scanner = null;
 export async function openScanner(helpers, onId) {

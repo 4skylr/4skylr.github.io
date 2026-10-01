@@ -1,9 +1,9 @@
-import * as store from "./store.js?v=8";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=8";
-import { SEED_DATE } from "./seed-data.js?v=8";
-import { renderYield, productPanel } from "./analytics.js?v=8";
-import { mountGithubDash } from "./gh-dash.js?v=8";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode } from "./stock-card.js?v=8";
+import * as store from "./store.js?v=9";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=9";
+import { SEED_DATE } from "./seed-data.js?v=9";
+import { renderYield, productPanel } from "./analytics.js?v=9";
+import { mountGithubDash } from "./gh-dash.js?v=9";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage } from "./stock-card.js?v=9";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "5";
@@ -158,6 +158,12 @@ function go(route) {
   render(); window.scrollTo(0, 0);
 }
 function render() {
+  const hash = location.hash.slice(1);
+  if (hash === "labels" && data.products?.length) return viewLabels();
+  if (hash.startsWith("p/") && data.products?.length) {
+    const p = data.products.find(x => x.id === hash.slice(2));
+    if (p) return viewScanProduct(p);
+  }
   renderNav(); renderNet(); renderTicker();
   const r = ROUTES.find(x => x.id === ui.route) || ROUTES[0];
   $("#kicker").textContent = r.kicker;
@@ -294,7 +300,7 @@ function filtered() {
 function viewProducts() {
   $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button>`;
   $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); openProductCard(p, cardHelpers()); });
-  $("#print-codes").onclick = () => printBarcodes(data.products, cardHelpers());
+  $("#print-codes").onclick = () => { location.hash = "labels"; };
   $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
   $("#view").innerHTML = `
@@ -583,7 +589,24 @@ function renderHud() {
 
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
-const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast });
+const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
+function viewLabels() {
+  renderNav(); renderNet();
+  $("#kicker").textContent = "Labels";
+  $("#page-title").innerHTML = 'Cut <span class="voice">sheet</span>';
+  $("#title-actions").innerHTML = `<button class="btn hot" id="do-print">Print</button><button class="btn ghost" data-route="products">Back</button>`;
+  $("#view").innerHTML = `<div id="labels"></div>`;
+  mountLabelSheet($("#labels"), data.products, cardHelpers());
+  $("#do-print").onclick = () => window.print();
+}
+function viewScanProduct(p) {
+  renderNav(); renderNet();
+  $("#kicker").textContent = "Product";
+  $("#page-title").innerHTML = `${esc(p.name)}`;
+  $("#title-actions").innerHTML = `<button class="btn ghost" data-route="products">Stock</button>`;
+  $("#view").innerHTML = `<div id="scan-root"></div>`;
+  mountProductPage($("#scan-root"), p, cardHelpers());
+}
 function viewYield() {
   $("#title-actions").innerHTML = "";
   renderYield($("#view"), helpers());
@@ -708,7 +731,7 @@ store.onChange(snap => {
 });
 window.addEventListener("hashchange", () => {
   const r = location.hash.slice(1);
-  if (r.startsWith("p/")) { const p = data.products.find(x => x.id === r.slice(2)); if (p) openProductCard(p, cardHelpers()); return; }
+  if (r === "labels" || r.startsWith("p/")) { render(); window.scrollTo(0, 0); return; }
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 grain();
