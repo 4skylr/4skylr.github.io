@@ -1,5 +1,6 @@
 // Admin sync. PDF text: mozilla/pdf.js · Excel write-back: exceljs/exceljs · time: iamkun/dayjs
-import { EXPIRY_SHEET } from "./expiry-data.js?v=28";
+import { EXPIRY_SHEET } from "./expiry-data.js?v=44";
+import { REPORT_NAMES } from "./report-names.js?v=44";
 import { livePin, rotatePin, downloadSheet } from "./stock-card.js?v=28";
 
 const SYNC_AT = "noir-sync-at";
@@ -26,7 +27,9 @@ function locOf(line) {
 }
 function matchProduct(products, line) {
   const n = norm(line);
-  return products.find(p => (p.code && n.includes(norm(p.code))) || (p.sku && n.includes(norm(p.sku))) || (p.name && n.includes(norm(p.name))));
+  const hit = REPORT_NAMES.find(r => (r.code && n.includes(norm(r.code))) || (r.report && n.includes(norm(r.report))));
+  if (hit) return products.find(p => p.id === hit.id) || hit;
+  return products.find(p => (p.code && n.includes(norm(p.code))) || (p.sku && n.includes(norm(p.sku))));
 }
 
 export async function parseStockPdf(file, products) {
