@@ -162,6 +162,11 @@ function go(route) {
 }
 function render() {
   document.body.classList.remove("card-only");
+  const qid = new URLSearchParams(location.search).get("p");
+  if (qid && data.products?.length) {
+    const p = data.products.find(x => x.id === qid);
+    if (p) { history.replaceState(null, "", "#p/" + p.id); return viewScanProduct(p); }
+  }
   const hash = location.hash.slice(1);
   if (hash === "labels" && data.products?.length) return viewLabels();
   if (hash.startsWith("p/") && data.products?.length) {

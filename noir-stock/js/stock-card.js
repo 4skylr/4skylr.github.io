@@ -51,9 +51,11 @@ export function rotatePin() {
 export const pinUnlocked = () => Number(localStorage.getItem(UNLOCK) || 0) > Date.now();
 export const pinLeft = () => Math.max(0, Number(localStorage.getItem(UNLOCK) || 0) - Date.now());
 
-export function productUrl(id) { return `${SITE}#p/${id}`; }
+export function productUrl(id) { return `${SITE}?p=${id}`; }
 export function idFromCode(raw) {
   const s = String(raw || "").trim();
+  const q = s.match(/[?&]p=([a-z0-9-]+)/i);
+  if (q) return q[1];
   const hash = s.match(/#p\/([a-z0-9-]+)/i);
   if (hash) return hash[1];
   const m = s.match(/^NC-(.+)$/i);
