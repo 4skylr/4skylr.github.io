@@ -1,25 +1,44 @@
-/* Noir Cinema brand book: purple #7C2280, silver #A4A4A4, beige #F4EDE4. */
+/* Brand book applied: #7C2280 purple, #F4EDE4 beige, #A4A4A4 silver, white.
+   Type from GitHub google/fonts: Nunito (Cocon stand-in), Cairo (GE SS Two stand-in). */
+@font-face { font-family: "Nunito Brand"; src: url("../assets/fonts/Nunito-Regular.ttf") format("truetype"); font-weight: 300 800; font-display: swap; }
+@font-face { font-family: "Cairo Brand"; src: url("../assets/fonts/Cairo-Regular.ttf") format("truetype"); font-weight: 300 800; font-display: swap; }
 :root {
   --void: #1a0d22;
   --deep: #240f2e;
   --plate: #2c1438;
-  --glass: rgba(124, 34, 128, 0.18);
-  --glass-hi: rgba(124, 34, 128, 0.28);
+  --glass: rgba(124, 34, 128, 0.2);
+  --glass-hi: rgba(124, 34, 128, 0.32);
   --line: rgba(244, 237, 228, 0.16);
-  --line-hi: rgba(244, 237, 228, 0.34);
+  --line-hi: rgba(244, 237, 228, 0.36);
   --ink: #ffffff;
   --ink-2: #f4ede4;
   --muted: #a4a4a4;
   --violet: #7c2280;
   --magenta: #7a2a90;
   --cyan: #f4ede4;
-  --holo: linear-gradient(115deg, #7c2280, #7a2a90 70%, #f4ede4);
+  --amber: #f4ede4;
+  --good: #f4ede4;
+  --bad: #ffd7df;
+  --holo: linear-gradient(115deg, #7c2280, #7a2a90 72%, #f4ede4);
   --beam: linear-gradient(90deg, #7c2280, #7a2a90);
+  --f-display: "Nunito Brand", "Cairo Brand", sans-serif;
+  --f-voice: "Cairo Brand", "Nunito Brand", sans-serif;
+  --f-text: "Cairo Brand", "Nunito Brand", sans-serif;
+  --f-data: "Nunito Brand", sans-serif;
 }
-.aura i:nth-child(1) { background: #7c2280; }
-.aura i:nth-child(2) { background: #7a2a90; }
-.aura i:nth-child(3) { background: #4a1458; }
-.mark .lens, .mark .word { display: none; }
-.mark { gap: 0; }
-.brand-logo { height: 54px; width: auto; display: block; }
-.btn { text-transform: none; }
+body { font-size: 16px; line-height: 1.55; background: #1a0d22; }
+.aura i:nth-child(1) { background: #7c2280; opacity: .5; }
+.aura i:nth-child(2) { background: #7a2a90; opacity: .28; }
+.aura i:nth-child(3) { background: #4a1458; opacity: .24; }
+.mark { padding: 4px; }
+.brand-logo { height: 64px; width: auto; max-width: 72px; object-fit: contain; background: transparent; }
+.head { border-bottom: 1px solid rgba(244,237,228,.12); }
+.page-title { font-size: clamp(32px, 5vw, 48px); font-weight: 700; letter-spacing: 0; line-height: 1.15; }
+.kicker, .tag, .net { letter-spacing: .02em; text-transform: none; }
+.btn, .btn.hot { background: #7c2280; color: #fff; border-color: #7c2280; text-transform: none; font-weight: 650; }
+.btn.ghost { background: transparent; color: #f4ede4; border-color: rgba(244,237,228,.35); }
+.dock-nav { background: #2a1034; border-top: 1px solid rgba(244,237,228,.16); }
+.dock-nav button[aria-current="page"] { color: #fff; }
+.slab, .token, .vault { border-color: rgba(244,237,228,.14); }
+::selection { background: rgba(124, 34, 128, .45); }
+:focus-visible { outline-color: #f4ede4; }

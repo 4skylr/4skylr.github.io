@@ -1,10 +1,10 @@
-import * as store from "./store.js?v=14";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=14";
-import { SEED_DATE } from "./seed-data.js?v=14";
-import { renderYield, productPanel } from "./analytics.js?v=14";
-import { mountGithubDash } from "./gh-dash.js?v=14";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=14";
-import { downloadCountCsv } from "./export-count.js?v=14";
+import * as store from "./store.js?v=15";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=15";
+import { SEED_DATE } from "./seed-data.js?v=15";
+import { renderYield, productPanel } from "./analytics.js?v=15";
+import { mountGithubDash } from "./gh-dash.js?v=15";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=15";
+import { downloadCountCsv } from "./export-count.js?v=15";
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "14";
@@ -80,7 +80,7 @@ const ROUTES = [
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
-const CAT_COLORS = ["#9b6bff", "#ff4fd8", "#3be7ff", "#ffc857", "#4cf0a8", "#ff8a5c", "#7aa2ff", "#e27bff", "#5ce1c6", "#ff5c7a", "#8a84a3"];
+const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
 
 // ── State ────────────────────────────────────────────────────
 const ui = {
@@ -192,7 +192,7 @@ function viewDashboard() {
   $("#title-actions").innerHTML = `<button class="btn hot" data-route="count">${icon("count")}Start a count</button>`;
 
   // orbit rings: one ring per location, radius shrinks inward
-  const cols = ["#9b6bff", "#ff4fd8", "#3be7ff"];
+  const cols = ["#7c2280", "#f4ede4", "#a4a4a4"];
   const rings = byLoc.map((l, i) => {
     const R = 112 - i * 22, C = 2 * Math.PI * R, share = grand ? l.v / grand : 0;
     return `<circle cx="130" cy="130" r="${R}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="12"/>
