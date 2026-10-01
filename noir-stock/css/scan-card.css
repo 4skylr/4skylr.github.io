@@ -1,31 +1,32 @@
-/* Scan card. Brand book colors. Countdown is FlipDown (github.com/PButcher/flipdown).
-   Pace uses decimal.js (github.com/MikeMcl/decimal.js). Ring uses progressbar.js. */
-.scan-page { background: #1a0d22; color: #fff; border: 0; padding: 0; overflow: hidden; }
-.id-top { display: flex; align-items: center; gap: 12px; padding: 16px 16px 0; }
-.id-top img { width: 56px; height: 56px; object-fit: contain; }
-.id-top p { margin: 0; color: #a4a4a4; font-size: 12px; }
-.id-plate { margin: 14px 16px; background: #fff; border-radius: 22px; display: grid; place-items: center; min-height: 240px; }
-.id-plate .pic { width: min(260px, 72vw); height: min(260px, 72vw); object-fit: contain; object-position: center; background: transparent; padding: 8px; }
-.id-name { padding: 0 16px 8px; }
-.id-name h2 { margin: 0; font-size: 32px; line-height: 1.15; color: #fff; }
-.id-name .en { margin: 4px 0 0; color: #f4ede4; font-size: 16px; }
-.id-name .sku { margin: 2px 0 0; color: #a4a4a4; font-size: 13px; }
-.clock-box, .pace, .id-block { margin: 10px 16px; padding: 14px; border: 1px solid rgba(244,237,228,.16); border-radius: 18px; }
-.clock-box { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: center; }
-.clock-box .gauge { width: 92px; height: 92px; }
-.clock-box h3 { margin: 0 0 4px; font-size: 18px; }
-.clock-box p { margin: 0; color: #f4ede4; }
-.expired-seal { display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 999px; background: #7c2280; color: #fff; letter-spacing: .04em; }
-.flipdown { margin-top: 10px; --flip-bg: #7c2280; }
-.pace b { font-size: 28px; display: block; }
-.pace span { color: #a4a4a4; }
-.wh-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.wh-grid div { background: rgba(124,34,128,.28); border-radius: 14px; padding: 10px; }
-.wh-grid b { display: block; font-size: 22px; }
-.wh-grid i { color: #a4a4a4; font-style: normal; font-size: 11px; }
-.batch-row, .recipe-card li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid rgba(244,237,228,.12); }
-.batch-row em, .recipe-card em { color: #f4ede4; font-style: normal; }
-.recipe-card { border: 0; padding: 0; margin: 0; }
-.recipe-card ol { list-style: none; margin: 0; padding: 0; }
-.recipe-card li span { width: 22px; height: 22px; border-radius: 50%; background: #7c2280; display: inline-grid; place-items: center; margin-inline-end: 8px; font-size: 12px; }
-.id-block h3 { margin: 0 0 8px; font-size: 16px; }
+/* Phone scan card. One screen, brand purple, logo at the top. */
+body.card-only .marquee,
+body.card-only .head,
+body.card-only .title-row,
+body.card-only .dock-nav,
+body.card-only .aura { display: none !important; }
+body.card-only { background: #1a0d22; }
+body.card-only .stage { padding: 0; max-width: 430px; margin: 0 auto; }
+.phone-card { max-width: 430px; margin: 0 auto; min-height: 100dvh; padding: 12px 16px 24px; background: #1a0d22; color: #fff; }
+.pc-bar { display: flex; align-items: center; gap: 10px; }
+.pc-bar img { width: 44px; height: 44px; object-fit: contain; }
+.pc-bar b { display: block; font-size: 15px; }
+.pc-bar span { color: #a4a4a4; font-size: 12px; }
+.pc-shot { margin: 12px 0; background: #fff; border-radius: 20px; display: grid; place-items: center; height: 210px; }
+.pc-shot .pic { width: 180px; height: 180px; object-fit: contain; object-position: center; background: transparent; padding: 0; }
+.phone-card h1 { margin: 0; font-size: 28px; line-height: 1.15; }
+.pc-en { margin: 2px 0 0; color: #f4ede4; }
+.pc-qty { margin: 10px 0 0; font-size: 18px; }
+.pc-qty b { font-size: 28px; }
+.pc-desc { margin: 4px 0 0; color: #a4a4a4; font-size: 13px; }
+.pc-clock { margin-top: 12px; display: grid; grid-template-columns: 72px 1fr; gap: 10px; align-items: center; padding: 10px; border: 1px solid rgba(244,237,228,.18); border-radius: 16px; }
+.pc-clock .gauge { width: 72px; height: 72px; }
+.pc-clock strong, .pc-clock span, .pc-clock em { display: block; }
+.pc-clock span, .pc-clock em { color: #f4ede4; font-style: normal; font-size: 13px; }
+.pc-clock.is-expired { background: #7c2280; }
+.pc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.pc-actions button { background: transparent; color: #fff; border: 1px solid #f4ede4; border-radius: 999px; padding: 12px 8px; font: inherit; }
+.pc-actions button[aria-pressed="true"] { background: #7c2280; border-color: #7c2280; }
+.pc-sheet { margin-top: 10px; padding: 12px; border-radius: 16px; background: #2c1438; }
+.pc-sheet h2, .pc-sheet h3 { margin: 0 0 8px; font-size: 16px; }
+.pc-sheet p, .pc-sheet li { margin: 0 0 6px; color: #f4ede4; }
+.pc-sheet ol { margin: 0; padding: 0 0 0 16px; }

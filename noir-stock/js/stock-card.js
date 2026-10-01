@@ -13,7 +13,7 @@ import { mountGauges } from "./indicators.js?v=13";
 import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
 import { RECIPES } from "./recipes-data.js?v=16";
 import { AR, LOC_AR } from "./names-ar.js?v=16";
-import { renderScanCard } from "./scan-view.js?v=18";
+import { renderScanCard } from "./scan-view.js?v=19";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
