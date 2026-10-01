@@ -25,13 +25,12 @@
   --f-data: "JetBrains Mono Web", "Martian Mono", ui-monospace, monospace;
 }
 
-.label-sheet { display: grid; grid-template-columns: repeat(auto-fill, 8cm); gap: 0; justify-content: start; }
-.cut { width: 8cm; height: 8cm; box-sizing: border-box; border: 0.6mm dashed #7c2280; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2mm; padding: 3mm; background: #fff; color: #111; break-inside: avoid; page-break-inside: avoid; }
-.cut .qr { width: 3.4cm; height: 3.4cm; background:#fff; }
-.cut .bar { width: 4.4cm; height: 0.9cm; object-fit: contain; background:#fff; }
-.cut .logo { width: 2.4cm; height: 2.4cm; object-fit: contain; background:#fff; }
-.cut b { font-size: 11pt; line-height: 1.15; text-align: center; max-width: 7.2cm; }
-.cut small { font-size: 7pt; color: #444; }
+.label-sheet { display: grid; grid-template-columns: repeat(2, 8cm); gap: 0; justify-content: center; }
+.cut { width: 8cm; height: 8cm; overflow: hidden; box-sizing: border-box; border: 0.5mm dashed #7c2280; display: grid; grid-template-rows: 2.5cm 3.6cm 1.2cm; justify-items: center; align-items: center; padding: 3mm; background: #fff; color: #111; break-inside: avoid; page-break-inside: avoid; }
+.cut .logo { width: 2.3cm; height: 2.3cm; object-fit: contain; background: #fff; }
+.cut .qr { width: 3.4cm; height: 3.4cm; object-fit: contain; background: #fff; }
+.cut .bar, .cut small { display: none !important; }
+.cut b { font-size: 11pt; line-height: 1.1; text-align: center; max-width: 7.2cm; margin: 0; }
 .scan-page .scan-qr, .card-top .scan-qr { width: 112px; height: 112px; background: #fff; border-radius: 8px; margin-top: 8px; }
 @media print {
   .marquee, .head, .dock-nav, .title-row, .aura, .grain, .toasts, .note { display: none !important; }

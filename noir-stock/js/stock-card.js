@@ -232,7 +232,7 @@ function batchSummary(id) {
 export function savedMark(id) { return BARCODES[id] || { code: `NC-${id}`, url: productUrl(id), barcode: "", qr: "" }; }
 export async function mountLabelSheet(root, products, helpers) {
   H = helpers;
-  root.innerHTML = `<p class="note no-print">Saved barcodes. Phone scan opens only that product card. Cut on the dashed line, 5 × 5 cm.</p><div class="label-sheet" id="label-sheet"></div>`;
+  root.innerHTML = `<p class="note no-print">Saved barcodes. Phone scan opens only that product card. Cut on the dashed line, 8 × 8 cm.</p><div class="label-sheet" id="label-sheet"></div>`;
   const box = root.querySelector("#label-sheet");
   box.innerHTML = products.map(p => {
     const m = savedMark(p.id);
