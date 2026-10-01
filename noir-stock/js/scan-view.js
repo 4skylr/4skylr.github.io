@@ -1,6 +1,6 @@
 // Phone scan card. Countdown: github.com/PButcher/flipdown
-import { AR, LOC_AR } from "./names-ar.js?v=25";
-import { RECIPES } from "./recipes-data.js?v=25";
+import { AR, LOC_AR } from "./names-ar.js?v=26";
+import { RECIPES } from "./recipes-data.js?v=26";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -25,8 +25,17 @@ function loadFlip() {
   });
 }
 
+const LANG_KEY = "noir-card-lang";
+const langOf = () => sessionStorage.getItem(LANG_KEY) === "en" ? "en" : "ar";
+const T = {
+  ar: { until: "حتى", past: "سابقة", day: "يوم", groups: "المجموعات", recipe: "الوصفة", qty: "الكمية الحالية", none: "بدون تاريخ · الكمية فقط", heads: ["يوم", "ساعة", "دقيقة", "ثانية"] },
+  en: { until: "Until", past: "Past", day: "days", groups: "Groups", recipe: "Recipe", qty: "On hand", none: "No date · quantity only", heads: ["Days", "Hours", "Minutes", "Seconds"] }
+};
 export async function renderScanCard(root, p, ctx) {
   const { H, rowsFor, daysLeft, fmtDate, asDate, mountGauges, writeOff } = ctx;
+  const lang = langOf();
+  const L = T[lang];
+  const gname = n => lang === "en" ? "Group " + n : groupName(n);
   const products = H.data?.().products || [];
   const dated = noDate(p) ? [] : rowsFor(p.id)
     .flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date) })))
@@ -38,15 +47,16 @@ export async function renderScanCard(root, p, ctx) {
   const unit = H.UNITS[p.unit] || "";
   const locRows = H.LOCATIONS.map(l => ({ l, n: Number(p.stock?.[l.id]) || 0 }));
   const hits = recipesFor(p);
-  root.innerHTML = `<article class="phone-card shield">
+  root.innerHTML = `<article class="phone-card shield" dir="${lang === "ar" ? "rtl" : "ltr"}">
+    <div class="lang-switch"><button type="button" data-lang="ar" aria-pressed="${lang === "ar"}">عربي</button><button type="button" data-lang="en" aria-pressed="${lang === "en"}">English</button></div>
     <div class="pc-shot">${H.pic(p, "pic")}</div>
-    <h1>${H.esc(AR[p.id] || p.name)}</h1>
-    <p class="pc-en">${H.esc(p.name)}</p>
-    <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)}</span></p>
+    <h1>${H.esc(lang === "ar" ? (AR[p.id] || p.name) : p.name)}</h1>
+    <p class="pc-en">${H.esc(lang === "ar" ? p.name : (AR[p.id] || ""))}</p>
+    <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
     <p class="pc-desc">${locRows.map(x => `${H.esc(LOC_AR[x.l.id] || x.l.name)} ${H.qty(x.n)}`).join(" · ")}</p>
-    ${next ? `<section class="pc-dash"><h2>حتى ${groupName(next.n)}</h2><div id="flip" class="flipdown"></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
-    ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${groupName(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? "سابقة" : b.left + " يوم"}</em></li>`).join("")}</ul>
-    <div class="pc-actions"><button type="button" data-open="batch">المجموعات</button><button type="button" data-open="recipe">الوصفة</button></div>` : `<p class="pc-note">بدون تاريخ · الكمية فقط</p><div class="pc-actions"><button type="button" data-open="recipe">الوصفة</button></div>`}
+    ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
+    ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
+    <div class="pc-actions"><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" data-open="recipe">${L.recipe}</button></div>`}
     <section class="pc-sheet" id="sheet-batch" hidden>
       <h2>المجموعات</h2>
       ${dated.map(b => `<p><b>${groupName(b.n)}</b> · ${H.esc(b.location)} · ${H.esc(fmtDate(b.date))} · ${H.esc(b.qty ?? "—")}</p>`).join("")}
@@ -71,12 +81,16 @@ export async function renderScanCard(root, p, ctx) {
     sheet.hidden = !open;
     btn.setAttribute("aria-pressed", String(open));
   });
+  root.querySelectorAll("[data-lang]").forEach(btn => btn.onclick = () => {
+    sessionStorage.setItem(LANG_KEY, btn.dataset.lang);
+    renderScanCard(root, p, ctx);
+  });
   root.querySelector("#write-off")?.addEventListener("click", () => writeOff(p, past[0]));
   if (next && asDate(next.date)) {
     await loadFlip().catch(() => null);
     const stamp = Math.floor(asDate(next.date).getTime() / 1000);
     if (window.FlipDown && root.querySelector("#flip")) {
-      new window.FlipDown(stamp, "flip", { theme: "dark", headings: ["يوم", "ساعة", "دقيقة", "ثانية"] }).start();
+      new window.FlipDown(stamp, "flip", { theme: "dark", headings: L.heads }).start();
     }
   }
 }

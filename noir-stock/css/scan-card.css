@@ -33,3 +33,17 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .pc-ings figcaption { padding: 6px 8px 8px; font-size: 12px; }
 .pc-ings i { display: block; color: #7c2280; font-style: normal; }
 .flipdown { font-size: 12px; }
+
+.lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.lang-switch button { background: transparent; color: #f4ede4; border: 1px solid rgba(244,237,228,.4); border-radius: 999px; padding: 6px 14px; font: inherit; }
+.lang-switch button[aria-pressed="true"] { background: #7c2280; color: #fff; border-color: #7c2280; }
+.flip-wrap { height: 78px; overflow: hidden; display: grid; place-items: start center; }
+.phone-card .flipdown { transform: scale(.58); transform-origin: top center; margin-top: 0 !important; }
+.phone-card .flipdown .rotor,
+.phone-card .flipdown .rotor-top,
+.phone-card .flipdown .rotor-leaf-front { background: #7c2280 !important; color: #f4ede4 !important; }
+.phone-card .flipdown .rotor-bottom,
+.phone-card .flipdown .rotor-leaf-rear { background: #5a1860 !important; color: #fff !important; }
+.phone-card .flipdown .rotor-group-heading:before { color: #f4ede4 !important; }
+.phone-card .flipdown .rotor-group:nth-child(n+2):nth-child(-n+3):before,
+.phone-card .flipdown .rotor-group:nth-child(n+2):nth-child(-n+3):after { background: #f4ede4 !important; }
