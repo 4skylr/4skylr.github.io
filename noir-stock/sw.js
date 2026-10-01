@@ -1,5 +1,5 @@
 /* Offline shell. workbox-sw is vendored; this worker caches the stock app. */
-const CACHE = "noir-stock-v26";
+const CACHE = "noir-stock-v27";
 const CORE = ["./", "./index.html", "./css/style.css", "./css/fonts.css", "./js/app.js", "./vendor/progressbar.min.js", "./vendor/dayjs.min.js"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));

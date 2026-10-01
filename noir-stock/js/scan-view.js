@@ -1,6 +1,6 @@
 // Phone scan card. Countdown: github.com/PButcher/flipdown
-import { AR, LOC_AR } from "./names-ar.js?v=26";
-import { RECIPES } from "./recipes-data.js?v=26";
+import { AR, LOC_AR } from "./names-ar.js?v=27";
+import { RECIPES } from "./recipes-data.js?v=27";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -53,7 +53,8 @@ export async function renderScanCard(root, p, ctx) {
     <h1>${H.esc(lang === "ar" ? (AR[p.id] || p.name) : p.name)}</h1>
     <p class="pc-en">${H.esc(lang === "ar" ? p.name : (AR[p.id] || ""))}</p>
     <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
-    <p class="pc-desc">${locRows.map(x => `${H.esc(LOC_AR[x.l.id] || x.l.name)} ${H.qty(x.n)}`).join(" · ")}</p>
+    <div class="pc-wh">${locRows.filter(x => x.n > 0).map(x => `<span><img src="${H.esc(H.src(p.image || ""))}" alt=""><i>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} ${H.qty(x.n)}</i><b>✓</b></span>`).join("") || `<span><i>${lang === "ar" ? "غير موجود في المستودعات" : "Not in a warehouse"}</i></span>`}</div>
+    <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
     ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
     <div class="pc-actions"><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" data-open="recipe">${L.recipe}</button></div>`}
