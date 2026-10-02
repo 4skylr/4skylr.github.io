@@ -6,10 +6,11 @@
 //   vanilla-tilt.js github.com/micku7zu/vanilla-tilt.js   — 3D tilt + gyroscope on phones
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-//   tsParticles     github.com/tsparticles/tsparticles    — ice / steam mood (unchanged)
+//   product effects (snow, popcorn popping, steam…) live in fx.js
 import { AR, LOC_AR } from "./names-ar.js?v=37";
 import { RECIPES } from "./recipes-data.js?v=37";
 import { soldOf } from "./sales-data.js?v=37";
+import { playProductFx } from "./fx.js?v=67";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -162,7 +163,6 @@ export async function renderScanCard(root, p, ctx) {
 
   root.innerHTML = `<article class="phone-card pass shield ${mood} w-${worst}" dir="${lang === "ar" ? "rtl" : "ltr"}">
     <div class="lang-switch"><button type="button" data-lang="ar" aria-pressed="${lang === "ar"}">عربي</button><button type="button" data-lang="en" aria-pressed="${lang === "en"}">English</button></div>
-    <div id="card-fx" class="card-fx"></div>
 
     <div class="pass-hero" data-tilt>
       <span class="pass-holo" aria-hidden="true"></span>
@@ -217,7 +217,7 @@ export async function renderScanCard(root, p, ctx) {
   </article>`;
 
   mountGauges(root);
-  mountMood(mood);
+  if (!H.quiet) playProductFx(p);
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
   else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
@@ -255,10 +255,17 @@ export async function renderScanCard(root, p, ctx) {
   root.querySelector("#write-off")?.addEventListener("click", () => writeOff(p, past[0]));
 
   startTicking(root, asDate);
-  animateIn(root, worst);
+  if (H.quiet) settle(root); else animateIn(root, worst);
 }
 
 // ── Motion ───────────────────────────────────────────────────
+// redraw without the intro (data refresh while the card is open)
+function settle(root) {
+  root.querySelectorAll(".cd-arc").forEach(a => { a.style.strokeDashoffset = Number(a.dataset.full) * (1 - (Number(getComputedStyle(a.closest(".cd")).getPropertyValue("--frac")) || 0)); });
+  root.querySelectorAll(".pl-arc").forEach(a => { a.style.strokeDashoffset = a.dataset.to; });
+  root.querySelectorAll("[data-odo]").forEach(el => { const to = Number(el.dataset.odo) || 0; el.textContent = Math.abs(to % 1) > 1e-9 ? to.toFixed(2) : String(to); });
+  loadTilt().then(VT => { const hero = root.querySelector("[data-tilt]"); if (VT && hero && !calm()) VT.init(hero, { max: 9, glare: true, "max-glare": 0.22, gyroscope: true }); });
+}
 const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 async function animateIn(root, worst) {
@@ -297,9 +304,7 @@ async function animateIn(root, worst) {
     .add({ targets: plArcs, strokeDashoffset: el => [el.getAttribute("stroke-dasharray"), el.dataset.to], duration: 1200, delay: anime.stagger(120) }, "-=600")
     .add({ targets: card.querySelectorAll(".cd"), opacity: [0, 1], translateY: [40, 0], rotateX: [-24, 0], duration: 900, delay: anime.stagger(140) }, "-=900")
     .add({ targets: arcs, strokeDashoffset: el => { const full = Number(el.dataset.full); const f = Number(getComputedStyle(el.closest(".cd")).getPropertyValue("--frac")) || 0; return [full, full * (1 - f)]; }, duration: 1600, delay: anime.stagger(140), easing: "easeOutElastic(1, .7)" }, "-=800");
-  tl.finished.then(() => {
-    if (worst === "safe" || worst === "watch") burst(null, 0.35);
-  });
+
 }
 
 async function burst(colors, power = 0.5) {
@@ -312,34 +317,5 @@ async function burst(colors, power = 0.5) {
     particleCount: Math.round(70 * power), spread: 75, startVelocity: 32 * power + 12, ticks: 160, scalar: 0.8,
     origin: { x: (r.left + r.width / 2) / innerWidth, y: (r.top + r.height / 2) / innerHeight },
     colors: colors || ["#9b6bff", "#ff4fd8", "#3be7ff", "#ffc857", "#ffffff"], disableForReducedMotion: true
-  });
-}
-
-function loadTs() {
-  if (window.tsParticles) return Promise.resolve(window.tsParticles);
-  return new Promise((res, rej) => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js";
-    s.onload = () => res(window.tsParticles);
-    s.onerror = rej;
-    document.head.append(s);
-  });
-}
-async function mountMood(mood) {
-  if (!mood || !document.getElementById("card-fx")) return;
-  const ts = await loadTs().catch(() => null);
-  if (!ts) return;
-  const cold = mood === "cold";
-  ts.load("card-fx", {
-    fullScreen: { enable: false },
-    particles: {
-      number: { value: cold ? 28 : 18 },
-      color: { value: cold ? ["#f4ede4", "#d7e7ff"] : ["#f4ede4", "#ffffff"] },
-      shape: { type: cold ? "square" : "circle" },
-      opacity: { value: { min: 0.25, max: 0.7 } },
-      size: { value: { min: cold ? 2 : 4, max: cold ? 6 : 14 } },
-      move: { enable: true, direction: cold ? "bottom" : "top", speed: cold ? 1.1 : 0.7, outModes: "out" }
-    },
-    detectRetina: true
   });
 }

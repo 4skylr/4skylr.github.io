@@ -38,7 +38,26 @@ export function txHash() {
   return "0x" + Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function emit() { listeners.forEach(fn => { try { fn(snapshot()); } catch (e) { console.error(e); } }); }
+// Several Firestore snapshots can land in the same moment; coalesce them into one redraw.
+let emitQueued = false;
+function emit() {
+  if (emitQueued) return;
+  emitQueued = true;
+  queueMicrotask(() => { emitQueued = false; listeners.forEach(fn => { try { fn(snapshot()); } catch (e) { console.error(e); } }); });
+}
+export function hasData() { return mem.products.length > 0; }
+// writes made while Firebase is still connecting wait for it instead of landing in local storage
+let markConnected; const connected = new Promise(r => { markConnected = r; });
+async function remote() { if (mode === "connecting") await connected; return mode === "firebase" && !!fb; }
+
+// Last Firestore snapshot, kept so the next open paints instantly while Firebase reconnects.
+const FB_CACHE = "noir-fb-cache-v1";
+function fbCacheRead() { try { const raw = localStorage.getItem(FB_CACHE); return raw ? JSON.parse(raw) : null; } catch { return null; } }
+let fbCacheTimer = null;
+function fbCacheWrite() {
+  clearTimeout(fbCacheTimer);
+  fbCacheTimer = setTimeout(() => { try { localStorage.setItem(FB_CACHE, JSON.stringify({ at: Date.now(), products: mem.products, sessions: mem.sessions.slice(0, 50), activity: mem.activity.slice(0, 30) })); } catch {} }, 400);
+}
 export function onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
 export function snapshot() { return { products: mem.products, sessions: mem.sessions, activity: mem.activity, mode }; }
 export function getMode() { return mode; }
@@ -95,10 +114,16 @@ function seedProducts() {
 // ── Init ─────────────────────────────────────────────────────
 export async function init() {
   if (firebaseConfig.apiKey) {
-    try { await initFirebase(); mode = "firebase"; emit(); return mode; }
+    // paint right away from the last snapshot (or the bundled report) while Firebase connects
+    const cached = fbCacheRead();
+    mem = cached?.products?.length ? { products: cached.products, sessions: cached.sessions || [], activity: cached.activity || [] }
+      : { products: seedProducts(), sessions: [], activity: [] };
+    mode = "connecting"; emit();
+    try { await initFirebase(); mode = "firebase"; markConnected(); emit(); return mode; }
     catch (e) { console.error("Firebase connection failed, falling back to local mode", e); }
   }
   mode = "local";
+  markConnected();
   const saved = lsRead();
   mem = saved && saved.products?.length ? saved : { products: seedProducts(), sessions: [], activity: [], seedVersion: SEED_VERSION };
   if (!saved) { log("seed", `Loaded ${mem.products.length} products from the stock report`); lsWrite(); }
@@ -133,54 +158,58 @@ async function initFirebase() {
   const storage = st.getStorage(app);
   fb = { db, storage, fs, st };
 
-  // first run: upload the report data
-  const first = await fs.getDocs(fs.query(fs.collection(db, COL.products), fs.limit(1)));
-  if (first.empty) {
-    const items = seedProducts();
-    for (let i = 0; i < items.length; i += 400) {
-      const batch = fs.writeBatch(db);
-      items.slice(i, i + 400).forEach(p => batch.set(fs.doc(db, COL.products, p.id), p));
-      await batch.commit();
-    }
-    await log("seed", `Loaded ${items.length} products from the stock report`);
-    await fs.setDoc(fs.doc(db, COL.meta, "seed"), { version: SEED_VERSION });
-  } else {
-    const metaRef = fs.doc(db, COL.meta, "seed");
-    const meta = await fs.getDoc(metaRef);
-    const from = meta.exists() ? meta.data().version : 2;
-    if (from < SEED_VERSION) {
-      const all = (await fs.getDocs(fs.collection(db, COL.products))).docs.map(d => ({ id: d.id, ...d.data() }));
-      const { updates, additions, removals } = seedUpgrade(all, from);
-      const now = new Date().toISOString();
-      const batch = fs.writeBatch(db);
-      updates.forEach(({ id, ...patch }) => batch.update(fs.doc(db, COL.products, id), patch));
-      removals.forEach(id => batch.delete(fs.doc(db, COL.products, id)));
-      additions.forEach(p => batch.set(fs.doc(db, COL.products, p.id), { ...p, createdAt: now, updatedAt: now }));
-      batch.set(metaRef, { version: SEED_VERSION });
-      await batch.commit();
-      await log("seed", `Catalog updated: ${updates.length} photos refreshed, ${additions.length} added, ${removals.length} retired`);
-    }
-  }
-
   const live = (name, key, order) => new Promise(resolve => {
     let firstLoad = true;
     fs.onSnapshot(fs.query(fs.collection(db, name), ...(order ? [fs.orderBy(order, "desc"), fs.limit(200)] : [])), snap => {
       mem[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      fbCacheWrite();
       emit();
       if (firstLoad) { firstLoad = false; resolve(); }
     });
   });
+  // listeners first so data arrives as early as possible; the one-off seed check runs alongside
+  const seedCheck = (async () => {
+    // first run: upload the report data
+    const first = await fs.getDocs(fs.query(fs.collection(db, COL.products), fs.limit(1)));
+    if (first.empty) {
+      const items = seedProducts();
+      for (let i = 0; i < items.length; i += 400) {
+        const batch = fs.writeBatch(db);
+        items.slice(i, i + 400).forEach(p => batch.set(fs.doc(db, COL.products, p.id), p));
+        await batch.commit();
+      }
+      await log("seed", `Loaded ${items.length} products from the stock report`);
+      await fs.setDoc(fs.doc(db, COL.meta, "seed"), { version: SEED_VERSION });
+    } else {
+      const metaRef = fs.doc(db, COL.meta, "seed");
+      const meta = await fs.getDoc(metaRef);
+      const from = meta.exists() ? meta.data().version : 2;
+      if (from < SEED_VERSION) {
+        const all = (await fs.getDocs(fs.collection(db, COL.products))).docs.map(d => ({ id: d.id, ...d.data() }));
+        const { updates, additions, removals } = seedUpgrade(all, from);
+        const now = new Date().toISOString();
+        const batch = fs.writeBatch(db);
+        updates.forEach(({ id, ...patch }) => batch.update(fs.doc(db, COL.products, id), patch));
+        removals.forEach(id => batch.delete(fs.doc(db, COL.products, id)));
+        additions.forEach(p => batch.set(fs.doc(db, COL.products, p.id), { ...p, createdAt: now, updatedAt: now }));
+        batch.set(metaRef, { version: SEED_VERSION });
+        await batch.commit();
+        await log("seed", `Catalog updated: ${updates.length} photos refreshed, ${additions.length} added, ${removals.length} retired`);
+      }
+    }
+  })().catch(e => console.warn("Seed check skipped", e));
   await Promise.all([
     live(COL.products, "products"),
     live(COL.sessions, "sessions", "createdAt"),
     live(COL.activity, "activity", "at")
   ]);
+  seedCheck.then(() => {});
 }
 
 // ── Activity ledger ───────────────────────────────────
 export async function log(type, text) {
   const entry = { id: txHash(), type, text, at: new Date().toISOString() };
-  if (mode === "firebase" && fb) {
+  if (fb) {
     await fb.fs.setDoc(fb.fs.doc(fb.db, COL.activity, entry.id), entry);
   } else {
     mem.activity = [entry, ...mem.activity].slice(0, 200);
@@ -193,7 +222,7 @@ export async function saveProduct(p, { silent = false } = {}) {
   const now = new Date().toISOString();
   const isNew = !mem.products.some(x => x.id === p.id);
   const doc = { ...p, updatedAt: now, createdAt: p.createdAt || now };
-  if (mode === "firebase") {
+  if (await remote()) {
     await fb.fs.setDoc(fb.fs.doc(fb.db, COL.products, doc.id), doc);
   } else {
     mem.products = isNew ? [...mem.products, doc] : mem.products.map(x => x.id === doc.id ? doc : x);
@@ -205,7 +234,7 @@ export async function saveProduct(p, { silent = false } = {}) {
 
 export async function deleteProduct(id) {
   const p = mem.products.find(x => x.id === id);
-  if (mode === "firebase") {
+  if (await remote()) {
     await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.products, id));
     if (p?.imagePath) { try { await fb.st.deleteObject(fb.st.ref(fb.storage, p.imagePath)); } catch {} }
   } else {
@@ -218,7 +247,7 @@ export async function deleteProduct(id) {
 // compress to a 512px square WebP, then upload
 export async function uploadImage(productId, file) {
   const blob = await compressImage(file, 512);
-  if (mode === "firebase") {
+  if (await remote()) {
     const path = `products/${productId}-${Date.now()}.webp`;
     const r = fb.st.ref(fb.storage, path);
     await fb.st.uploadBytes(r, blob, { contentType: "image/webp" });
@@ -249,7 +278,7 @@ const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.on
 // ── Count sessions ──────────────────────────────
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
-  if (mode === "firebase") {
+  if (await remote()) {
     await fb.fs.setDoc(fb.fs.doc(fb.db, COL.sessions, doc.id), doc);
   } else {
     const exists = mem.sessions.some(x => x.id === doc.id);
@@ -260,7 +289,7 @@ export async function saveSession(s) {
 }
 
 export async function deleteSession(id) {
-  if (mode === "firebase") await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.sessions, id));
+  if (await remote()) await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.sessions, id));
   else { mem.sessions = mem.sessions.filter(x => x.id !== id); lsWrite(); emit(); }
   await log("delete", `Deleted count session ${id.slice(0, 10)}`);
 }
@@ -269,7 +298,7 @@ export async function deleteSession(id) {
 export async function commitSession(session) {
   const loc = session.location;
   const counted = Object.entries(session.counts || {});
-  if (mode === "firebase") {
+  if (await remote()) {
     const batch = fb.fs.writeBatch(fb.db);
     counted.forEach(([pid, qty]) => {
       const p = mem.products.find(x => x.id === pid); if (!p) return;

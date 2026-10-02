@@ -1,17 +1,38 @@
-/* Offline shell. workbox-sw is vendored; this worker caches the stock app. */
-const CACHE = "noir-stock-v64";
-const CORE = ["./", "./index.html", "./css/style.css", "./css/fonts.css", "./js/app.js", "./vendor/progressbar.min.js", "./vendor/dayjs.min.js"];
+/* Offline shell for the stock app.
+   - Same-origin static files (js, css, vendor, assets): stale-while-revalidate → instant repeat opens.
+   - Pages and JSON: network first, cache as fallback.
+   - Versioned CDN files (Firebase SDK, fonts): cache first.
+   - Firestore / auth traffic is never touched, so live sync is not slowed or broken. */
+const CACHE = "noir-stock-v67";
+const CORE = ["./", "./index.html", "./css/style.css", "./css/fonts.css", "./css/scan-pass.css", "./css/fx.css", "./vendor/dayjs.min.js", "./vendor/confetti.browser.js"];
+const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdn\.jsdelivr\.net\/(gh|npm)\/)/;
+
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}).then(() => self.skipWaiting()));
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
+
+const put = (req, res) => { if (res && res.ok && (res.type === "basic" || res.type === "cors")) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); } return res; };
+
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
-  e.respondWith(fetch(e.request).then(res => {
-    const copy = res.clone();
-    caches.open(CACHE).then(c => c.put(e.request, copy));
-    return res;
-  }).catch(() => caches.match(e.request)));
+  const req = e.request;
+  if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  const same = url.origin === self.location.origin;
+
+  if (!same) {
+    if (CDN.test(req.url)) e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => put(req, res))));
+    return; // everything else (Firestore, auth, analytics) goes straight to the network
+  }
+  const isPage = req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/") || url.pathname.endsWith(".json");
+  if (isPage) {
+    e.respondWith(fetch(req).then(res => put(req, res)).catch(() => caches.match(req).then(hit => hit || caches.match("./index.html"))));
+    return;
+  }
+  e.respondWith(caches.match(req).then(hit => {
+    const net = fetch(req).then(res => put(req, res)).catch(() => hit);
+    return hit || net;
+  }));
 });

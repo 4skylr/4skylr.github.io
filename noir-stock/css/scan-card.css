@@ -32,22 +32,10 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .pc-ings img, .pc-ings span { width: 100%; height: 72px; object-fit: contain; display: grid; place-items: center; background: #fff; }
 .pc-ings figcaption { padding: 6px 8px 8px; font-size: 12px; }
 .pc-ings i { display: block; color: #7c2280; font-style: normal; }
-.flipdown { font-size: 12px; }
 
 .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
 .lang-switch button { background: transparent; color: #f4ede4; border: 1px solid rgba(244,237,228,.4); border-radius: 999px; padding: 6px 14px; font: inherit; }
 .lang-switch button[aria-pressed="true"] { background: #7c2280; color: #fff; border-color: #7c2280; }
-.flip-wrap { height: 54px; overflow: hidden; display: flex; justify-content: center; }
-.phone-card .flipdown { width: max-content !important; height: 70px !important; transform: scale(.5); transform-origin: top center; white-space: nowrap; }
-.phone-card .flipdown .rotor-group { float: none !important; display: inline-block; vertical-align: top; }
-.phone-card .flipdown .rotor,
-.phone-card .flipdown .rotor-top,
-.phone-card .flipdown .rotor-leaf-front { background: #7c2280 !important; color: #f4ede4 !important; }
-.phone-card .flipdown .rotor-bottom,
-.phone-card .flipdown .rotor-leaf-rear { background: #5a1860 !important; color: #fff !important; }
-.phone-card .flipdown .rotor-group-heading:before { color: #f4ede4 !important; }
-.phone-card .flipdown .rotor-group:nth-child(n+2):nth-child(-n+3):before,
-.phone-card .flipdown .rotor-group:nth-child(n+2):nth-child(-n+3):after { background: #f4ede4 !important; }
 
 .pc-wh { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
 .pc-wh span { display: flex; align-items: center; gap: 6px; background: #2c1438; border-radius: 999px; padding: 4px 8px 4px 4px; font-size: 12px; }
@@ -59,8 +47,6 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .pc-age { position: absolute; top: 8px; inset-inline-start: 8px; background: #7c2280; color: #fff; border-radius: 999px; padding: 3px 8px; font-size: 11px; }
 
 .phone-card { position: relative; }
-.card-fx { position: absolute; inset: 0 0 auto 0; height: 220px; pointer-events: none; z-index: 2; }
-.card-fx canvas { width: 100% !important; height: 100% !important; }
 
 body.card-only #modal-root { display: block; position: relative; z-index: 40; }
 .pc-cost { margin: 8px 0 0; color: #f4ede4; font-size: 13px; }

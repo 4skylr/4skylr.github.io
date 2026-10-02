@@ -1,0 +1,69 @@
+/* Product effects (js/fx.js) — CSS layers + the confetti canvas */
+.fx-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 70; }
+.fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 69; overflow: hidden; transition: opacity .9s ease; }
+.fx-layer.out { opacity: 0; }
+
+/* ❄ frost: icy vignette that creeps in from the edges, with a crystalline shimmer */
+.fx-frost i {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(200, 235, 255, .22) 72%, rgba(225, 245, 255, .55) 100%),
+    repeating-conic-gradient(from 10deg at 0 0, rgba(255,255,255,.07) 0 4deg, transparent 4deg 11deg),
+    repeating-conic-gradient(from 200deg at 100% 100%, rgba(255,255,255,.07) 0 3deg, transparent 3deg 9deg);
+  box-shadow: inset 0 0 80px 20px rgba(190, 230, 255, .35), inset 0 0 18px 4px rgba(255,255,255,.4);
+  backdrop-filter: blur(.4px) saturate(1.1);
+  animation: frost-in 1.6s cubic-bezier(.2, .8, .2, 1) both, frost-shimmer 3s ease-in-out 1.6s infinite;
+}
+@keyframes frost-in { from { opacity: 0; transform: scale(1.08); filter: blur(6px); } }
+@keyframes frost-shimmer { 50% { filter: brightness(1.15) hue-rotate(-8deg); } }
+body[data-fx="frost"] .pass-hero { box-shadow: 0 0 0 1px rgba(200, 235, 255, .5), 0 30px 70px -30px rgba(120, 200, 255, .9), inset 0 0 30px rgba(200, 235, 255, .18); }
+
+/* 🫧 fizz bubbles rising */
+.fx-bubbles i {
+  position: absolute; bottom: -30px; left: var(--x); width: calc(14px * var(--s)); height: calc(14px * var(--s)); border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(180, 230, 255, .35) 40%, rgba(120, 200, 255, .08) 70%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), 0 0 10px rgba(140, 220, 255, .4);
+  animation: rise var(--t) cubic-bezier(.3, .1, .4, 1) var(--d) both;
+}
+@keyframes rise {
+  0% { transform: translate(0, 0) scale(.6); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(calc(var(--w) * .6), -55vh) scale(1); }
+  100% { transform: translate(var(--w), -110vh) scale(1.15); opacity: 0; }
+}
+body[data-fx="energy"] .fx-bubbles i { background: radial-gradient(circle at 30% 30%, #fff, rgba(120, 255, 80, .5) 45%, rgba(60, 200, 40, .1) 70%); box-shadow: 0 0 12px rgba(120, 255, 80, .6); }
+
+/* ☕ steam puffs drifting up from the photo */
+.fx-steam i {
+  position: absolute; top: 34vh; left: calc(30% + var(--x) * .4); width: calc(70px * var(--s)); height: calc(70px * var(--s)); border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.55), rgba(255,255,255,0) 68%); filter: blur(10px);
+  animation: steam var(--t) ease-out var(--d) both;
+}
+@keyframes steam {
+  0% { transform: translate(0, 40px) scale(.4); opacity: 0; }
+  25% { opacity: .9; }
+  100% { transform: translate(var(--w), -38vh) scale(2.2); opacity: 0; }
+}
+
+/* 🔥 embers for the grill and spicy food */
+.fx-embers i {
+  position: absolute; bottom: -10px; left: var(--x); width: calc(5px * var(--s)); height: calc(5px * var(--s)); border-radius: 50%;
+  background: #ffd36e; box-shadow: 0 0 8px 2px #ff8a3c, 0 0 18px 6px rgba(255, 70, 30, .45);
+  animation: ember var(--t) linear var(--d) both;
+}
+@keyframes ember {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 1; }
+  60% { transform: translate(calc(var(--w) * -.5), -50vh); background: #ff8a3c; }
+  100% { transform: translate(var(--w), -95vh) scale(.3); opacity: 0; background: #ff3d2a; }
+}
+
+/* 🍭 candy-floss clouds */
+.fx-floss i {
+  position: absolute; top: calc(10% + var(--x) * .5); left: calc(var(--x) - 10%); width: calc(140px * var(--s)); height: calc(90px * var(--s)); border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 170, 220, .55), rgba(150, 200, 255, .25) 60%, transparent 72%); filter: blur(14px);
+  animation: floss var(--t) ease-in-out var(--d) both;
+}
+@keyframes floss { 0% { transform: scale(.3) translateX(0); opacity: 0; } 40% { opacity: .9; } 100% { transform: scale(1.4) translateX(var(--w)); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) { .fx-layer, .fx-canvas { display: none !important; } }

@@ -2,13 +2,16 @@ import * as store from "./store.js?v=37";
 import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=37";
 import { SEED_DATE } from "./seed-data.js?v=37";
 import { renderYield, productPanel } from "./analytics.js?v=37";
-import { mountGithubDash } from "./gh-dash.js?v=64";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=66";
-import { downloadCountCsv } from "./export-count.js?v=48";
-import { renderFinance } from "./finance-view.js?v=64";
-import { renderUnaizah } from "./unaizah-view.js?v=64";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=67";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
-import { renderAdmin } from "./sync-admin.js?v=37";
+// Heavy sections load only when opened, so the first paint (and every scan) stays light.
+const lazy = path => { let p; return () => (p ??= import(path)); };
+const ghDash = lazy("./gh-dash.js?v=64");
+const exportCount = lazy("./export-count.js?v=48");
+const financeView = lazy("./finance-view.js?v=64");
+const unaizahView = lazy("./unaizah-view.js?v=64");
+const syncAdmin = lazy("./sync-admin.js?v=37");
+const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
 const ASSET_V = "46";
@@ -153,7 +156,7 @@ function renderNav() {
 function renderNet() {
   const live = data.mode === "firebase", el = $("#net");
   el.classList.toggle("live", live);
-  el.querySelector("span").textContent = live ? "Firebase · synced" : "Local node · this browser";
+  el.querySelector("span").textContent = live ? "Firebase · synced" : data.mode === "connecting" ? "Connecting…" : "Local node · this browser";
   el.title = live ? "Data is stored in Firestore and syncs live" : "Data is stored in this browser only. Add your Firebase config to sync.";
 }
 function renderTicker() {
@@ -176,6 +179,7 @@ function go(route) {
   render(); window.scrollTo(0, 0);
 }
 function render() {
+  if (!isScanUrl()) lastCard = null;
   document.body.classList.remove("card-only");
   const qid = new URLSearchParams(location.search).get("p");
   if (qid && data.products?.length) {
@@ -309,7 +313,7 @@ function viewDashboard() {
     <section class="slab span-7" id="gh-loc"></section>
     <section class="slab" id="gh-grid"></section>
   </div>`;
-  mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 });
+  ghDash().then(m => { if (document.getElementById("gh-grid")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
 }
 
 // ── Collection ───────────────────────────────────────────────
@@ -635,19 +639,31 @@ function viewLabels() {
   $("#do-print").onclick = () => window.print();
   $("#do-pdf").onclick = () => exportLabelsPdf(data.products).then(() => toast("Label PDF downloaded")).catch(e => toast(e.message, true));
 }
+let lastCard = null, cardQueue = Promise.resolve();
 function viewScanProduct(p) {
+  const sig = JSON.stringify(p) + "|" + (localStorage.getItem("noir-expiry-edits-v1") || "");
+  if (lastCard && lastCard.id === p.id && lastCard.sig === sig) return;
+  lastCard = { id: p.id, sig };
   document.body.classList.add("card-only");
   $("#kicker").textContent = "";
   $("#page-title").innerHTML = "";
   $("#title-actions").innerHTML = "";
-  $("#view").innerHTML = `<div id="scan-root"></div>`;
-  Promise.resolve(mountProductPage($("#scan-root"), p, cardHelpers())).catch(err => {
+  // one draw at a time: a data refresh that lands mid-draw waits, then redraws quietly (no replayed intro)
+  cardQueue = cardQueue.then(() => {
+    if (lastCard?.sig !== sig) return;
+    const quiet = !!$("#scan-root .phone-card");
+    if (!$("#scan-root")) $("#view").innerHTML = `<div id="scan-root"></div>`;
+    return Promise.resolve(mountProductPage($("#scan-root"), p, { ...cardHelpers(), quiet }))
+      .then(() => new Promise(r => requestAnimationFrame(r)))
+      .then(() => window.NoirCurtain?.open());
+  }).catch(err => {
     $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "تعذر فتح البطاقة")}</p></article>`;
+    window.NoirCurtain?.open();
   });
 }
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
-function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) renderUnaizah($("#view")); }
-function viewFinance() { if (!$("#view").querySelector(".fx")) renderFinance($("#view")); }
+function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view")); }); }
+function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
 function viewYield() {
   $("#title-actions").innerHTML = "";
   renderYield($("#view"), helpers());
@@ -752,7 +768,7 @@ function viewSettings() {
     try { await store.importAll(JSON.parse(await f.text())); toast("Import complete"); } catch (err) { toast(err.message || "That file isn't a valid backup", true); }
     e.target.value = "";
   };
-  renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") });
+  syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
     const { parseStockPdf } = await import("./sync-admin.js?v=35");
@@ -785,7 +801,7 @@ function viewSettings() {
 // ── Film grain ───────────────────────────────────────────────
 function exportLedger() {
   const rows = data.products.map(p => ({ sku: p.sku, name: p.name, unit: p.unit, mini: p.stock?.mini || 0, refuel: p.stock?.refuel || 0, stores: p.stock?.stores || 0, total: total(p), value: value(p).toFixed(2) }));
-  downloadCountCsv(rows, "noir-stock-count.csv").then(() => toast("CSV exported")).catch(e => toast(e.message, true));
+  exportCount().then(m => m.downloadCountCsv(rows, "noir-stock-count.csv")).then(() => toast("CSV exported")).catch(e => toast(e.message, true));
 }
 function grain() {
   const el = $("#grain"); if (!el) return;
@@ -808,7 +824,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 grain();
-render();
+if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
 
