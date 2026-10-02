@@ -34,6 +34,14 @@ export const MENU = [
 
 // combos: parts are menu ids; drinks are assumed to match the popcorn size (medium with medium, large with large)
 export const COMBOS = [
+  // new combos (posters in assets/combos); cost comes from the matching recipe in the Recipe Master List
+  { id: "c-heroes", en: "Heroes combo", ar: "كومبو الأبطال", price: 35, parts: ["pop-r", "slush-m", "mm-s"], isNew: true, img: "assets/combos/heroes.webp", color: "#8a3fc0",
+    lines: [["1 small popcorn", "1 فشار صغير"], ["1 slush", "1 سلاش"], ["1 chocolate", "1 شوكولاتة"]], recipe: "Hero Combo (RegPop+ RegSlush+Small Chocolate)",
+    extra: { "pop-r": { price: 0, recipes: ["Regular Tub Salted Popcorn - 46 Oz", "Regular Tub Cheese Popcorn - 46 Oz", "Regular Tub Caramel Popcorn - 46 Oz", "Regular Tub Pizza Savory Popcorn-46 Oz"] } } },
+  { id: "c-duo", en: "Duo combo", ar: "كومبو الثنائي", price: 69, parts: ["pop-l", "slush-l", "slush-l"], isNew: true, img: "assets/combos/duo.webp", color: "#f06a7c",
+    lines: [["1 large popcorn", "1 فشار كبير"], ["2 slush", "2 سلاش"]], recipe: "Duo Combo (LrgPop+2 LrgSlush)" },
+  { id: "c-lamma", en: "Gathering combo", ar: "كومبو اللمة", price: 99, parts: ["pop-m", "pop-m", "slush-l", "slush-l", "nachos-r"], isNew: true, img: "assets/combos/lamma.webp", color: "#1f62d6",
+    lines: [["2 medium popcorn", "2 فشار وسط"], ["2 slush", "2 سلاش"], ["1 nachos", "1 ناتشوز"]], recipe: "Group Combo (2Med Pop +RegNachos+2Lrg Slush)" },
   { id: "c-couple", en: "Couple combo", ar: "كومبو شخصين", price: 65, parts: ["pop-l", "pop-l", "soft-l", "soft-l"] },
   { id: "c-xl", en: "XL combo", ar: "كومبو اكسترا لارج", price: 40, parts: ["pop-xl", "soft-l"] },
   { id: "c-medium", en: "Medium combo", ar: "كومبو الوسط", price: 38, parts: ["pop-m", "soft-m"] },
@@ -42,3 +50,6 @@ export const COMBOS = [
   { id: "c-kids", en: "Kids combo", ar: "كومبو الأطفال", price: 30, parts: ["pop-r", "rani", "mm-s"], extra: { "pop-r": { price: 0, recipes: ["Regular Tub Salted Popcorn - 46 Oz", "Regular Tub Cheese Popcorn - 46 Oz", "Regular Tub Caramel Popcorn - 46 Oz", "Regular Tub Pizza Savory Popcorn-46 Oz"] } } }
 ];
 export const GROUPS = { snacks: ["Cinema snacks", "سناكات السينما"], drinks: ["Drink picks", "مشروب من اختيارك"], sweets: ["Sweet picks", "الحلويات"] };
+
+// promo posters shown with the combos
+export const PROMOS = [{ id: "p-slush", en: "Slush your mood", ar: "خذ سلاشك على مزاجك", price: "25 / 27", img: "assets/combos/slush.webp", color: "#f2b31b", items: ["slush-m", "slush-l"] }];

@@ -1,20 +1,21 @@
-import * as store from "./store.js?v=72";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=72";
-import { SEED_DATE } from "./seed-data.js?v=72";
-import { renderYield, productPanel } from "./analytics.js?v=72";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=72";
-import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=72";
-import { usageOf } from "./consumption.js?v=72";
-import { AR as NAMES_AR } from "./names-ar.js?v=72";
+import * as store from "./store.js?v=73";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=73";
+import { SEED_DATE } from "./seed-data.js?v=73";
+import { renderYield, productPanel } from "./analytics.js?v=73";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=73";
+import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=73";
+import { usageOf } from "./consumption.js?v=73";
+import { AR as NAMES_AR } from "./names-ar.js?v=73";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const exportCount = lazy("./export-count.js?v=72");
-const financeView = lazy("./finance-view.js?v=72");
-const unaizahView = lazy("./unaizah-view.js?v=72");
-const syncAdmin = lazy("./sync-admin.js?v=72");
-const toolsMod = lazy("./tools.js?v=72");
-const intelMod = lazy("./stock-intel.js?v=72");
-const menuMod = lazy("./menu-lab.js?v=72");
+const exportCount = lazy("./export-count.js?v=73");
+const financeView = lazy("./finance-view.js?v=73");
+const unaizahView = lazy("./unaizah-view.js?v=73");
+const syncAdmin = lazy("./sync-admin.js?v=73");
+const toolsMod = lazy("./tools.js?v=73");
+const intelMod = lazy("./stock-intel.js?v=73");
+const menuMod = lazy("./menu-lab.js?v=73");
+const p360Mod = lazy("./product-360.js?v=73");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -213,11 +214,12 @@ function renderTicker() {
 }
 document.addEventListener("click", e => {
   const r = e.target.closest("[data-route]"); if (r) return go(r.dataset.route);
-  const ed = e.target.closest("[data-edit]"); if (ed) return openProductCard(data.products.find(p => p.id === ed.dataset.edit), cardHelpers());
+  const ed = e.target.closest("[data-edit]");
+  if (ed) { const p = data.products.find(x => x.id === ed.dataset.edit); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); return; }
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
-  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=72").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=73").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -454,18 +456,29 @@ function renderResults() {
   bindTilt();
 }
 
+// top 6 sellers by units actually rung up (not linked or estimated items)
+let topCache = null;
+function topRank(id) {
+  if (!topCache) topCache = data.products.filter(p => !moveOf(p.id) && soldOf(p.id) > 0).sort((a, b) => soldOf(b.id) - soldOf(a.id)).slice(0, 6).map(p => p.id);
+  const i = topCache.indexOf(id); return i < 0 ? 0 : i + 1;
+}
 function token(p) {
   const t = total(p), max = Math.max(...LOCATIONS.map(l => Number(p.stock?.[l.id]) || 0), 1), lv = level(p);
   const low = (Number(p.min) > 0 && t <= p.min) || lv.state === "low" || lv.state === "crit";
   const state = t === 0 ? `<span class="token-state out">Out</span>` : low ? `<span class="token-state low">Low</span>` : "";
   const unit = esc(UNITS[p.unit] || "");
-  return `<button class="token" data-edit="${esc(p.id)}">
+  const rank = topRank(p.id);
+  return `<button class="token ${rank ? "top" : ""}" data-edit="${esc(p.id)}">
     <div class="token-frame">${pic(p, "token-img")}<span class="token-id">${tokenNo(p.id)}</span>${state}${tank(lv)}</div>
+    ${rank ? `<span class="top-seller"><b>★</b>${siteLang() === "ar" ? "الأكثر مبيعاً" : "Top seller"} #${rank}</span>` : ""}
     <div class="token-body"><span class="token-cat">${esc(catName(p.category))}</span><h3>${esc(p.name)}</h3><span class="token-sku">${esc(p.sku || p.code || "not on report")}</span></div>
     <div class="level s-${lv.state}">${lv.state === "unset"
       ? `<span>Level</span><em>set a full level</em>`
       : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
-    <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
+    <div class="alloc">
+      <div class="alloc-bar" role="img" aria-label="Stock by location">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return n > 0 ? `<i class="l-${l.id}" style="flex:${n}" title="${esc(l.name)} ${qty(n)}"></i>` : ""; }).join("") || `<i class="none"></i>`}</div>
+      <div class="alloc-legend">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<span class="l-${l.id} ${ui.loc === l.id ? "on" : ""} ${n ? "" : "zero"}"><i></i><em>${l.code}</em><b>${qty(n)}</b><small>${t ? Math.round(n / t * 100) : 0}%</small></span>`; }).join("")}</div>
+    </div>
     <div class="token-foot"><span class="qty">${qty(t)} ${unit}</span><span class="val">${Number(p.rate || 0).toFixed(2)}<small>/${unit}</small></span></div>
     ${usageOf(p, data.products) ? (u => `<p class="token-sold">${siteLang() === "ar" ? "استهلاك" : "Used"} <b>${u.exact ? "" : "≈ "}${qty(u.total)}</b> ${esc(UNITS[p.unit] || "")}${u.exact ? "" : `<i>${siteLang() === "ar" ? "تقدير" : "est."}</i>`}</p>`)(usageOf(p, data.products)) : soldOf(p.id) ? (mv => { const ar = siteLang() === "ar";
       return `<p class="token-sold">${mv && mv.shared ? (ar ? "تحرك مع" : "Moved with") : (ar ? "مباع من بداية السنة" : "Sold this year")} <b>${qty(soldOf(p.id))}</b>${mv && mv.shared ? ` ${mv.unit[ar ? 1 : 0]}` : ""}${mv && !mv.shared ? `<i>${ar ? "مرتبط" : "linked"}</i>` : ""}</p>`; })(moveOf(p.id)) : ""}
@@ -696,6 +709,7 @@ function renderHud() {
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
+const p360Helpers = () => ({ ...toolHelpers(), catName, topRank, saveProduct: store.saveProduct, log: store.log, requirePin, pinUnlocked });
 const toolHelpers = () => ({ ...cardHelpers(), fuzzyIds, namesAr: NAMES_AR, level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
 function viewLabels() {
   document.body.classList.remove("card-only");
@@ -845,7 +859,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=72");
+    const { parseStockPdf } = await import("./sync-admin.js?v=73");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -855,7 +869,7 @@ function viewSettings() {
   });
   $("#up-sales")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const pdfjs = await (await import("./sync-admin.js?v=72")).loadPdf();
+    const pdfjs = await (await import("./sync-admin.js?v=73")).loadPdf();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -879,7 +893,7 @@ function exportLedger() {
 
 // ── Boot ─────────────────────────────────────────────────────
 store.onChange(snap => {
-  data = fixCats(snap);
+  data = fixCats(snap); topCache = null;
   if (ui.route === "count" && ui.session) { renderNet(); renderTicker(); return; }
   render();
 });
@@ -889,7 +903,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=72").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=73").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

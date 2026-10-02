@@ -5,11 +5,11 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "./names-ar.js?v=72";
-import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=72";
-import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=72";
-import { placement, isBulk } from "./fefo-place.js?v=72";
-import { usageOf } from "./consumption.js?v=72";
+import { AR, LOC_AR } from "./names-ar.js?v=73";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=73";
+import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=73";
+import { placement, isBulk } from "./fefo-place.js?v=73";
+import { usageOf } from "./consumption.js?v=73";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);

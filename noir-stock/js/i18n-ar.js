@@ -156,7 +156,7 @@ function tr(s) {
 }
 
 // Never touch the scan card, the barcode label sheet, finance pages (already Arabic), code or charts.
-const SKIP = "script,style,svg,canvas,code,textarea,.pass,#labels,.lbl,.qr,.scan-qr,#curtain,.marquee,.uz,.fx,.hash-chip,.data.hash,[data-noar]";
+const SKIP = "script,style,svg,canvas,code,textarea,.pass,#labels,.lbl,.qr,.scan-qr,#curtain,.marquee,.uz,.fx,.hash-chip,.data.hash,[data-noar],.p360,.ml";
 const ATTRS = ["placeholder", "aria-label", "title"];
 
 function walk(root) {

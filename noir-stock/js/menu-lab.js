@@ -1,9 +1,9 @@
 // Menu Lab — the price boards joined to recipe costs, sales and stock.
 //   Menu engineering (Kasavana & Smith): popularity × contribution margin → Stars / Plowhorses / Puzzles / Dogs
 //   Charts: apache/echarts (vendored)
-import { MENU, COMBOS, GROUPS, VAT } from "./menu-data.js?v=72";
-import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=72";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "./sales-data.js?v=72";
+import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "./menu-data.js?v=73";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=73";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "./sales-data.js?v=73";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -16,7 +16,7 @@ const T = {
     combos: "Combo value", combosSub: "what the guest saves and what the cinema keeps (drink size follows the popcorn size)",
     cols: ["Combo", "À la carte", "Combo price", "Guest saves", "Cost", "Profit", "Margin"],
     sim: "Price simulator", simSub: "move the price; volume held at this year's sales", item: "Item", newP: "New price", delta: "Change in yearly profit",
-    range: "flavours", groupsTitle: "The boards" },
+    range: "flavours", groupsTitle: "The boards", showcase: "Combos & offers", newTag: "NEW", blocked: "Can't be made: out of" },
   ar: { title: "مختبر المنيو", sub: `أسعار المنيو (شاملة ضريبة 15%) مقابل تكلفة الوصفة، والمبيعات من ${SALES_FROM} إلى ${SALES_TO}، والمخزون الحالي.`,
     k: { rev: "الإيراد بسعر المنيو", profit: "إجمالي الربح", fc: "نسبة التكلفة", best: "الأعلى ربحاً" }, note: "حد أعلى: أصناف الكومبو محسوبة بسعر المنيو الكامل.",
     price: "السعر", net: "بدون ضريبة", cost: "التكلفة", margin: "ربح الحبة", sold: "المباع", make: "يكفي المخزون لـ", fcost: "تكلفة",
@@ -26,7 +26,7 @@ const T = {
     combos: "قيمة الكومبو", combosSub: "كم يوفّر الزبون وكم يبقى للسينما (حجم المشروب نفس حجم الفشار)",
     cols: ["الكومبو", "بالمفرد", "سعر الكومبو", "توفير الزبون", "التكلفة", "الربح", "الهامش"],
     sim: "محاكي الأسعار", simSub: "حرّك السعر، والكمية نفس مبيعات هذه السنة", item: "الصنف", newP: "السعر الجديد", delta: "التغير في ربح السنة",
-    range: "نكهات", groupsTitle: "اللوحات" }
+    range: "نكهات", groupsTitle: "اللوحات", showcase: "الكومبو والعروض", newTag: "جديد", blocked: "ما ينسوى الحين: خلص" }
 };
 const QCOL = { star: "#ffc857", horse: "#3be7ff", puzzle: "#ff4fd8", dog: "#8c7aa3" };
 const low = s => String(s || "").toLowerCase();
@@ -38,21 +38,24 @@ function costOf(names) {
   if (!cs.length) return null;
   return { mean: cs.reduce((a, c) => a + c, 0) / cs.length, min: Math.min(...cs), max: Math.max(...cs), n: cs.length };
 }
-// how many of the best-stocked flavour the shelves can make
-function makeable(names, products) {
+// how many of the best-stocked flavour the shelves can make, and which item runs out first
+function makeInfo(names, products) {
   const bySku = new Map(products.filter(p => p.sku).map(p => [low(p.sku), p]));
-  let best = 0;
+  let best = { n: 0, lim: null };
   names.map(n => recipeByName.get(low(n))).filter(Boolean).forEach(r => {
-    const m = Math.min(...r.lines.map(l => {
-      const p = bySku.get(low(l.rm)); if (!p || !(l.qty > 0)) return Infinity;
+    let n = Infinity, lim = null;
+    r.lines.forEach(l => {
+      const p = bySku.get(low(l.rm)); if (!p || !(l.qty > 0)) return;
       const key = Object.keys(RAW_MATERIALS).find(k => low(k) === low(l.rm));
       const conv = (key && RAW_MATERIALS[key].conv) || 1;
-      return Math.floor(Object.values(p.stock || {}).reduce((a, n) => a + (Number(n) || 0), 0) * conv / l.qty + 1e-9);
-    }));
-    if (m !== Infinity && m > best) best = m;
+      const m = Math.floor(Object.values(p.stock || {}).reduce((a, x) => a + (Number(x) || 0), 0) * conv / l.qty + 1e-9);
+      if (m < n) { n = m; lim = p; }
+    });
+    if (n !== Infinity && (n > best.n || !best.lim)) best = { n, lim };
   });
   return best;
 }
+const makeable = (names, products) => makeInfo(names, products).n;
 
 export function analyseMenu(products) {
   const items = MENU.map(m => {
@@ -69,8 +72,10 @@ export function analyseMenu(products) {
   const byId = Object.fromEntries(items.map(i => [i.id, i]));
   const combos = COMBOS.map(cb => {
     const parts = cb.parts.map(pid => byId[pid] || (() => { const x = cb.extra?.[pid]; const c = costOf(x.recipes); return { id: pid, price: x.price, cost: c ? c.mean : 0 }; })());
-    const alc = parts.reduce((a, p) => a + p.price, 0), cost = parts.reduce((a, p) => a + p.cost, 0), net = cb.price / (1 + VAT);
-    return { ...cb, alc, cost, net, profit: net - cost, margin: net ? (net - cost) / net : 0, save: alc ? 1 - cb.price / alc : 0, hasFree: parts.some(p => !p.price) };
+    const rc = cb.recipe ? costOf([cb.recipe]) : null, mk = cb.recipe ? makeInfo([cb.recipe], products) : null;
+    const alc = parts.reduce((a, p) => a + p.price, 0), cost = rc ? rc.mean : parts.reduce((a, p) => a + p.cost, 0), net = cb.price / (1 + VAT);
+    return { ...cb, alc, cost, net, profit: net - cost, margin: net ? (net - cost) / net : 0, save: alc ? 1 - cb.price / alc : 0, hasFree: parts.some(p => !p.price),
+      make: mk ? mk.n : Math.min(...parts.map(p => p.make ?? Infinity)), lim: mk ? mk.lim : null };
   });
   const rev = items.reduce((a, i) => a + i.revenue, 0), profit = items.reduce((a, i) => a + i.profit, 0);
   return { items, combos, rev, profit, fc: rev ? 1 - profit / rev : 0, best: [...items].sort((a, b) => b.profit - a.profit)[0] };
@@ -91,6 +96,27 @@ export function renderMenuLab(host, H) {
       <article class="good"><span>${L.k.profit}</span><b class="data">${n0(A.profit)} <small>SAR</small></b></article>
       <article class="${A.fc < .2 ? "good" : "warn"}"><span>${L.k.fc}</span><b class="data">${pct(A.fc)}</b></article>
       <article><span>${L.k.best}</span><b>${esc(name(A.best))}</b><em class="data">${n0(A.best.profit)} SAR</em></article>
+    </div>
+
+    <h3 class="ml-h">${L.showcase}</h3>
+    <div class="ml-show">${A.combos.filter(c => c.img).map(c => `<article class="ml-card" style="--c:${c.color}">
+        <div class="ml-poster"><img src="${c.img}" alt="${esc(ar ? c.ar : c.en)}" loading="lazy">${c.isNew ? `<span class="ml-new">${L.newTag}</span>` : ""}</div>
+        <div class="ml-card-b">
+          <header><b>${esc(ar ? c.ar : c.en)}</b><strong class="data">${c.price}<small> SR</small></strong></header>
+          <div class="ml-lines">${(c.lines || []).map(l => `<span>${esc(l[ar ? 1 : 0])}</span>`).join("")}</div>
+          <div class="ml-stats">
+            <div><span>${L.cost}</span><b class="data">${m2(c.cost)}</b></div>
+            <div><span>${L.margin}</span><b class="data pos">${m2(c.profit)}</b></div>
+            <div><span>${L.cols[6]}</span><b class="data">${pct(c.margin)}</b></div>
+            <div class="${c.make ? "" : "zero"}"><span>${L.make}</span><b class="data">${Number.isFinite(c.make) ? n0(c.make) : "—"}</b></div>
+          </div>
+          ${!c.make && c.lim ? `<p class="ml-warn">⚑ ${L.blocked} ${esc(ar ? (H.namesAr?.[c.lim.id] || c.lim.name) : c.lim.name)}</p>` : c.hasFree ? "" : `<p class="ml-save">${L.cols[3]} <b>${pct(c.save)}</b> · ${c.alc} → ${c.price} SR</p>`}
+        </div></article>`).join("")}
+      ${PROMOS.map(pr => { const its = pr.items.map(id => A.items.find(i => i.id === id)).filter(Boolean); return `<article class="ml-card" style="--c:${pr.color}">
+        <div class="ml-poster"><img src="${pr.img}" alt="" loading="lazy"></div>
+        <div class="ml-card-b"><header><b>${esc(ar ? pr.ar : pr.en)}</b><strong class="data">${pr.price}<small> SR</small></strong></header>
+          <div class="ml-stats">${its.map(i => `<div><span>${esc(name(i))}</span><b class="data pos">+${m2(i.margin)}</b></div><div class="${i.make ? "" : "zero"}"><span>${L.make}</span><b class="data">${n0(i.make)}</b></div>`).join("")}</div>
+        </div></article>`; }).join("")}
     </div>
 
     <h3 class="ml-h">${L.groupsTitle}</h3>

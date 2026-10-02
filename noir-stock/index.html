@@ -11,15 +11,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Noir Stock">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239b6bff'/%3E%3Cstop offset='.6' stop-color='%23ff4fd8'/%3E%3Cstop offset='1' stop-color='%233be7ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='16' fill='%2305040a'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='url(%23g)'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=72">
-<link rel="stylesheet" href="css/fonts.css?v=72">
-<link rel="stylesheet" href="css/indicators.css?v=72">
-<link rel="stylesheet" href="css/scan-card.css?v=72">
-<link rel="stylesheet" href="css/scan-pass.css?v=72">
-<link rel="stylesheet" href="css/brand.css?v=72">
-<link rel="stylesheet" href="css/unaizah.css?v=72">
-<link rel="stylesheet" href="css/finance.css?v=72">
-<link rel="stylesheet" href="css/analyst.css?v=72">
+<link rel="stylesheet" href="css/style.css?v=73">
+<link rel="stylesheet" href="css/fonts.css?v=73">
+<link rel="stylesheet" href="css/indicators.css?v=73">
+<link rel="stylesheet" href="css/scan-card.css?v=73">
+<link rel="stylesheet" href="css/scan-pass.css?v=73">
+<link rel="stylesheet" href="css/brand.css?v=73">
+<link rel="stylesheet" href="css/unaizah.css?v=73">
+<link rel="stylesheet" href="css/finance.css?v=73">
+<link rel="stylesheet" href="css/analyst.css?v=73">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
@@ -99,8 +99,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-72")) {
-    localStorage.setItem("noir-bust-72", "1");
+  if (!localStorage.getItem("noir-bust-73")) {
+    localStorage.setItem("noir-bust-73", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
@@ -130,10 +130,11 @@ try {
   <section id="view" aria-live="polite"></section>
 </main>
 
+<footer class="dev-chip" data-noar><a href="https://wa.me/966561105517" target="_blank" rel="noopener" dir="ltr"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3a.5.5 0 0 0 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.1 5.1 0 0 0 1.1 2.7 11.6 11.6 0 0 0 4.4 3.9c1.7.7 2.3.8 3.1.6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .2-1.2c-.1-.1-.3-.2-.5-.3Z"/></svg><span>Contact the developer</span><b>+966 56 110 5517</b></a></footer>
 <nav class="dock-nav" id="nav" aria-label="Main"></nav>
 <div id="modal-root"></div>
 <div class="toasts" id="toasts" role="status"></div>
 
-<script type="module" src="js/app.js?v=72"></script>
+<script type="module" src="js/app.js?v=73"></script>
 </body>
 </html>
