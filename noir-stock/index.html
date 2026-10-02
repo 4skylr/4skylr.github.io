@@ -11,15 +11,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Noir Stock">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%239b6bff'/%3E%3Cstop offset='.6' stop-color='%23ff4fd8'/%3E%3Cstop offset='1' stop-color='%233be7ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='16' fill='%2305040a'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='url(%23g)'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=73">
-<link rel="stylesheet" href="css/fonts.css?v=73">
-<link rel="stylesheet" href="css/indicators.css?v=73">
-<link rel="stylesheet" href="css/scan-card.css?v=73">
-<link rel="stylesheet" href="css/scan-pass.css?v=73">
-<link rel="stylesheet" href="css/brand.css?v=73">
-<link rel="stylesheet" href="css/unaizah.css?v=73">
-<link rel="stylesheet" href="css/finance.css?v=73">
-<link rel="stylesheet" href="css/analyst.css?v=73">
+<link rel="stylesheet" href="css/style.css?v=74">
+<link rel="stylesheet" href="css/fonts.css?v=74">
+<link rel="stylesheet" href="css/indicators.css?v=74">
+<link rel="stylesheet" href="css/scan-card.css?v=74">
+<link rel="stylesheet" href="css/scan-pass.css?v=74">
+<link rel="stylesheet" href="css/brand.css?v=74">
+<link rel="stylesheet" href="css/unaizah.css?v=74">
+<link rel="stylesheet" href="css/finance.css?v=74">
+<link rel="stylesheet" href="css/analyst.css?v=74">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
@@ -99,8 +99,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-73")) {
-    localStorage.setItem("noir-bust-73", "1");
+  if (!localStorage.getItem("noir-bust-74")) {
+    localStorage.setItem("noir-bust-74", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
@@ -135,6 +135,6 @@ try {
 <div id="modal-root"></div>
 <div class="toasts" id="toasts" role="status"></div>
 
-<script type="module" src="js/app.js?v=73"></script>
+<script type="module" src="js/app.js?v=74"></script>
 </body>
 </html>

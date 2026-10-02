@@ -5,11 +5,11 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "./names-ar.js?v=73";
-import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=73";
-import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=73";
-import { placement, isBulk } from "./fefo-place.js?v=73";
-import { usageOf } from "./consumption.js?v=73";
+import { AR, LOC_AR } from "./names-ar.js?v=74";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=74";
+import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=74";
+import { placement, isBulk } from "./fefo-place.js?v=74";
+import { usageOf } from "./consumption.js?v=74";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -235,9 +235,23 @@ export async function renderScanCard(root, p, ctx) {
       <div class="pass-foot">
         ${dated.length ? `<p class="fifo ${misplaced || expiredN ? "bad" : ""}"><b>${misplaced || expiredN ? "⚑" : "✓"}</b> ${misplaced ? L.bad(misplaced) : expiredN ? L.expd(expiredN) : L.fifo}</p>
         <p class="pc-groups">${L.summary(dated.length, plc.locs)}</p>` : ""}
-        ${use ? `<div class="pc-use"><p>${L.used} <b dir="ltr">${use.exact ? "" : "≈ "}${H.qty(use.total)}</b> ${H.esc(unit)}</p>
-          <div class="pc-use-parts">${use.parts.map(x => `<span><i>${H.esc(x.size[lang === "ar" ? 1 : 0])}</i><b dir="ltr">${H.qty(x.sold)} × ${H.qty(x.per)} ${H.esc(x.uom)}</b></span>`).join("")}</div>
-          ${use.exact ? "" : `<small>${L.est(H.qty(use.lo), H.qty(use.hi), H.esc(unit))}</small>`}</div>`
+        ${use ? (() => {
+          const HUE = ["#3be7ff", "#9b6bff", "#ff4fd8", "#ffc857"], ar = lang === "ar";
+          const parts = use.parts.map((x, i) => ({ ...x, out: x.sold * x.per / x.conv, hue: HUE[i % HUE.length] }));
+          const tot = parts.reduce((a, x) => a + x.out, 0) || 1, span = use.hi - use.lo || 1, mark = ((use.total - use.lo) / span * 100).toFixed(1);
+          return `<section class="cx">
+            <header class="cx-top"><span class="cx-chip"><i></i>${ar ? "استهلاك · من بداية السنة" : "CONSUMPTION · YTD"}</span>${use.exact ? `<span class="cx-tag ok">${ar ? "دقيق" : "EXACT"}</span>` : `<span class="cx-tag">${ar ? "تقدير" : "ESTIMATE"}</span>`}</header>
+            <div class="cx-big" dir="ltr"><b>${use.exact ? "" : "≈"}${H.qty(use.total)}</b><span>${H.esc(unit)}</span></div>
+            <div class="cx-stack" dir="ltr">${parts.map(x => `<i style="flex:${x.out.toFixed(3)};--h:${x.hue}"></i>`).join("")}</div>
+            <div class="cx-rows">${parts.map(x => `<div class="cx-row" style="--h:${x.hue}">
+              <span class="cx-node"></span>
+              <div class="cx-id"><b>${H.esc(x.size[ar ? 1 : 0])}</b><small dir="ltr">${H.qty(x.sold)} × ${H.qty(x.per)} ${H.esc(x.uom)}</small></div>
+              <div class="cx-val" dir="ltr"><b>${H.qty(x.out)}</b><small>${H.esc(unit)} · ${Math.round(x.out / tot * 100)}%</small></div>
+              <span class="cx-bar"><u style="width:${(x.out / tot * 100).toFixed(1)}%"></u></span></div>`).join("")}</div>
+            ${use.exact ? "" : `<div class="cx-range" dir="ltr"><div class="cx-rail"><span style="left:${mark}%"></span></div>
+              <div class="cx-ends"><small>${H.qty(use.lo)} ${H.esc(unit)}</small><small>${H.qty(use.hi)} ${H.esc(unit)}</small></div>
+              <p dir="${ar ? "rtl" : "ltr"}">${ar ? "المبيعات بالحجم فقط، فالنكهات محسوبة بالتساوي" : "Sales are by size only, so flavours are split evenly"}</p></div>`}
+          </section>`; })()
         : `<p class="pc-sold">${mv && mv.shared ? L.moved : L.sold} <b class="odo-xs" data-odo="${soldOf(p.id) || 0}" dir="ltr">0</b>${mv && mv.shared ? ` ${H.esc(mv.unit[lang === "ar" ? 1 : 0])}` : ""}</p>`}
         ${src ? `<p class="pc-link">${L.via} ${src.map(id => products.find(x => x.id === id)).filter(Boolean).map(x => H.esc(nameOf(x))).join(" + ")}</p>` : ""}
         ${moves.length ? `<p class="pc-link">${L.alsoMoves}: ${moves.map(x => `${H.esc(nameOf(x))} <b dir="ltr">${H.qty(soldOf(x.id))}</b>`).join(" · ")}</p>` : ""}
