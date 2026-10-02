@@ -82,6 +82,7 @@ const ROUTES = [
   { id: "count", label: "Count", kicker: "Stocktake", title: 'Count <span class="voice">the room</span>' },
   { id: "yield", label: "Yield", kicker: "Analytics", title: 'What stock <span class="voice">can sell</span>' },
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
+  { id: "finance", label: "Budget", kicker: "Finance", title: 'Branch <span class="voice">budget</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
 const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
