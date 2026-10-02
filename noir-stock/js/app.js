@@ -5,7 +5,7 @@ import { renderYield, productPanel } from "./analytics.js?v=37";
 import { mountGithubDash } from "./gh-dash.js?v=37";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=37";
 import { downloadCountCsv } from "./export-count.js?v=48";
-import { renderFinance } from "./finance-view.js?v=56";
+import { renderFinance } from "./finance-view.js?v=57";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
