@@ -1,19 +1,20 @@
-import * as store from "./store.js?v=71";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=71";
-import { SEED_DATE } from "./seed-data.js?v=71";
-import { renderYield, productPanel } from "./analytics.js?v=71";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=71";
-import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=71";
-import { usageOf } from "./consumption.js?v=71";
-import { AR as NAMES_AR } from "./names-ar.js?v=71";
+import * as store from "./store.js?v=72";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=72";
+import { SEED_DATE } from "./seed-data.js?v=72";
+import { renderYield, productPanel } from "./analytics.js?v=72";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=72";
+import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=72";
+import { usageOf } from "./consumption.js?v=72";
+import { AR as NAMES_AR } from "./names-ar.js?v=72";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const exportCount = lazy("./export-count.js?v=71");
-const financeView = lazy("./finance-view.js?v=71");
-const unaizahView = lazy("./unaizah-view.js?v=71");
-const syncAdmin = lazy("./sync-admin.js?v=71");
-const toolsMod = lazy("./tools.js?v=71");
-const intelMod = lazy("./stock-intel.js?v=71");
+const exportCount = lazy("./export-count.js?v=72");
+const financeView = lazy("./finance-view.js?v=72");
+const unaizahView = lazy("./unaizah-view.js?v=72");
+const syncAdmin = lazy("./sync-admin.js?v=72");
+const toolsMod = lazy("./tools.js?v=72");
+const intelMod = lazy("./stock-intel.js?v=72");
+const menuMod = lazy("./menu-lab.js?v=72");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -216,7 +217,7 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
-  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=71").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=72").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -733,7 +734,12 @@ function viewScanProduct(p) {
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view")); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
 function viewYield() {
-  $("#title-actions").innerHTML = "";
+  const ar = siteLang() === "ar", tab = ui.yieldTab || lsGet("yieldTab", "stock");
+  $("#title-actions").innerHTML = `<div class="seg" role="group" aria-label="Yield views">
+    <button data-ytab="stock" aria-pressed="${tab === "stock"}">${icon("yield")}${ar ? "المخزون" : "Stock yield"}</button>
+    <button data-ytab="menu" aria-pressed="${tab === "menu"}">${icon("finance")}${ar ? "المنيو والربح" : "Menu Lab"}</button></div>`;
+  $$("[data-ytab]").forEach(b => b.onclick = () => { ui.yieldTab = b.dataset.ytab; lsSet("yieldTab", ui.yieldTab); viewYield(); });
+  if (tab === "menu") { $("#view").innerHTML = `<div id="menu-lab"></div>`; menuMod().then(m => { if (ui.route === "yield") m.renderMenuLab($("#menu-lab"), helpers()); }); return; }
   renderYield($("#view"), helpers());
 }
 
@@ -839,7 +845,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=71");
+    const { parseStockPdf } = await import("./sync-admin.js?v=72");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -849,7 +855,7 @@ function viewSettings() {
   });
   $("#up-sales")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const pdfjs = await (await import("./sync-admin.js?v=71")).loadPdf();
+    const pdfjs = await (await import("./sync-admin.js?v=72")).loadPdf();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -883,7 +889,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=71").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=72").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

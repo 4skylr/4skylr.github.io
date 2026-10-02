@@ -110,6 +110,45 @@ export async function startTour() {
     progressText: "{{current}} / {{total}}", onDestroyed: () => { try { localStorage.setItem("noir-tour-v1", "1"); } catch {} } }).drive();
 }
 
+// Refresh: clear the offline cache, pull the newest files and reload (no need to re-add the link on the phone)
+export async function hardRefresh() {
+  document.documentElement.classList.add("refreshing");
+  try {
+    const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
+    await Promise.all(regs.map(r => r.update().catch(() => {})));
+    if (window.caches) await Promise.all((await caches.keys()).map(k => caches.delete(k)));
+  } catch {}
+  location.reload();
+}
+// pull down at the top of the page to refresh (the home-screen app has no reload button)
+function pullToRefresh() {
+  if (!matchMedia("(pointer: coarse)").matches) return;
+  const tip = document.createElement("div"); tip.className = "ptr"; tip.innerHTML = "<i>⟳</i>"; document.body.append(tip);
+  let y0 = null, d = 0;
+  addEventListener("touchstart", e => { y0 = scrollY <= 0 && !document.querySelector("#modal-root .veil, #skylr, .driver-popover") ? e.touches[0].clientY : null; d = 0; }, { passive: true });
+  addEventListener("touchmove", e => {
+    if (y0 == null) return; d = Math.max(0, e.touches[0].clientY - y0);
+    tip.style.setProperty("--d", Math.min(d, 120) + "px"); tip.classList.toggle("on", d > 10); tip.classList.toggle("ready", d > 90);
+  }, { passive: true });
+  addEventListener("touchend", () => { if (y0 != null && d > 90) { tip.classList.add("go"); hardRefresh(); } else { tip.classList.remove("on", "ready"); } y0 = null; });
+}
+// tell the user when a newer version has been downloaded in the background
+function watchUpdates() {
+  navigator.serviceWorker?.getRegistration?.().then(reg => {
+    if (!reg) return;
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing; if (!w) return;
+      w.addEventListener("statechange", () => {
+        if (w.state !== "installed" || !navigator.serviceWorker.controller || document.getElementById("upd-bar")) return;
+        const bar = document.createElement("button"); bar.id = "upd-bar"; bar.type = "button";
+        bar.textContent = AR() ? "⟳ يوجد تحديث جديد — اضغط للتحميل" : "⟳ A new version is ready — tap to load";
+        bar.onclick = hardRefresh; document.body.append(bar);
+      });
+    });
+    setInterval(() => reg.update().catch(() => {}), 10 * 60 * 1000);
+  }).catch(() => {});
+}
+
 let deferred = null;
 export function mountTools(H) {
   document.addEventListener("keydown", e => {
@@ -125,7 +164,12 @@ export function mountTools(H) {
     help.type = "button"; help.id = "tour-btn"; help.className = "btn sm ghost icon"; help.textContent = "?";
     help.title = AR() ? "جولة تعريفية" : "Guided tour"; help.setAttribute("aria-label", help.title);
     help.onclick = () => startTour().catch(() => {}); meta.prepend(help);
+    const rf = document.createElement("button");
+    rf.type = "button"; rf.id = "refresh-btn"; rf.className = "btn sm ghost icon"; rf.innerHTML = "<span>⟳</span>";
+    rf.title = AR() ? "تحديث الصفحة" : "Refresh"; rf.setAttribute("aria-label", rf.title);
+    rf.onclick = hardRefresh; meta.prepend(rf);
   }
+  pullToRefresh(); watchUpdates();
   let seen = null; try { seen = localStorage.getItem("noir-tour-v1"); } catch {}
   if (!seen && !/[?&]p=|#p\//.test(location.href)) setTimeout(() => { if (!document.querySelector("#modal-root .veil, #skylr")) startTour().catch(() => {}); }, 2600);
   window.addEventListener("beforeinstallprompt", e => {
