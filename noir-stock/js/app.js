@@ -5,7 +5,7 @@ import { renderYield, productPanel } from "./analytics.js?v=37";
 import { mountGithubDash } from "./gh-dash.js?v=37";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=37";
 import { downloadCountCsv } from "./export-count.js?v=48";
-import { renderFinance } from "./finance-view.js?v=52";
+import { renderFinance } from "./finance-view.js?v=53";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
@@ -135,8 +135,11 @@ function download(name, content, type) {
 const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
 
 // ── Chrome ───────────────────────────────────────────────────
+const LANG_KEY = "noir-lang";
+const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", settings: "الإعدادات" };
+function siteLang() { return sessionStorage.getItem(LANG_KEY) || "en"; }
 function renderNav() {
-  $("#nav").innerHTML = ROUTES.map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${r.label}">${icon(r.id)}<span>${r.label}</span></button>`).join("");
+  $("#nav").innerHTML = ROUTES.map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span></button>`).join("");
 }
 function renderNet() {
   const live = data.mode === "firebase", el = $("#net");
@@ -177,6 +180,13 @@ function render() {
     if (p) return viewScanProduct(p);
   }
   renderNav(); renderNet(); renderTicker();
+  const langBtn = document.getElementById("lang-btn");
+  if (langBtn && !langBtn.dataset.bound) {
+    langBtn.dataset.bound = "1";
+    langBtn.textContent = siteLang() === "ar" ? "English" : "عربي";
+    document.documentElement.lang = siteLang();
+    langBtn.onclick = () => { sessionStorage.setItem(LANG_KEY, siteLang() === "ar" ? "en" : "ar"); location.reload(); };
+  }
   const r = ROUTES.find(x => x.id === ui.route) || ROUTES[0];
   $("#kicker").textContent = r.kicker;
   $("#page-title").innerHTML = r.title;
