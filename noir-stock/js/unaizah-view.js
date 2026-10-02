@@ -3,13 +3,11 @@
 //   charts      github.com/apache/echarts
 //   indicators  github.com/anandanand84/technicalindicators  (SMA · Bollinger · RSI · MACD)
 //   counters    github.com/inorganik/countUp.js
-//   data grid   github.com/grid-js/gridjs
 // Vendored copies of the npm releases live in vendor/ so the board works offline.
 const CDN = {
   echarts: "vendor/echarts.min.js",
   ta: "vendor/technicalindicators.min.js",
-  countup: "vendor/countUp.umd.js",
-  grid: "vendor/gridjs.umd.js"
+  countup: "vendor/countUp.umd.js"
 };
 const lang = () => sessionStorage.getItem("noir-lang") || "en";
 
@@ -46,6 +44,9 @@ const T = {
     week: "Weekday rhythm", weekSub: "Average revenue by day of week.",
     mix: "Liquidity mix", mixSub: "Monthly inflow stacked by tender.",
     recon: "Reconciliation", reconSub: "Drawer excess and shortage against the POS report, with accuracy.",
+    cashT: "Cash & deposits", cashSub: "Cash collected per month from the DCS, what was counted into the safe, and the drawer excess and shortage — line it up with the bank deposit file.",
+    cashCols: { month: "Month", days: "Days", cash: "Cash (DCS)", safe: "Counted to safe", diff: "Cash − safe", excess: "Excess", shortage: "Shortage", net: "Net", onHand: "On hand (month end)", check: "Check" },
+    cashOk: "Matches", cashCheck: "Review", cashTotal: "Total", cashDays: "Days to review", cashDaysNone: "Every counted day matches its cash total.", cashExport: "Export cash CSV", notCounted: "not counted",
     board: "Validator board", boardSub: "Cashiers ranked by revenue handled; accuracy = 1 − |variance| ÷ handled.",
     ledger: "Block explorer", ledgerSub: "Every business day is a block. Search, sort, export.",
     tabDays: "Daily blocks", tabMonths: "Monthly statement", export: "Export CSV",
@@ -68,6 +69,9 @@ const T = {
     week: "إيقاع الأسبوع", weekSub: "متوسط الإيراد حسب يوم الأسبوع.",
     mix: "مزيج السيولة", mixSub: "الإيراد الشهري مكدّس حسب وسيلة الدفع.",
     recon: "المطابقة", reconSub: "الزيادة والعجز في الدرج مقابل تقرير نقاط البيع، مع نسبة الدقة.",
+    cashT: "الكاش والإيداعات", cashSub: "الكاش المحصّل شهرياً من ملفات DCS، والمبلغ المعدود للخزنة، والزيادة والعجز — قارنه مع ملف الإيداع البنكي.",
+    cashCols: { month: "الشهر", days: "الأيام", cash: "الكاش (DCS)", safe: "المعدود للخزنة", diff: "الكاش − الخزنة", excess: "زيادة", shortage: "عجز", net: "الصافي", onHand: "الرصيد آخر الشهر", check: "التحقق" },
+    cashOk: "مطابق", cashCheck: "راجع", cashTotal: "الإجمالي", cashDays: "أيام تحتاج مراجعة", cashDaysNone: "كل الأيام المعدودة مطابقة لإجمالي الكاش.", cashExport: "تصدير الكاش CSV", notCounted: "غير معدود",
     board: "لوحة المدققين", boardSub: "الكاشيرية مرتبين حسب المبالغ المستلمة؛ الدقة = ١ − |الفرق| ÷ المستلم.",
     ledger: "مستكشف البلوكات", ledgerSub: "كل يوم عمل بلوك مستقل. ابحث، رتّب، صدّر.",
     tabDays: "البلوكات اليومية", tabMonths: "القائمة الشهرية", export: "تصدير CSV",
@@ -110,8 +114,11 @@ function load(src) {
 
 let charts = [];
 let observer = null;
+let renderId = 0;
 const chart = el => { const c = window.echarts.init(el, null, { renderer: "canvas" }); charts.push(c); return c; };
-function dispose() { charts.forEach(c => c.dispose()); charts = []; observer?.disconnect(); }
+function dispose() {
+  charts.forEach(c => c.dispose()); charts = []; observer?.disconnect();
+}
 
 const AXIS = { axisLine: { lineStyle: { color: "rgba(190,170,255,.18)" } }, axisLabel: { color: "#7f789c", fontFamily: "Martian Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.07)" } } };
 const TIP = { backgroundColor: "rgba(12,9,22,.94)", borderColor: "rgba(155,107,255,.45)", textStyle: { color: "#f2efff", fontFamily: "Bricolage Grotesque, system-ui", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(155,107,255,.25)" };
@@ -198,19 +205,21 @@ function gapRanges(missing) {
 
 // ── render ──────────────────────────────────────────────────────────
 export async function renderUnaizah(root) {
+  const id = ++renderId;
   dispose();
   const ar = lang() === "ar", t = T[ar ? "ar" : "en"];
   root.innerHTML = `<div class="uz-loading"><i></i><span>${ar ? "مزامنة البلوكات…" : "Syncing blocks…"}</span></div>`;
   let data;
   try {
     [data] = await Promise.all([
-      fetch("unaizah/ledger.json?v=63").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
-      load(CDN.echarts), load(CDN.ta), load(CDN.countup), load(CDN.grid)
+      fetch(`unaizah/ledger.json?v=${Date.now() / 36e5 | 0}`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      load(CDN.echarts), load(CDN.ta), load(CDN.countup)
     ]);
   } catch (e) {
     root.innerHTML = `<div class="uz-error">${ar ? "تعذر تحميل بيانات عنيزة." : "Could not load the Unaizah ledger."} <small>${esc(e.message)}</small></div>`;
     return;
   }
+  if (id !== renderId || !root.isConnected) return; // a newer render took over while this one was loading
   const days = data.days;
   const ui = { period: sessionStorage.getItem("uz-period") || "ytd", mode: "daily", osc: "rsi", tab: "days" };
   const years = [...new Set(days.map(d => d.date.slice(0, 4)))];
@@ -268,6 +277,11 @@ export async function renderUnaizah(root) {
       <section class="uz-card"><div class="uz-h"><div><h3>${t.recon}</h3><p>${t.reconSub}</p></div></div><div class="uz-chart" id="uz-recon"></div></section>
     </div>
 
+    <section class="uz-card" id="uz-cash-card">
+      <div class="uz-h"><div><h3>${t.cashT}</h3><p>${t.cashSub}</p></div><button type="button" class="uz-btn" id="uz-cash-csv">${t.cashExport}</button></div>
+      <div class="uz-cash" id="uz-cash"></div>
+    </section>
+
     <section class="uz-card">
       <div class="uz-h"><div><h3>${t.board}</h3><p>${t.boardSub}</p></div></div>
       <div class="uz-board" id="uz-board"></div>
@@ -298,7 +312,6 @@ export async function renderUnaizah(root) {
   observer.observe(root);
 
   let view = { rows: [], prev: [] };
-  let grid = null;
   const countTotal = new window.countUp.CountUp($("#uz-total"), 0, { duration: 1.4, separator: ",", decimalPlaces: 0 });
   countTotal.start();
 
@@ -489,6 +502,57 @@ export async function renderUnaizah(root) {
     }, true);
   }
 
+  let cashCsv = [];
+  function paintCash() {
+    const rows = view.rows;
+    const months = new Map();
+    rows.forEach(r => {
+      const k = r.date.slice(0, 7);
+      if (!months.has(k)) months.set(k, { month: k, days: 0, cash: 0, safe: 0, counted: 0, cashCounted: 0, excess: 0, shortage: 0, onHand: null });
+      const m = months.get(k);
+      m.days++; m.cash += r.cash || 0; m.excess += r.excess || 0; m.shortage += r.shortage || 0;
+      if (r.safe != null) { m.safe += r.safe; m.counted++; m.cashCounted += r.cash || 0; }
+      if (r.on_hand != null) m.onHand = r.on_hand;
+    });
+    const list = [...months.values()];
+    const c = t.cashCols;
+    const tot = list.reduce((a, m) => ({ days: a.days + m.days, cash: a.cash + m.cash, safe: a.safe + m.safe, cashCounted: a.cashCounted + m.cashCounted, excess: a.excess + m.excess, shortage: a.shortage + m.shortage }), { days: 0, cash: 0, safe: 0, cashCounted: 0, excess: 0, shortage: 0 });
+    const flagged = rows.filter(r => r.safe != null && Math.abs((r.cash || 0) - r.safe) > 1);
+    const money2 = n => fmt(n, 2);
+    const row = m => {
+      const diff = m.counted ? m.cashCounted - m.safe : null;
+      const net = m.excess - m.shortage;
+      const ok = diff == null ? null : Math.abs(diff) <= 1;
+      return `<tr>
+        <td>${monthLabel(m.month, ar)}</td><td class="data">${m.days}</td>
+        <td class="data"><b>${money2(m.cash)}</b></td>
+        <td class="data">${m.counted ? money2(m.safe) : `<small>${t.notCounted}</small>`}${m.counted && m.counted < m.days ? ` <small>(${m.counted}/${m.days})</small>` : ""}</td>
+        <td class="data ${diff == null ? "" : ok ? "" : "neg"}">${diff == null ? "—" : money2(diff)}</td>
+        <td class="data pos">${money2(m.excess)}</td><td class="data neg">${money2(m.shortage)}</td>
+        <td class="data ${net > 0 ? "pos" : net < 0 ? "neg" : ""}">${net > 0 ? "+" : ""}${money2(net)}</td>
+        <td class="data">${m.onHand == null ? "—" : money2(m.onHand)}</td>
+        <td>${ok == null ? "—" : `<span class="uz-pill ${ok ? "ok" : "short"}">${ok ? t.cashOk : t.cashCheck}</span>`}</td></tr>`;
+    };
+    cashCsv = [[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand],
+      ...list.map(m => [m.month, m.days, +m.cash.toFixed(2), m.counted ? +m.safe.toFixed(2) : "", m.counted ? +(m.cashCounted - m.safe).toFixed(2) : "", +m.excess.toFixed(2), +m.shortage.toFixed(2), +(m.excess - m.shortage).toFixed(2), m.onHand ?? ""]),
+      [t.cashTotal, tot.days, +tot.cash.toFixed(2), +tot.safe.toFixed(2), +(tot.cashCounted - tot.safe).toFixed(2), +tot.excess.toFixed(2), +tot.shortage.toFixed(2), +(tot.excess - tot.shortage).toFixed(2), ""]];
+    const net = tot.excess - tot.shortage;
+    $("#uz-cash").innerHTML = `
+      <div class="uz-cash-kpis">
+        <div><p>${c.cash}</p><b class="data">${money2(tot.cash)}</b></div>
+        <div><p>${c.safe}</p><b class="data">${money2(tot.safe)}</b></div>
+        <div><p>${c.excess}</p><b class="data pos">${money2(tot.excess)}</b></div>
+        <div><p>${c.shortage}</p><b class="data neg">${money2(tot.shortage)}</b></div>
+        <div><p>${c.net}</p><b class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</b></div>
+      </div>
+      <div class="fx-table-wrap"><table class="fx-table uz-cash-table">
+        <thead><tr>${[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand, c.check].map(h => `<th>${h}</th>`).join("")}</tr></thead>
+        <tbody>${list.slice().reverse().map(row).join("")}</tbody>
+        <tfoot><tr><td>${t.cashTotal}</td><td class="data">${tot.days}</td><td class="data">${money2(tot.cash)}</td><td class="data">${money2(tot.safe)}</td><td class="data">${money2(tot.cashCounted - tot.safe)}</td><td class="data pos">${money2(tot.excess)}</td><td class="data neg">${money2(tot.shortage)}</td><td class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</td><td></td><td></td></tr></tfoot>
+      </table></div>
+      <div class="uz-cash-flags"><p>${t.cashDays}</p>${flagged.length ? flagged.map(r => `<span class="uz-gap data">${r.date} · ${t.cashCols.cash} ${money2(r.cash || 0)} · ${t.cashCols.safe} ${money2(r.safe)}</span>`).join("") : `<small>${t.cashDaysNone}</small>`}</div>`;
+  }
+
   function paintBoard() {
     const m = new Map();
     view.rows.forEach(r => r.cashiers.forEach(c => {
@@ -520,50 +584,82 @@ export async function renderUnaizah(root) {
     return v > 0 ? ["over", t.over] : ["short", t.short];
   }
 
+  // cell = [html, sortValue]; plain values are both
+  const cell = (html, sort) => [html, sort === undefined ? html : sort];
   function tableData() {
-    const h = window.gridjs.html;
+    const c = t.cols;
     if (ui.tab === "months") {
       const months = byMonth(view.rows);
-      const c = t.cols;
       return {
         columns: [c.month, c.days, c.total, c.mom, c.cash, c.card, c.online, c.delivery, c.promo, c.excess, c.shortage, c.acc],
         csv: months.map((m, i) => [m.month, m.days, m.total, i ? (m.total - months[i - 1].total) / months[i - 1].total : "", m.cash, m.card, m.online, delivery(m), promo(m), m.excess, m.shortage, 1 - (m.excess + m.shortage) / (m.report || m.total || 1)]),
-        data: months.map((m, i) => {
+        rows: months.map((m, i) => {
           const d = i ? delta(m.total, months[i - 1].total) : null;
           const acc = 1 - (m.excess + m.shortage) / (m.report || m.total || 1);
-          return [monthLabel(m.month, ar), m.days, h(`<b class="data">${fmt(m.total)}</b>`), h(chip(d)), fmt(m.cash), fmt(m.card), fmt(m.online), fmt(delivery(m)), fmt(promo(m)),
-            h(`<span class="pos data">${fmt(m.excess)}</span>`), h(`<span class="neg data">${fmt(m.shortage)}</span>`), h(`<span class="data">${pct(acc, 2)}</span>`)];
-        })
+          return [cell(monthLabel(m.month, ar), m.month), cell(m.days), cell(`<b class="data">${fmt(m.total)}</b>`, m.total), cell(chip(d), d ?? -Infinity),
+            cell(fmt(m.cash), m.cash), cell(fmt(m.card), m.card), cell(fmt(m.online), m.online), cell(fmt(delivery(m)), delivery(m)), cell(fmt(promo(m)), promo(m)),
+            cell(`<span class="pos data">${fmt(m.excess)}</span>`, m.excess), cell(`<span class="neg data">${fmt(m.shortage)}</span>`, m.shortage), cell(`<span class="data">${pct(acc, 2)}</span>`, acc)];
+        }).reverse()
       };
     }
-    const c = t.cols;
     const idx = new Map(days.map((d, i) => [d.date, i + 1]));
     const rows = view.rows.slice().reverse();
     return {
       columns: [c.block, c.hash, c.date, c.total, c.cash, c.card, c.online, c.delivery, c.promo, c.variance, c.status],
       csv: rows.map(r => [idx.get(r.date), txHash(r), r.date, r.total, r.cash || 0, r.card || 0, r.online || 0, delivery(r), promo(r), (r.excess || 0) - (r.shortage || 0), status(r)[1]]),
-      data: rows.map(r => {
+      rows: rows.map(r => {
         const [cls, label] = status(r);
         const v = (r.excess || 0) - (r.shortage || 0);
-        return [h(`<span class="uz-blk data">#${idx.get(r.date)}</span>`), h(`<span class="uz-hash data" title="${txHash(r)}">${short(txHash(r))}</span>`), r.date,
-          h(`<b class="data">${fmt(r.total, 2)}</b>`), fmt(r.cash || 0), fmt(r.card || 0), fmt(r.online || 0), fmt(delivery(r)), fmt(promo(r)),
-          h(`<span class="data ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v > 0 ? "+" : ""}${fmt(v, 2)}</span>`), h(`<span class="uz-pill ${cls}">${label}</span>`)];
+        const hsh = txHash(r);
+        return [cell(`<span class="uz-blk data">#${idx.get(r.date)}</span>`, idx.get(r.date)), cell(`<span class="uz-hash data" title="${hsh}">${short(hsh)}</span>`, hsh), cell(r.date),
+          cell(`<b class="data">${fmt(r.total, 2)}</b>`, r.total), cell(fmt(r.cash || 0), r.cash || 0), cell(fmt(r.card || 0), r.card || 0), cell(fmt(r.online || 0), r.online || 0),
+          cell(fmt(delivery(r)), delivery(r)), cell(fmt(promo(r)), promo(r)),
+          cell(`<span class="data ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v > 0 ? "+" : ""}${fmt(v, 2)}</span>`, v), cell(`<span class="uz-pill ${cls}">${label}</span>`, label)];
       })
     };
   }
 
+  // Block explorer table: search, sort and pages, kept in plain DOM so it never races a re-render.
   let csvRows = [], csvCols = [];
-  function paintGrid() {
-    const { columns, data: rows, csv } = tableData();
+  const table = { q: "", sort: null, dir: 1, page: 0 };
+  function paintGrid(reset = true) {
+    const { columns, rows, csv } = tableData();
     csvRows = csv; csvCols = columns;
+    if (reset) { table.sort = null; table.page = 0; }
     const host = $("#uz-grid");
-    host.innerHTML = "";
-    grid = new window.gridjs.Grid({
-      columns, data: rows, sort: true, search: { placeholder: ar ? "ابحث بالتاريخ أو المبلغ…" : "Search date, hash, amount…" },
-      pagination: { limit: ui.tab === "months" ? 24 : 12, summary: true }, fixedHeader: false,
-      language: ar ? { search: { placeholder: "ابحث…" }, pagination: { previous: "السابق", next: "التالي", showing: "عرض", of: "من", to: "إلى", results: () => "سجل" }, noRecordsFound: "لا توجد نتائج" } : {},
-      className: { table: "uz-table" }
-    }).render(host);
+    if (!host.querySelector(".uz-search")) {
+      host.innerHTML = `<input class="uz-search data" type="search" placeholder="${ar ? "ابحث بالتاريخ أو الهاش أو المبلغ…" : "Search date, hash, amount…"}" aria-label="Search">
+        <div class="fx-table-wrap"><table class="fx-table uz-explorer"><thead></thead><tbody></tbody></table></div>
+        <div class="uz-pager"><span class="uz-pager-info"></span><div class="uz-pager-btns"></div></div>`;
+      host.querySelector(".uz-search").oninput = e => { table.q = e.target.value.trim().toLowerCase(); table.page = 0; draw(); };
+    }
+    host.querySelector(".uz-search").value = table.q;
+    const limit = ui.tab === "months" ? 24 : 12;
+    const strip = html => String(html).replace(/<[^>]+>/g, " ");
+    const indexed = rows.map(r => ({ r, text: r.map(([html, sv]) => `${strip(html)} ${sv}`).join(" ").toLowerCase() }));
+    function draw() {
+      let list = table.q ? indexed.filter(x => x.text.includes(table.q)) : indexed.slice();
+      if (table.sort != null) {
+        const k = table.sort;
+        list.sort((a, b) => { const x = a.r[k][1], y = b.r[k][1]; return (typeof x === "number" && typeof y === "number" ? x - y : String(x).localeCompare(String(y))) * table.dir; });
+      }
+      const pages = Math.max(1, Math.ceil(list.length / limit));
+      table.page = Math.min(table.page, pages - 1);
+      const slice = list.slice(table.page * limit, table.page * limit + limit);
+      host.querySelector("thead").innerHTML = `<tr>${columns.map((col, i) => `<th><button type="button" data-k="${i}" class="${table.sort === i ? (table.dir > 0 ? "asc" : "desc") : ""}">${col}<i></i></button></th>`).join("")}</tr>`;
+      host.querySelector("tbody").innerHTML = slice.length ? slice.map(x => `<tr>${x.r.map(([html]) => `<td>${html}</td>`).join("")}</tr>`).join("")
+        : `<tr><td colspan="${columns.length}" class="uz-empty">${ar ? "لا توجد نتائج" : "No matching blocks"}</td></tr>`;
+      const from = list.length ? table.page * limit + 1 : 0, to = Math.min(list.length, (table.page + 1) * limit);
+      host.querySelector(".uz-pager-info").innerHTML = ar ? `عرض <b>${from}</b>–<b>${to}</b> من <b>${list.length}</b>` : `Showing <b>${from}</b>–<b>${to}</b> of <b>${list.length}</b>`;
+      const nums = [...new Set([0, table.page - 1, table.page, table.page + 1, pages - 1])].filter(n => n >= 0 && n < pages).sort((a, b) => a - b);
+      let prevN = -1;
+      host.querySelector(".uz-pager-btns").innerHTML = `<button type="button" data-p="${table.page - 1}" ${table.page ? "" : "disabled"}>${ar ? "السابق" : "Prev"}</button>` +
+        nums.map(n => { const gap = n - prevN > 1 ? "<span>…</span>" : ""; prevN = n; return `${gap}<button type="button" data-p="${n}" class="${n === table.page ? "on" : ""}">${n + 1}</button>`; }).join("") +
+        `<button type="button" data-p="${table.page + 1}" ${table.page < pages - 1 ? "" : "disabled"}>${ar ? "التالي" : "Next"}</button>`;
+    }
+    host.querySelector("thead").onclick = e => { const b = e.target.closest("button"); if (!b) return; const k = +b.dataset.k; table.dir = table.sort === k ? -table.dir : -1; table.sort = k; draw(); };
+    host.querySelector(".uz-pager-btns").onclick = e => { const b = e.target.closest("button"); if (!b || b.disabled) return; table.page = +b.dataset.p; draw(); };
+    draw();
   }
 
   function paintIntegrity() {
@@ -586,22 +682,24 @@ export async function renderUnaizah(root) {
     root.querySelectorAll("#uz-osc button").forEach(b => b.classList.toggle("on", b.dataset.v === ui.osc));
     root.querySelectorAll("#uz-tab button").forEach(b => b.classList.toggle("on", b.dataset.v === ui.tab));
     const s = stats(view.rows), p = stats(view.prev);
-    paintHero(s, p); paintKpis(s, p); paintTokens(); paintPrice(); paintHeat(); paintFlow(); paintWeek(); paintMix(); paintRecon(); paintBoard(); paintGrid();
+    paintHero(s, p); paintKpis(s, p); paintTokens(); paintPrice(); paintHeat(); paintFlow(); paintWeek(); paintMix(); paintRecon(); paintCash(); paintBoard(); paintGrid();
   }
 
   root.querySelector(".uz-periods").onclick = e => { const b = e.target.closest("button"); if (!b) return; ui.period = b.dataset.p; sessionStorage.setItem("uz-period", ui.period); paintAll(); };
   $("#uz-mode").onclick = e => { const b = e.target.closest("button"); if (!b) return; ui.mode = b.dataset.v; root.querySelectorAll("#uz-mode button").forEach(x => x.classList.toggle("on", x === b)); paintPrice(); };
   $("#uz-osc").onclick = e => { const b = e.target.closest("button"); if (!b) return; ui.osc = b.dataset.v; root.querySelectorAll("#uz-osc button").forEach(x => x.classList.toggle("on", x === b)); paintPrice(); };
   $("#uz-tab").onclick = e => { const b = e.target.closest("button"); if (!b) return; ui.tab = b.dataset.v; root.querySelectorAll("#uz-tab button").forEach(x => x.classList.toggle("on", x === b)); paintGrid(); };
-  $("#uz-csv").onclick = () => {
+  $("#uz-cash-csv").onclick = () => download(cashCsv, `unaizah-cash-${view.from}_${view.to}.csv`);
+  function download(rows, name) {
     const q = v => (typeof v === "string" && /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : typeof v === "number" ? +v.toFixed(4) : v);
-    const text = "﻿" + [csvCols, ...csvRows].map(r => r.map(q).join(",")).join("\n");
+    const text = "\ufeff" + rows.map(r => r.map(q).join(",")).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
-    a.download = `unaizah-${ui.tab}-${view.from}_${view.to}.csv`;
+    a.download = name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  };
+  }
+  $("#uz-csv").onclick = () => download([csvCols, ...csvRows], `unaizah-${ui.tab}-${view.from}_${view.to}.csv`);
 
   if (!periods.includes(ui.period)) ui.period = "ytd";
   paintIntegrity();

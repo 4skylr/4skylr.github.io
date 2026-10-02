@@ -4,12 +4,13 @@
 //   Grid.js             github.com/gridjs/gridjs
 //   CountUp.js          github.com/inorganik/countUp.js
 const LIB = {
-  chart: "https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js",
-  apex: "https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js",
-  grid: "https://cdn.jsdelivr.net/npm/gridjs@6.2.0/dist/gridjs.umd.js",
-  countup: "https://cdn.jsdelivr.net/npm/countup.js@2.8.0/dist/countUp.umd.js"
+  chart: "vendor/chart.umd.min.js",
+  apex: "vendor/apexcharts.min.js",
+  grid: "vendor/gridjs.umd.js",
+  countup: "vendor/countUp.umd.js"
 };
 const loading = new Map();
+let mountId = 0;
 function loadScript(src) {
   if (loading.has(src)) return loading.get(src);
   const p = new Promise((res, rej) => {
@@ -32,6 +33,9 @@ export async function mountGithubDash(ctx) {
   const locHost = document.getElementById("gh-loc");
   const gridHost = document.getElementById("gh-grid");
   if (!barHost) return;
+  // The libraries load async; if the person has moved to another tab meanwhile, the mount points are gone.
+  const id = ++mountId;
+  const alive = () => barHost.isConnected && id === mountId;
   chartBar?.destroy(); chartBar = null;
   apexValue?.destroy(); apexValue = null;
   apexLoc?.destroy(); apexLoc = null;
@@ -43,6 +47,7 @@ export async function mountGithubDash(ctx) {
 
   try {
     await loadScript(LIB.countup);
+    if (!alive()) return;
     const CountUp = window.countUp?.CountUp;
     if (CountUp && countHost) {
       countHost.innerHTML = `<div class="slab-h"><h2>Current stock count</h2><span class="voice">CountUp.js</span></div><div class="hero-num" id="gh-count-num" style="font-size:clamp(42px,6vw,72px)">0</div><p class="note">Units on hand across every location. Library: inorganik/countUp.js</p>`;
@@ -53,6 +58,7 @@ export async function mountGithubDash(ctx) {
 
   try {
     await loadScript(LIB.chart);
+    if (!alive()) return;
     barHost.innerHTML = `<div class="slab-h"><h2>Current stock bar</h2><span class="voice">Chart.js</span></div><div style="height:360px"><canvas id="gh-bar-canvas"></canvas></div><p class="note">Top quantities on hand. Library: chartjs/Chart.js</p>`;
     chartBar = new window.Chart(document.getElementById("gh-bar-canvas"), {
       type: "bar",
@@ -81,6 +87,7 @@ export async function mountGithubDash(ctx) {
 
   try {
     await loadScript(LIB.apex);
+    if (!alive()) return;
     const byCat = categories.map(c => ({
       name: c.name,
       v: products.filter(p => p.category === c.id).reduce((a, p) => a + value(p), 0)
@@ -115,6 +122,7 @@ export async function mountGithubDash(ctx) {
 
   try {
     await loadScript(LIB.grid);
+    if (!alive()) return;
     gridHost.innerHTML = `<div class="slab-h"><h2>Inventory grid</h2><span class="voice">Grid.js</span></div><div id="gh-grid-table"></div><p class="note">Read-only view of the current ledger. Library: gridjs/gridjs</p>`;
     const rows = [...products].sort((a, b) => total(b) - total(a)).map(p => [
       p.name, p.sku || "", qty(total(p)), units[p.unit] || p.unit || "", ctx.sar(value(p))

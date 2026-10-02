@@ -2,11 +2,11 @@ import * as store from "./store.js?v=37";
 import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=37";
 import { SEED_DATE } from "./seed-data.js?v=37";
 import { renderYield, productPanel } from "./analytics.js?v=37";
-import { mountGithubDash } from "./gh-dash.js?v=37";
+import { mountGithubDash } from "./gh-dash.js?v=64";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=37";
 import { downloadCountCsv } from "./export-count.js?v=48";
-import { renderFinance } from "./finance-view.js?v=58";
-import { renderUnaizah } from "./unaizah-view.js?v=63";
+import { renderFinance } from "./finance-view.js?v=64";
+import { renderUnaizah } from "./unaizah-view.js?v=64";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
@@ -62,6 +62,7 @@ const ICON = {
   history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
   settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   finance: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="M4 9l6-4 6 3 6-4"/>',
+  unaizah: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
@@ -83,10 +84,16 @@ const ROUTES = [
   { id: "count", label: "Count", kicker: "Stocktake", title: 'Count <span class="voice">the room</span>' },
   { id: "yield", label: "Yield", kicker: "Analytics", title: 'What stock <span class="voice">can sell</span>' },
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
-  { id: "finance", label: "Budget", kicker: "Finance", title: 'Branch <span class="voice">budget</span>' },
+  { id: "finance", label: "Budget", kicker: "Finance", title: 'Branch <span class="voice">network</span>' },
   { id: "unaizah", label: "Unaizah", kicker: "Unaizah", title: 'Unaizah <span class="voice">treasury</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
+const TITLE_AR = {
+  dashboard: ["الخزينة", 'المخزون <span class="voice">بنظرة</span>'], products: ["المخزون", 'قائمة <span class="voice">الستوك</span>'],
+  count: ["الجرد", 'جرد <span class="voice">الموقع</span>'], yield: ["التحليل", 'ما يمكن <span class="voice">بيعه</span>'],
+  history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'],
+  unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
+};
 const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
 
 // ── State ────────────────────────────────────────────────────
@@ -190,8 +197,9 @@ function render() {
     langBtn.onclick = () => { sessionStorage.setItem(LANG_KEY, siteLang() === "ar" ? "en" : "ar"); location.reload(); };
   }
   const r = ROUTES.find(x => x.id === ui.route) || ROUTES[0];
-  $("#kicker").textContent = r.kicker;
-  $("#page-title").innerHTML = r.title;
+  const arTitle = siteLang() === "ar" && TITLE_AR[r.id];
+  $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
+  $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
   ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, unaizah: viewUnaizah, settings: viewSettings })[r.id]();
 }
@@ -637,8 +645,9 @@ function viewScanProduct(p) {
     $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "تعذر فتح البطاقة")}</p></article>`;
   });
 }
-function viewUnaizah() { renderUnaizah($("#view")); }
-function viewFinance() { renderFinance($("#view")); }
+// These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
+function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) renderUnaizah($("#view")); }
+function viewFinance() { if (!$("#view").querySelector(".fx")) renderFinance($("#view")); }
 function viewYield() {
   $("#title-actions").innerHTML = "";
   renderYield($("#view"), helpers());
@@ -805,7 +814,7 @@ store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.mes
 
 async function loadChart() {
   if (!document.getElementById("sales-chart")) return;
-  if (!window.Chart) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"; s.onload = res; s.onerror = rej; document.head.append(s); });
+  if (!window.Chart) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/chart.umd.min.js"; s.onload = res; s.onerror = rej; document.head.append(s); });
   const top = data.products.map(p => ({ name: p.name, sold: soldOf(p.id), cost: soldOf(p.id) * Number(p.rate || 0) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 8);
   new window.Chart(document.getElementById("sales-chart"), { type: "bar", data: { labels: top.map(x => x.name), datasets: [{ label: "مباع من بداية السنة", data: top.map(x => x.sold), backgroundColor: "#9b6bff" }] }, options: { plugins: { legend: { labels: { color: "#f4ede4" } } }, scales: { x: { ticks: { color: "#a4a4a4" } }, y: { ticks: { color: "#a4a4a4" } } } } });
 }

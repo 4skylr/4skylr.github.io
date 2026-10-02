@@ -111,6 +111,32 @@ def file_month(path):
     return year, None
 
 
+def first_number(df, i, rows=4):
+    """First numeric cell to the right of a label, looking a few rows down when the label row is empty."""
+    for r in range(i, min(i + rows, len(df))):
+        for j in range(1, df.shape[1]):
+            v = df.iat[r, j]
+            if isinstance(v, (int, float)) and v == v and not isinstance(v, bool):
+                return round(float(v), 2)
+    return None
+
+
+def parse_cash(df):
+    """Drawer cash handed to the safe, cash still on hand, and the bank-deposit period when one is noted."""
+    out = {}
+    for i in range(len(df)):
+        label = re.sub(r"\s+", " ", str(df.iat[i, 0])).strip().lower()
+        if label.startswith("final deposit") and "safe" not in out:
+            out["safe"] = first_number(df, i, 1)
+        elif label.startswith("cash balance") and "on_hand" not in out:
+            out["on_hand"] = first_number(df, i)
+        elif label == "deposit":
+            texts = [str(x) for x in df.iloc[i].tolist() if isinstance(x, str) and re.search(r"\d/\d", x)]
+            if texts:
+                out["bank_period"] = texts[0].strip()
+    return {k: v for k, v in out.items() if v is not None}
+
+
 def parse_sheet(df):
     hdr = None
     for i in range(min(12, len(df))):
@@ -167,7 +193,7 @@ def main():
             if not tot["total"]:
                 tot["total"] = round(sum(tot[t] for t in TENDERS), 2)
             days[d.isoformat()] = {
-                "date": d.isoformat(), **tot,
+                "date": d.isoformat(), **tot, **parse_cash(df),
                 "cashiers": [c for c in cashiers if any(c[k] for k in FIELDS)],
                 "source": os.path.relpath(path, HERE), "_rank": rank,
             }
@@ -179,6 +205,9 @@ def main():
         out_days.append(day)
 
     unify_names(out_days)
+    for day in out_days:  # a blank formula cell reads as 0; that is "not counted", not "counted zero"
+        if not day.get("safe") and day["cash"]:
+            day.pop("safe", None)
     for day in out_days:  # keep the file small: cashier rows carry only non-zero fields
         day["cashiers"] = [{k: v for k, v in c.items() if k == "user" or v} for c in day["cashiers"]]
     # Calendar days between the first and last sheet that no workbook covers.

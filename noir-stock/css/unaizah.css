@@ -185,3 +185,34 @@
 /* Grid.js mermaid theme paints rows white — keep them on glass */
 .uz-grid .gridjs-tbody, .uz-grid .gridjs-thead, .uz-grid tr.gridjs-tr, .uz-grid .gridjs-table { background: transparent !important; }
 .uz-grid .gridjs-wrapper { overflow-x: auto; }
+
+/* ── cash & deposits ── */
+.uz-cash-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.uz-cash-kpis > div { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.03); border: 1px solid var(--edge); min-width: 0; }
+.uz-cash-kpis p { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.uz-cash-kpis b { display: block; font-size: 17px; margin-top: 6px; font-weight: 600; }
+.uz-cash-table td b { color: var(--cyan); }
+.uz-cash-flags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.uz-cash-flags p { width: 100%; font-size: 12px; color: var(--ink-2); }
+@media (max-width: 760px) { .uz-cash-kpis { grid-template-columns: 1fr 1fr; } }
+
+/* ── block explorer table ── */
+.uz-search { width: min(340px, 100%); height: 40px; margin-bottom: 12px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--edge); background: rgba(0,0,0,.3); color: var(--ink); font-size: 12px; }
+.uz-search:focus { outline: none; border-color: var(--magenta); box-shadow: 0 0 0 3px rgba(255,79,216,.2); }
+.uz-explorer th { padding: 0; }
+.uz-explorer th button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 6px; width: 100%; padding: 12px 14px; cursor: pointer; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; }
+.uz-explorer th button:hover, .uz-explorer th button:focus-visible { color: var(--ink); background: rgba(155,107,255,.1); }
+.uz-explorer th button i { width: 0; height: 0; border: 4px solid transparent; border-top-color: currentColor; opacity: .25; margin-top: 4px; }
+.uz-explorer th button.desc i { opacity: 1; color: var(--magenta); }
+.uz-explorer th button.asc i { opacity: 1; color: var(--cyan); transform: rotate(180deg); margin-top: -4px; }
+.uz-explorer td { font-variant-numeric: tabular-nums; }
+.uz-explorer td b { color: var(--ink); }
+.uz-pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.uz-pager-info { font-size: 12px; color: var(--muted); }
+.uz-pager-info b { color: var(--ink-2); font-weight: 600; }
+.uz-pager-btns { display: flex; gap: 4px; align-items: center; }
+.uz-pager-btns span { color: var(--muted); padding: 0 4px; }
+.uz-pager-btns button { min-width: 34px; height: 34px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--edge); background: rgba(255,255,255,.03); color: var(--ink-2); font-family: var(--f-data); font-size: 12px; }
+.uz-pager-btns button:hover:not(:disabled) { color: var(--ink); border-color: var(--line-hi); }
+.uz-pager-btns button.on { background: var(--beam); color: #0b0914; border-color: transparent; font-weight: 700; }
+.uz-pager-btns button:disabled { opacity: .35; cursor: default; }

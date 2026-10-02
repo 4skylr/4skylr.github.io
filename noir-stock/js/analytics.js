@@ -4,7 +4,7 @@
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
 import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "./recipes-data.js?v=9";
 
-const ECHARTS_URL = "https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js";
+const ECHARTS_URL = "vendor/echarts.min.js";
 const FUSE_URL = "https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.mjs";
 
 export const MENU_CATS = [
