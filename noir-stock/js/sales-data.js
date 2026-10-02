@@ -10,13 +10,29 @@ export const SALES_YTD = {
 };
 export const SALES_FROM = "2026-01-01";
 export const SALES_TO = "2026-10-01";
-// Items that are used one-for-one with a sold item: every 30 oz cup gets a 30 oz lid, every
-// fountain cup gets a straw, every slush glass gets a straw-spoon. Their "sold" follows the source.
-export const LINKED = {
-  "lids-16": ["cups-16"], "lids-24": ["cups-24"], "lids-30": ["cups-30"],
-  "straw": ["cups-16", "cups-24", "cups-30"],
-  "straw-spoon": ["slush-glass-12", "slush-glass-16"]
+// Items that are not rung up on their own move with something that is.
+// exact: one-for-one (every 30 oz cup gets a 30 oz lid). shared: the count is the drinks/tubs/orders they went
+// into, split across flavours we can't tell apart (every fountain cup used some BIB syrup and CO2).
+const FOUNTAIN = ["cups-16", "cups-24", "cups-30"], TUBS = ["tub-46", "tub-64", "tub-85", "tub-130"],
+  SLUSH = ["slush-glass-12", "slush-glass-16"], NACHOS = ["nachos-tray-3", "nachos-tray-4"], HOTDOG = ["hotdog-tray"], FLOSS = ["cotton-candy-tub"];
+const ALL = Object.keys(SALES_YTD);
+const U = { cup: ["cups", "كوب"], drink: ["drinks", "مشروب"], tub: ["tubs", "علبة فشار"], glass: ["glasses", "كوب سلاش"], tray: ["trays", "صحن"],
+  hotdog: ["hot dogs", "هوت دوق"], floss: ["floss tubs", "علبة غزل"], order: ["order items", "صنف بالطلبات"], lid: ["lids", "غطاء"], straw: ["straws", "شفاط"] };
+const mv = (src, u, shared = true) => ({ src, unit: U[u], shared });
+export const MOVES = {
+  "lids-16": mv(["cups-16"], "lid", false), "lids-24": mv(["cups-24"], "lid", false), "lids-30": mv(["cups-30"], "lid", false),
+  "straw": mv(FOUNTAIN, "straw", false), "straw-spoon": mv(SLUSH, "straw", false),
+  "bib-coke": mv(FOUNTAIN, "cup"), "bib-coke-zero": mv(FOUNTAIN, "cup"), "bib-fanta": mv(FOUNTAIN, "cup"), "bib-sprite": mv(FOUNTAIN, "cup"),
+  "co2": mv(FOUNTAIN, "drink"), "napkin": mv(ALL, "order"),
+  "popcorn-oil": mv(TUBS, "tub"), "corn-butterfly": mv(TUBS, "tub"), "corn-mushroom": mv(TUBS, "tub"), "caramel": mv(TUBS, "tub"),
+  "salt": mv(TUBS, "tub"), "cheese-masala": mv(TUBS, "tub"), "pizza-mix": mv(TUBS, "tub"),
+  "slush-blue": mv(SLUSH, "glass"), "slush-pom": mv(SLUSH, "glass"), "slush-straw": mv(SLUSH, "glass"),
+  "lemon": mv(["slush-glass-16"], "glass"), "mint": mv(["slush-glass-16"], "glass"), "lemonade-syrup": mv(["slush-glass-16"], "glass"), "mojito-syrup": mv(["slush-glass-16"], "glass"),
+  "nachos-chips": mv(NACHOS, "tray"), "cheese-sauce": mv(NACHOS, "tray"), "jalapeno": mv(NACHOS, "tray"), "salsa": mv(NACHOS, "tray"),
+  "hotdog": mv(HOTDOG, "hotdog"), "hotdog-bun": mv(HOTDOG, "hotdog"), "ketchup": mv(HOTDOG, "hotdog"), "mustard": mv(HOTDOG, "hotdog"),
+  "flossine-blue": mv(FLOSS, "floss"), "flossine-pink": mv(FLOSS, "floss"), "sugar": mv(FLOSS, "floss")
 };
+export const LINKED = Object.fromEntries(Object.entries(MOVES).filter(([, m]) => !m.shared).map(([k, m]) => [k, m.src]));
 export const linkedTo = id => Object.entries(LINKED).filter(([, src]) => src.includes(id)).map(([k]) => k);
 function direct(id) {
   let over = {};
@@ -27,8 +43,11 @@ function direct(id) {
 export function soldOf(id) {
   const d = direct(id);
   if (d != null) return d;
-  return LINKED[id] ? LINKED[id].reduce((a, s) => a + (direct(s) || 0), 0) : 0;
+  return MOVES[id] ? MOVES[id].src.reduce((a, s) => a + (direct(s) || 0), 0) : 0;
 }
-export const soldSource = id => direct(id) == null && LINKED[id] ? LINKED[id] : null;
+// how an item's figure was worked out: null when it is rung up itself
+export const moveOf = id => direct(id) == null && MOVES[id] ? MOVES[id] : null;
+export const soldSource = id => moveOf(id)?.src || null;
 export const SALES_DAYS = Math.round((new Date(SALES_TO) - new Date(SALES_FROM)) / 86400000);
-export const dailyUse = id => soldOf(id) / SALES_DAYS;
+// usage per day in the item's own unit; shared counts (cups of mixed flavours) are not a usage rate
+export const dailyUse = id => { const m = moveOf(id); return m && m.shared ? 0 : soldOf(id) / SALES_DAYS; };

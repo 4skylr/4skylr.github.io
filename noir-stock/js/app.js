@@ -1,18 +1,18 @@
-import * as store from "./store.js?v=69";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=69";
-import { SEED_DATE } from "./seed-data.js?v=69";
-import { renderYield, productPanel } from "./analytics.js?v=69";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=69";
-import { soldOf, soldSource, SALES_FROM, SALES_TO } from "./sales-data.js?v=69";
+import * as store from "./store.js?v=70";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=70";
+import { SEED_DATE } from "./seed-data.js?v=70";
+import { renderYield, productPanel } from "./analytics.js?v=70";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=70";
+import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=70";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const ghDash = lazy("./gh-dash.js?v=69");
-const exportCount = lazy("./export-count.js?v=69");
-const financeView = lazy("./finance-view.js?v=69");
-const unaizahView = lazy("./unaizah-view.js?v=69");
-const syncAdmin = lazy("./sync-admin.js?v=69");
-const toolsMod = lazy("./tools.js?v=69");
-const intelMod = lazy("./stock-intel.js?v=69");
+const ghDash = lazy("./gh-dash.js?v=70");
+const exportCount = lazy("./export-count.js?v=70");
+const financeView = lazy("./finance-view.js?v=70");
+const unaizahView = lazy("./unaizah-view.js?v=70");
+const syncAdmin = lazy("./sync-admin.js?v=70");
+const toolsMod = lazy("./tools.js?v=70");
+const intelMod = lazy("./stock-intel.js?v=70");
 
 // Device: phone / tablet / desktop from width + touch; kept current on rotate and resize.
 (function device() {
@@ -190,6 +190,7 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=70").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -328,11 +329,10 @@ function viewDashboard() {
     <section class="slab span-7" id="gh-stock-bar"></section>
     <section class="slab span-5" id="gh-apex"></section>
     <section class="slab span-7" id="gh-loc"></section>
-    <section class="slab" id="gh-grid"></section>
   </div>`;
   // the library charts sit below the fold: load them only when the user scrolls near them
   const ghHost = document.getElementById("gh-count");
-  const mountGh = () => ghDash().then(m => { if (document.getElementById("gh-grid")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
+  const mountGh = () => ghDash().then(m => { if (document.getElementById("gh-count")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
   if (ghHost && "IntersectionObserver" in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); mountGh(); } }, { rootMargin: "400px" }); io.observe(ghHost); }
   else mountGh();
 }
@@ -435,7 +435,8 @@ function token(p) {
       : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
     <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
     <div class="token-foot"><span class="qty">${qty(t)} ${unit}</span><span class="val">${Number(p.rate || 0).toFixed(2)}<small>/${unit}</small></span></div>
-    ${soldOf(p.id) ? `<p class="token-sold">${siteLang() === "ar" ? "مباع من بداية السنة" : "Sold this year"} <b>${qty(soldOf(p.id))}</b>${soldSource(p.id) ? `<i>${siteLang() === "ar" ? "مرتبط" : "linked"}</i>` : ""}</p>` : ""}
+    ${soldOf(p.id) ? (mv => { const ar = siteLang() === "ar";
+      return `<p class="token-sold">${mv && mv.shared ? (ar ? "تحرك مع" : "Moved with") : (ar ? "مباع من بداية السنة" : "Sold this year")} <b>${qty(soldOf(p.id))}</b>${mv && mv.shared ? ` ${mv.unit[ar ? 1 : 0]}` : ""}${mv && !mv.shared ? `<i>${ar ? "مرتبط" : "linked"}</i>` : ""}</p>`; })(moveOf(p.id)) : ""}
   </button>`;
 }
 
@@ -760,7 +761,7 @@ function exportSession(s) {
 function viewSettings() {
   const live = data.mode === "firebase";
   if (sessionStorage.getItem("noir-admin") !== "1") {
-    $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>دخول الماستر</h2><input class="input" name="pin" inputmode="numeric" placeholder="899" autocomplete="off"><button class="btn hot" type="submit">دخول</button></form>`;
+    $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>دخول الماستر</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off"><button class="btn hot" type="submit">دخول</button></form>`;
     $("#master-gate").onsubmit = e => { e.preventDefault(); if (e.target.pin.value.trim() !== "899") { toast("الرقم غلط", true); return; } sessionStorage.setItem("noir-admin", "1"); viewSettings(); };
     return;
   }
@@ -806,7 +807,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=69");
+    const { parseStockPdf } = await import("./sync-admin.js?v=70");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -851,7 +852,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=69").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=70").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

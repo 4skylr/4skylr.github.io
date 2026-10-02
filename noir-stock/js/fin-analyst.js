@@ -329,7 +329,6 @@ export async function ledgerReport(host, days, ctx) {
     { sev: top10 > .35 ? "warn" : "info", title: `أفضل ١٠٪ من الأيام = ${pct(top10, 0)} من الإيراد`, text: `${top10n} يوم فقط صنعت ${pct(top10, 0)} من إيراد ${Y} — المواسم والأفلام الكبيرة تقود السنة.`, kpi: pct(top10, 0) },
     topSpike && { sev: "info", title: `${yrAnom.length} يوم غير عادي هذه السنة`, text: `أكبرها ${topSpike.d.date}: ${fmt(topSpike.d.total)} ر.س مقابل وسيط ${fmt(topSpike.med)}.`, kpi: String(yrAnom.length) },
     digNow != null && digPrev != null && { sev: "info", title: `الدفع الرقمي ${pct(digNow)} من الإيراد`, text: `كان ${pct(digPrev)} في نفس الأشهر من ${PY} (${sgn(digNow - digPrev)} نقطة).`, kpi: pct(digNow, 0) },
-    { sev: shortY > 1000 ? "bad" : shortY > 0 ? "warn" : "good", title: `عجز الكاش ${fmt(shortY)} ر.س في ${shortDays} يوم`, text: worstC ? `أعلى عجز عند ${esc(worstC.user)}: ${fmt(worstC.short)} ر.س على ${worstC.shifts} وردية.` : "لا توجد بيانات كاشير كافية.", kpi: fmt(shortY) }
   ] : [
     lflG != null && { sev: lflG >= 0 ? "good" : "bad", title: `Like-for-like growth ${sgn(lflG)} vs ${PY}`, text: `Over the ${lfl.length} months both years cover in full (${lfl.map(m => MN[m]).join(", ")}): ${compact(lflNow)} against ${compact(lflPrev)} SAR.`, kpi: sgn(lflG) },
     { sev: "info", title: `${Y} is heading for about ${compact(fcYear)} SAR`, text: `${compact(ytd)} banked so far; ${compact(fcYear - ytd)} expected across ${restM.map(m => MN[m]).join(", ")} (range ${compact(ytd + fcM.reduce((s, x) => s + x.lo, 0))}–${compact(ytd + fcM.reduce((s, x) => s + x.hi, 0))}).`, kpi: compact(fcYear) },
@@ -339,7 +338,6 @@ export async function ledgerReport(host, days, ctx) {
     { sev: top10 > .35 ? "warn" : "info", title: `The best 10% of days made ${pct(top10, 0)} of revenue`, text: `${top10n} days carried ${pct(top10, 0)} of ${Y} revenue: holidays and big releases drive the year.`, kpi: pct(top10, 0) },
     topSpike && { sev: "info", title: `${yrAnom.length} unusual days this year`, text: `The biggest was ${topSpike.d.date}: ${fmt(topSpike.d.total)} SAR against a median of ${fmt(topSpike.med)}.`, kpi: String(yrAnom.length) },
     digNow != null && digPrev != null && { sev: "info", title: `Digital payments are ${pct(digNow)} of revenue`, text: `They were ${pct(digPrev)} over the same months of ${PY} (${sgn(digNow - digPrev)} points).`, kpi: pct(digNow, 0) },
-    { sev: shortY > 1000 ? "bad" : shortY > 0 ? "warn" : "good", title: `Cash shortage ${fmt(shortY)} SAR over ${shortDays} days`, text: worstC ? `Largest at ${esc(worstC.user)}: ${fmt(worstC.short)} SAR over ${worstC.shifts} shifts.` : "Not enough cashier data.", kpi: fmt(shortY) }
   ]).filter(Boolean);
 
   host.innerHTML = `
@@ -352,12 +350,7 @@ export async function ledgerReport(host, days, ctx) {
       ${card("an-fc", t.fc, t.fcSub)}
       ${card("an-anom", t.anom, t.anomSub)}
       ${card("an-par", t.pareto, t.paretoSub)}
-    </div>
-    <section class="uz-card an-card"><div class="uz-h"><div><h3>${t.cash}</h3><p>${t.cashSub}</p></div></div>
-      <div class="an-table-wrap"><table class="fx-table an-table"><thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>
-      ${cashiers.slice(0, 12).map(c => { const flag = c.short > 300 || c.rate > .004 ? "review" : c.short > 50 ? "watch" : "clean";
-        return `<tr><td>${esc(c.user)}</td><td class="data">${c.shifts}</td><td class="data">${fmt(c.rev)}</td><td class="data ${c.short > 0 ? "neg" : ""}">${fmt(c.short)}</td><td class="data">${fmt(c.ex)}</td><td class="data">${(c.short / c.shifts).toFixed(1)}</td><td><span class="an-flag ${flag}">${t[flag]}</span></td></tr>`; }).join("")}
-      </tbody></table></div></section>`;
+    </div>`;
 
   // YoY monthly
   const yrs = [PY, Y];
@@ -417,4 +410,21 @@ export async function ledgerReport(host, days, ctx) {
       { name: t.even, type: "line", data: [[0, 0], [1, 1]], symbol: "none", lineStyle: { color: "rgba(255,255,255,.25)", type: "dashed" } }
     ]
   });
+}
+
+// Cashier cash control for the locked audit panel (not shown on the open page).
+export function cashierAudit(days, year) {
+  const cz = new Map();
+  days.filter(d => !year || d.date.startsWith(String(year))).forEach(d => {
+    const shortDay = d.shortage || 0, exDay = d.excess || 0, totDay = d.total || 1;
+    (d.cashiers || []).forEach(c => {
+      if (/kiosk|unpunch/i.test(c.user)) return;
+      const o = cz.get(c.user) || { user: c.user, shifts: 0, rev: 0, short: 0, ex: 0 };
+      o.shifts++; o.rev += c.total || 0;
+      o.short += c.shortage ?? shortDay * ((c.total || 0) / totDay);
+      o.ex += c.excess ?? exDay * ((c.total || 0) / totDay);
+      cz.set(c.user, o);
+    });
+  });
+  return [...cz.values()].filter(c => c.shifts >= 3).sort((a, b) => b.short - a.short);
 }

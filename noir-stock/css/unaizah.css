@@ -219,3 +219,21 @@
 .uz-pager-btns button:hover:not(:disabled) { color: var(--ink); border-color: var(--line-hi); }
 .uz-pager-btns button.on { background: var(--beam); color: #0b0914; border-color: transparent; font-weight: 700; }
 .uz-pager-btns button:disabled { opacity: .35; cursor: default; }
+
+/* Audit · Committee · Inquiry (locked) */
+.uz-lock { display: flex; gap: 10px; max-width: 360px; }
+.uz-lock .input { flex: 1; min-width: 0; height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.3); color: inherit; padding: 0 12px; font: inherit; }
+.uz-audit-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.uz-aud { --k: #3be7ff; border-radius: 16px; padding: 12px; border: 1px solid color-mix(in srgb, var(--k) 35%, transparent); background: color-mix(in srgb, var(--k) 7%, transparent); max-height: 420px; overflow: auto; min-width: 0; }
+.uz-aud-committee { --k: #ff5c7a; } .uz-aud-audit { --k: #ffc857; } .uz-aud-inquiry { --k: #3be7ff; }
+.uz-aud header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; position: sticky; top: -12px; padding: 4px 0; background: inherit; }
+.uz-aud header b { color: var(--k); font-size: 15px; } .uz-aud header span { font-size: 11.5px; opacity: .75; }
+.uz-aud-row { display: grid; grid-template-columns: auto auto; justify-content: space-between; gap: 2px 10px; padding: 7px 0; border-top: 1px solid rgba(255,255,255,.06); font-size: 12.5px; }
+.uz-aud-row em { grid-column: 1 / -1; font-style: normal; font-size: 11.5px; opacity: .7; }
+.uz-aud-cashiers { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.uz-aud-cashiers h4 { margin: 0 6px 0 0; font-size: 13px; }
+.uz-aud-chip { --k: #3be7ff; padding: 6px 10px; border-radius: 99px; font-size: 12px; border: 1px solid color-mix(in srgb, var(--k) 45%, transparent); }
+.uz-aud-chip.uz-aud-committee { --k: #ff5c7a; } .uz-aud-chip.uz-aud-audit { --k: #ffc857; }
+.uz-aud-chip i { font-style: normal; color: var(--k); }
+@media (max-width: 800px) { .uz-audit-grid { grid-template-columns: minmax(0, 1fr); } }
+.uz-aud-row b { justify-self: end; }

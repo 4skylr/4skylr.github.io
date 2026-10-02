@@ -1,12 +1,11 @@
 // Mount points only. Every visual here is rendered by a GitHub library:
 //   chart.js            github.com/chartjs/Chart.js
 //   ApexCharts          github.com/apexcharts/apexcharts.js
-//   Grid.js             github.com/gridjs/gridjs
+
 //   CountUp.js          github.com/inorganik/countUp.js
 const LIB = {
   chart: "vendor/chart.umd.min.js",
   apex: "vendor/apexcharts.min.js",
-  grid: "vendor/gridjs.umd.js",
   countup: "vendor/countUp.umd.js"
 };
 const loading = new Map();
@@ -50,7 +49,7 @@ export async function mountGithubDash(ctx) {
     if (!alive()) return;
     const CountUp = window.countUp?.CountUp;
     if (CountUp && countHost) {
-      countHost.innerHTML = `<div class="slab-h"><h2>Current stock count</h2><span class="voice">CountUp.js</span></div><div class="hero-num" id="gh-count-num" style="font-size:clamp(42px,6vw,72px)">0</div><p class="note">Units on hand across every location. Library: inorganik/countUp.js</p>`;
+      countHost.innerHTML = `<div class="slab-h"><h2>Current stock count</h2><span class="voice">CountUp.js</span></div><div class="hero-num" id="gh-count-num" style="font-size:clamp(42px,6vw,72px)">0</div>`;
       const c = new CountUp("gh-count-num", unitsOnHand, { duration: 1.4, separator: ",", decimalPlaces: 0 });
       if (!c.error) c.start(); else countHost.querySelector("#gh-count-num").textContent = ctx.nf0.format(unitsOnHand);
     }
@@ -59,7 +58,7 @@ export async function mountGithubDash(ctx) {
   try {
     await loadScript(LIB.chart);
     if (!alive()) return;
-    barHost.innerHTML = `<div class="slab-h"><h2>Current stock bar</h2><span class="voice">Chart.js</span></div><div style="height:360px"><canvas id="gh-bar-canvas"></canvas></div><p class="note">Top quantities on hand. Library: chartjs/Chart.js</p>`;
+    barHost.innerHTML = `<div class="slab-h"><h2>Current stock bar</h2><span class="voice">Chart.js</span></div><div style="height:360px"><canvas id="gh-bar-canvas"></canvas></div>`;
     chartBar = new window.Chart(document.getElementById("gh-bar-canvas"), {
       type: "bar",
       data: {
@@ -120,21 +119,5 @@ export async function mountGithubDash(ctx) {
     apexLoc.render();
   } catch { apexHost.innerHTML = `<p class="empty">ApexCharts needs a connection.</p>`; }
 
-  try {
-    await loadScript(LIB.grid);
-    if (!alive()) return;
-    gridHost.innerHTML = `<div class="slab-h"><h2>Inventory grid</h2><span class="voice">Grid.js</span></div><div id="gh-grid-table"></div><p class="note">Read-only view of the current ledger. Library: gridjs/gridjs</p>`;
-    const rows = [...products].sort((a, b) => total(b) - total(a)).map(p => [
-      p.name, p.sku || "", qty(total(p)), units[p.unit] || p.unit || "", ctx.sar(value(p))
-    ]);
-    grid = new window.gridjs.Grid({
-      columns: ["Product", "Report name", "On hand", "Unit", "Value SAR"],
-      data: rows,
-      search: true,
-      sort: true,
-      pagination: { limit: 8 },
-      fixedHeader: true,
-      height: "360px"
-    }).render(document.getElementById("gh-grid-table"));
-  } catch { gridHost.innerHTML = `<p class="empty">Grid.js needs a connection.</p>`; }
+  // the Grid.js table was a duplicate of the Stock ledger and broke in Arabic; removed
 }

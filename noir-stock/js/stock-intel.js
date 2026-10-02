@@ -1,9 +1,9 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=69";
-import { placement, isBulk } from "./fefo-place.js?v=69";
-import { AR as NAME_AR } from "./names-ar.js?v=69";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=70";
+import { placement, isBulk } from "./fefo-place.js?v=70";
+import { AR as NAME_AR } from "./names-ar.js?v=70";
 
 const LEAD = 7, SAFETY = 7, FRONT_DAYS = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
@@ -46,13 +46,13 @@ function loadECharts() {
 export function analyse(H) {
   const P = H.data().products, total = H.total;
   const rows = P.map(p => {
-    const have = total(p), sold = soldOf(p.id), daily = sold / SALES_DAYS, rate = Number(p.rate) || 0;
+    const have = total(p), sold = soldOf(p.id), daily = dailyUse(p.id), rate = Number(p.rate) || 0;
     const frontIds = isBulk(p) ? ["refuel", "mini"] : ["refuel"];
     const front = frontIds.reduce((a, l) => a + (Number(p.stock?.[l]) || 0), 0);
     const cover = daily > 0 ? have / daily : null, fcover = daily > 0 ? front / daily : null;
     const rop = daily * (LEAD + SAFETY);
     const status = daily <= 0 ? null : have <= daily * LEAD ? "now" : have <= rop ? "soon" : cover > 365 ? "over" : "ok";
-    return { p, have, sold, daily, cover, fcover, rop, status, rate, value: have * rate, src: soldSource(p.id) };
+    return { p, have, sold, daily, cover, fcover, rop, status, rate, value: have * rate, src: moveOf(p.id) && !moveOf(p.id).shared ? soldSource(p.id) : null };
   });
   // transfers forward: pcs → fill the Concession from Mini Store first, then Store; bulk → fill the front from Store
   const moves = [];

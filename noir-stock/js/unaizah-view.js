@@ -283,6 +283,8 @@ export async function renderUnaizah(root) {
       <div class="uz-cash" id="uz-cash"></div>
     </section>
 
+    <section class="uz-card uz-audit" id="uz-audit"></section>
+
     <section class="uz-card">
       <div class="uz-h"><div><h3>${t.board}</h3><p>${t.boardSub}</p></div></div>
       <div class="uz-board" id="uz-board"></div>
@@ -311,7 +313,7 @@ export async function renderUnaizah(root) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=69").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=70").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
 
   let view = { rows: [], prev: [] };
@@ -533,8 +535,7 @@ export async function renderUnaizah(root) {
         <td class="data ${diff == null ? "" : ok ? "" : "neg"}">${diff == null ? "—" : money2(diff)}</td>
         <td class="data pos">${money2(m.excess)}</td><td class="data neg">${money2(m.shortage)}</td>
         <td class="data ${net > 0 ? "pos" : net < 0 ? "neg" : ""}">${net > 0 ? "+" : ""}${money2(net)}</td>
-        <td class="data">${m.onHand == null ? "—" : money2(m.onHand)}</td>
-        <td>${ok == null ? "—" : `<span class="uz-pill ${ok ? "ok" : "short"}">${ok ? t.cashOk : t.cashCheck}</span>`}</td></tr>`;
+        <td class="data">${m.onHand == null ? "—" : money2(m.onHand)}</td></tr>`;
     };
     cashCsv = [[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand],
       ...list.map(m => [m.month, m.days, +m.cash.toFixed(2), m.counted ? +m.safe.toFixed(2) : "", m.counted ? +(m.cashCounted - m.safe).toFixed(2) : "", +m.excess.toFixed(2), +m.shortage.toFixed(2), +(m.excess - m.shortage).toFixed(2), m.onHand ?? ""]),
@@ -549,11 +550,50 @@ export async function renderUnaizah(root) {
         <div><p>${c.net}</p><b class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</b></div>
       </div>
       <div class="fx-table-wrap"><table class="fx-table uz-cash-table">
-        <thead><tr>${[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand, c.check].map(h => `<th>${h}</th>`).join("")}</tr></thead>
+        <thead><tr>${[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand].map(h => `<th>${h}</th>`).join("")}</tr></thead>
         <tbody>${list.slice().reverse().map(row).join("")}</tbody>
         <tfoot><tr><td>${t.cashTotal}</td><td class="data">${tot.days}</td><td class="data">${money2(tot.cash)}</td><td class="data">${money2(tot.safe)}</td><td class="data">${money2(tot.cashCounted - tot.safe)}</td><td class="data pos">${money2(tot.excess)}</td><td class="data neg">${money2(tot.shortage)}</td><td class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</td><td></td><td></td></tr></tfoot>
-      </table></div>
-      <div class="uz-cash-flags"><p>${t.cashDays}</p>${flagged.length ? flagged.map(r => `<span class="uz-gap data">${r.date} · ${t.cashCols.cash} ${money2(r.cash || 0)} · ${t.cashCols.safe} ${money2(r.safe)}</span>`).join("") : `<small>${t.cashDaysNone}</small>`}</div>`;
+      </table></div>`;
+  }
+
+  // Audit · Committee · Inquiry — only after the settings PIN (same unlock as Settings)
+  function paintAudit() {
+    const host = $("#uz-audit"); if (!host) return;
+    const A = ar ? { title: "أوديت · لجنة · تساؤل", sub: "يفتح بالرقم السري حق الإعدادات.", pin: "الرقم السري", open: "فتح", bad: "الرقم غلط",
+        committee: "لجنة", audit: "أوديت", inquiry: "تساؤل", rule: "لجنة ≥ 500 ر.س · أوديت ≥ 100 ر.س · تساؤل أقل من 100", none: "لا يوجد",
+        day: "اليوم", amt: "المبلغ", why: "السبب", cashSafe: "الكاش ≠ المعدود للخزنة", short: "عجز", over: "زيادة", cashier: "الكاشير", shifts: "ورديات", lock: "قفل" }
+      : { title: "Audit · Committee · Inquiry", sub: "Opens with the Settings PIN.", pin: "PIN", open: "Open", bad: "Wrong PIN",
+        committee: "Committee", audit: "Audit", inquiry: "Inquiry", rule: "Committee ≥ 500 SAR · Audit ≥ 100 SAR · Inquiry under 100", none: "None",
+        day: "Day", amt: "Amount", why: "Reason", cashSafe: "Cash ≠ counted to safe", short: "Shortage", over: "Excess", cashier: "Cashier", shifts: "shifts", lock: "Lock" };
+    if (sessionStorage.getItem("noir-admin") !== "1") {
+      host.innerHTML = `<div class="uz-h"><div><h3>🔒 ${A.title}</h3><p>${A.sub}</p></div></div>
+        <form class="uz-lock" id="uz-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${A.pin}" aria-label="${A.pin}"><button class="uz-btn" type="submit">${A.open}</button></form>`;
+      host.querySelector("#uz-lock").onsubmit = e => {
+        e.preventDefault();
+        if (e.target.pin.value.trim() !== "899") { e.target.pin.value = ""; e.target.pin.placeholder = A.bad; return; }
+        sessionStorage.setItem("noir-admin", "1"); paintAudit();
+      };
+      return;
+    }
+    const cls = a => a >= 500 ? "committee" : a >= 100 ? "audit" : "inquiry";
+    const items = [];
+    view.rows.forEach(r => {
+      const diff = r.safe != null ? (r.cash || 0) - r.safe : 0;
+      if (Math.abs(diff) > 1) items.push({ k: cls(Math.abs(diff)), day: r.date, amt: diff, why: A.cashSafe, who: (r.cashiers || []).map(c => c.user).filter(u => !/kiosk/i.test(u)).join("، ") });
+      if ((r.shortage || 0) > 1) items.push({ k: cls(r.shortage), day: r.date, amt: -r.shortage, why: A.short, who: (r.cashiers || []).filter(c => (c.shortage || 0) > 0).map(c => c.user).join("، ") });
+      if ((r.excess || 0) > 1) items.push({ k: cls(r.excess), day: r.date, amt: r.excess, why: A.over, who: (r.cashiers || []).filter(c => (c.excess || 0) > 0).map(c => c.user).join("، ") });
+    });
+    const groups = ["committee", "audit", "inquiry"].map(k => ({ k, list: items.filter(i => i.k === k).sort((a, b) => Math.abs(b.amt) - Math.abs(a.amt)) }));
+    const money2 = n => fmt(n, 2);
+    host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
+      <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
+        ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
+    import("./fin-analyst.js?v=70").then(m => {
+      const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
+      if (!cz.length || !host.isConnected) return;
+      host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);
+    }).catch(() => {});
+    host.querySelector("#uz-audit-lock").onclick = () => { sessionStorage.removeItem("noir-admin"); paintAudit(); };
   }
 
   function paintBoard() {
@@ -685,7 +725,7 @@ export async function renderUnaizah(root) {
     root.querySelectorAll("#uz-osc button").forEach(b => b.classList.toggle("on", b.dataset.v === ui.osc));
     root.querySelectorAll("#uz-tab button").forEach(b => b.classList.toggle("on", b.dataset.v === ui.tab));
     const s = stats(view.rows), p = stats(view.prev);
-    paintHero(s, p); paintKpis(s, p); paintTokens(); paintPrice(); paintHeat(); paintFlow(); paintWeek(); paintMix(); paintRecon(); paintCash(); paintBoard(); paintGrid();
+    paintHero(s, p); paintKpis(s, p); paintTokens(); paintPrice(); paintHeat(); paintFlow(); paintWeek(); paintMix(); paintRecon(); paintCash(); paintAudit(); paintBoard(); paintGrid();
   }
 
   root.querySelector(".uz-periods").onclick = e => { const b = e.target.closest("button"); if (!b) return; ui.period = b.dataset.p; sessionStorage.setItem("uz-period", ui.period); paintAll(); };
