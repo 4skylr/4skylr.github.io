@@ -656,3 +656,7 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
 .fin-rank { list-style: none; margin: 0; display: grid; gap: 8px; }
 .fin-rank li { display: grid; grid-template-columns: 22px 1fr auto auto; gap: 8px; align-items: center; }
 @media (max-width: 800px) { .fin-grid, .fin-top { display: grid; } }
+
+.fin-page { display: grid; gap: 16px; }
+.fin-table-wrap, .fin-chart-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 14px; overflow: auto; }
+.fin-table { width: 100
