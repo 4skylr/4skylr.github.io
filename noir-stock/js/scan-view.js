@@ -55,7 +55,8 @@ export async function renderScanCard(root, p, ctx) {
     <div class="pc-shot">${H.pic(p, "pic")}<small class="pc-age" data-age="${H.esc(localStorage.getItem("noir-sync-at") || p.updatedAt || "")}"></small></div>
     <h1>${H.esc(lang === "ar" ? (AR[p.id] || p.name) : p.name)}</h1>
     <p class="pc-en">${H.esc(lang === "ar" ? p.name : (AR[p.id] || ""))}</p>
-    <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${L.qty}</span></p>
+    <p class="pc-qty"><b>${H.qty(total)}</b> <span>${H.esc(unit)} · ${lang === "ar" ? "العدد الكلي" : "Total"}</span></p>
+    <div class="pc-locs">${locRows.map(x => `<span><b>${H.qty(x.n)}</b><i>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)}</i></span>`).join("")}</div>
     <div class="pc-bars">${locRows.map(x => {
       const pct = total ? x.n / total : 0;
       return `<div class="pc-barline"><span>${H.esc(lang === "ar" ? (LOC_AR[x.l.id] || x.l.name) : x.l.name)} · ${H.qty(x.n)}</span><b>${Math.round(pct * 100)}%</b><i data-bar="${pct.toFixed(3)}"></i></div>`;
@@ -63,11 +64,12 @@ export async function renderScanCard(root, p, ctx) {
     <p class="fifo"><b>✓</b> ${lang === "ar" ? "مطابق لـ FIFO" : "FIFO match"}</p>
     <p class="pc-sold">${lang === "ar" ? "مباع من بداية السنة" : "Sold this year"} ${H.qty(soldOf(p.id))}</p>
     ${next ? `<section class="pc-dash"><h2>${L.until} ${gname(next.n)}</h2><div class="flip-wrap"><div id="flip" class="flipdown"></div></div><p class="pc-when">${H.esc(fmtDate(next.date))} · ${H.esc(next.location)}</p></section>` : ""}
-    ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.esc(fmtDate(b.date))}</span><em>${b.left < 0 ? L.past : b.left + " " + L.day}</em></li>`).join("")}</ul>
+    ${dated.length ? `<ul class="pc-dates">${dated.map(b => `<li class="${b.left < 0 ? "past" : ""}"><b>${gname(b.n)}</b><span>${H.qty(b.qty)} ${H.esc(unit)}</span><em>${H.esc(fmtDate(b.date))}</em></li>`).join("")}</ul>
     <div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>` : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="recipe">${L.recipe}</button></div>`}
     <section class="pc-sheet" id="sheet-batch" hidden>
       <h2>المجموعات</h2>
-      ${dated.map(b => `<p><b>${groupName(b.n)}</b> · ${H.esc(b.location)} · ${H.esc(fmtDate(b.date))} · ${H.esc(b.qty ?? "—")}</p>`).join("")}
+      ${dated.map(b => `<p><b>${groupName(b.n)}</b> · ${H.esc(b.location)} · ${H.qty(b.qty)} · ${H.esc(fmtDate(b.date))}</p>`).join("")}
+      <form class="pc-edit" id="group-form"><label>الرقم السري</label><input class="input" name="pin" inputmode="numeric"><label>المجموعة</label><select class="input" name="n">${dated.map(b => `<option value="${b.row}:${b.n}">${groupName(b.n)} · ${H.esc(b.location)}</option>`).join("")}</select><label>الكمية</label><input class="input" name="qty" inputmode="decimal"><label>تاريخ الصلاحية</label><input class="input" name="date" placeholder="2026-12-31"><button class="btn" type="submit">حفظ المجموعة</button></form>
       ${past[0] ? `<button class="btn warn" id="write-off" type="button">شطب ${groupName(past[0].n)}</button>` : ""}
     </section>
     <section class="pc-sheet" id="sheet-recipe" hidden>
@@ -94,23 +96,21 @@ export async function renderScanCard(root, p, ctx) {
     sheet.hidden = !open;
     btn.setAttribute("aria-pressed", String(open));
   });
+  const saveGroup = box => {
+    const pin = box.pin.value.trim();
+    const live = localStorage.getItem("noir-live-pin") || "";
+    if (pin !== live && pin !== "899") { H.toast("الرقم غلط"); return; }
+    const [row, n] = String(box.n?.value || "").split(":");
+    const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
+    if (row) { all[row] = all[row] || {}; all[row]["q" + n] = box.qty.value; all[row]["d" + n] = box.date.value; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
+    if (pin !== "899") ctx.rotatePin?.();
+    H.toast("انحفظت المجموعة");
+    renderScanCard(root, p, ctx);
+  };
+  root.querySelector("#group-form")?.addEventListener("submit", e => { e.preventDefault(); saveGroup(e.target); });
   root.querySelector("#edit-card")?.addEventListener("click", () => {
-    const box = document.createElement("form");
-    box.className = "pc-edit";
-    box.innerHTML = `<label>الرقم السري</label><input class="input" name="pin" inputmode="numeric"><label>الكمية</label><input class="input" name="qty" value="${dated[0]?.qty ?? ""}"><label>التاريخ</label><input class="input" name="date" value="${dated[0]?.date ?? ""}"><button class="btn" type="submit">حفظ</button>`;
-    root.querySelector(".phone-card").append(box);
-    box.onsubmit = e => {
-      e.preventDefault();
-      const pin = box.pin.value.trim();
-      const live = localStorage.getItem("noir-live-pin") || "";
-      if (pin !== live && pin !== "899") { H.toast("الرقم غلط"); return; }
-      const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
-      const row = dated[0];
-      if (row?.row) { all[String(row.row)] = all[String(row.row)] || {}; all[String(row.row)]["q" + row.n] = box.qty.value; all[String(row.row)]["d" + row.n] = box.date.value; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
-      if (pin !== "899") ctx.rotatePin?.();
-      H.toast("انحفظ");
-      renderScanCard(root, p, ctx);
-    };
+    const sheet = root.querySelector("#sheet-batch");
+    if (sheet) sheet.hidden = false;
   });
   root.querySelectorAll("[data-lang]").forEach(btn => btn.onclick = () => {
     sessionStorage.setItem(LANG_KEY, btn.dataset.lang);

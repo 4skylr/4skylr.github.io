@@ -1,0 +1,505 @@
+{
+ "root": "inventory",
+ "images": "assets/products",
+ "dates": "js/expiry-data.js",
+ "stock": "js/seed-data.js",
+ "products": [
+  {
+   "id": "bib-coke",
+   "name": "Coca-Cola BIB Syrup",
+   "image": "assets/products/bib-coke.webp",
+   "qr": "assets/qrcodes/bib-coke.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "bib-coke-zero",
+   "name": "Coke Zero BIB Syrup",
+   "image": "assets/products/bib-coke-zero.webp",
+   "qr": "assets/qrcodes/bib-coke-zero.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "bib-fanta",
+   "name": "Fanta BIB Syrup",
+   "image": "assets/products/bib-fanta.webp",
+   "qr": "assets/qrcodes/bib-fanta.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "lemonade-syrup",
+   "name": "Lemonade Syrup",
+   "image": "assets/products/lemonade-syrup.webp",
+   "qr": "assets/qrcodes/lemonade-syrup.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mojito-syrup",
+   "name": "Mojito Syrup",
+   "image": "assets/products/mojito-syrup.webp",
+   "qr": "assets/qrcodes/mojito-syrup.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "bib-sprite",
+   "name": "Sprite BIB Syrup",
+   "image": "assets/products/bib-sprite.webp",
+   "qr": "assets/qrcodes/bib-sprite.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "arwa-500",
+   "name": "Arwa Water 500 ml",
+   "image": "assets/products/arwa-500.webp",
+   "qr": "assets/qrcodes/arwa-500.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "arwa-zero",
+   "name": "Arwa Zero 500 ml",
+   "image": "assets/products/arwa-zero.webp",
+   "qr": "assets/qrcodes/arwa-zero.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "barbican",
+   "name": "Barbican",
+   "image": "assets/products/barbican.webp",
+   "qr": "assets/qrcodes/barbican.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "monster",
+   "name": "Monster Energy Can",
+   "image": "assets/products/monster.webp",
+   "qr": "assets/qrcodes/monster.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "rani",
+   "name": "Rani Can",
+   "image": "assets/products/rani.webp",
+   "qr": "assets/qrcodes/rani.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "schweppes",
+   "name": "Schweppes Can",
+   "image": "assets/products/schweppes.webp",
+   "qr": "assets/qrcodes/schweppes.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "vimto-can",
+   "name": "Vimto Can 250 ml",
+   "image": "assets/products/vimto-can.webp",
+   "qr": "assets/qrcodes/vimto-can.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "vimto-pet",
+   "name": "Vimto PET 250 ml",
+   "image": "assets/products/vimto-pet.webp",
+   "qr": "assets/qrcodes/vimto-pet.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "vimto-blueberry",
+   "name": "Vimto PET Blueberry 250 ml",
+   "image": "assets/products/vimto-blueberry.webp",
+   "qr": "assets/qrcodes/vimto-blueberry.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mm-choco-150",
+   "name": "M&M's Chocolate 150 g",
+   "image": "assets/products/mm-choco-150.webp",
+   "qr": "assets/qrcodes/mm-choco-150.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mm-choco-45",
+   "name": "M&M's Chocolate 45 g",
+   "image": "assets/products/mm-choco-45.webp",
+   "qr": "assets/qrcodes/mm-choco-45.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mm-peanut-150",
+   "name": "M&M's Peanut 150 g",
+   "image": "assets/products/mm-peanut-150.webp",
+   "qr": "assets/qrcodes/mm-peanut-150.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mm-peanut-45",
+   "name": "M&M's Peanut 45 g",
+   "image": "assets/products/mm-peanut-45.webp",
+   "qr": "assets/qrcodes/mm-peanut-45.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "maltesers-175",
+   "name": "Maltesers 175 g",
+   "image": "assets/products/maltesers-175.webp",
+   "qr": "assets/qrcodes/maltesers-175.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "maltesers-37",
+   "name": "Maltesers 37 g",
+   "image": "assets/products/maltesers-37.webp",
+   "qr": "assets/qrcodes/maltesers-37.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "flossine-blue",
+   "name": "Blue Raspberry Flossine",
+   "image": "assets/products/flossine-blue.webp",
+   "qr": "assets/qrcodes/flossine-blue.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "corn-butterfly",
+   "name": "Butterfly Corn",
+   "image": "assets/products/corn-butterfly.webp",
+   "qr": "assets/qrcodes/corn-butterfly.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "caramel",
+   "name": "Caramel",
+   "image": "assets/products/caramel.webp",
+   "qr": "assets/qrcodes/caramel.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cheese-masala",
+   "name": "Cheese Masala",
+   "image": "assets/products/cheese-masala.webp",
+   "qr": "assets/qrcodes/cheese-masala.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cotton-candy-tub",
+   "name": "Cotton Candy Floss Tub",
+   "image": "assets/products/cotton-candy-tub.webp",
+   "qr": "assets/qrcodes/cotton-candy-tub.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "corn-mushroom",
+   "name": "Mushroom Corn",
+   "image": "assets/products/corn-mushroom.webp",
+   "qr": "assets/qrcodes/corn-mushroom.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "pizza-mix",
+   "name": "Pizza Savory Mix",
+   "image": "assets/products/pizza-mix.webp",
+   "qr": "assets/qrcodes/pizza-mix.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "popcorn-oil",
+   "name": "Popcorn Oil",
+   "image": "assets/products/popcorn-oil.webp",
+   "qr": "assets/qrcodes/popcorn-oil.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "tub-130",
+   "name": "Popcorn Tub 130 oz",
+   "image": "assets/products/tub-130.webp",
+   "qr": "assets/qrcodes/tub-130.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "tub-46",
+   "name": "Popcorn Tub 46 oz",
+   "image": "assets/products/tub-46.webp",
+   "qr": "assets/qrcodes/tub-46.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "tub-64",
+   "name": "Popcorn Tub 64 oz",
+   "image": "assets/products/tub-64.webp",
+   "qr": "assets/qrcodes/tub-64.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "tub-85",
+   "name": "Popcorn Tub 85 oz",
+   "image": "assets/products/tub-85.webp",
+   "qr": "assets/qrcodes/tub-85.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "salt",
+   "name": "Salt",
+   "image": "assets/products/salt.webp",
+   "qr": "assets/qrcodes/salt.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "sugar",
+   "name": "Sugar",
+   "image": "assets/products/sugar.webp",
+   "qr": "assets/qrcodes/sugar.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "flossine-pink",
+   "name": "Vanilla Pink Flossine",
+   "image": "assets/products/flossine-pink.webp",
+   "qr": "assets/qrcodes/flossine-pink.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "hotdog",
+   "name": "Beef Frankfurter",
+   "image": "assets/products/hotdog.webp",
+   "qr": "assets/qrcodes/hotdog.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cheese-sauce",
+   "name": "Cheese Sauce",
+   "image": "assets/products/cheese-sauce.webp",
+   "qr": "assets/qrcodes/cheese-sauce.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "hotdog-bun",
+   "name": "Hot Dog Bun",
+   "image": "assets/products/hotdog-bun.webp",
+   "qr": "assets/qrcodes/hotdog-bun.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "jalapeno",
+   "name": "Jalapeño",
+   "image": "assets/products/jalapeno.webp",
+   "qr": "assets/qrcodes/jalapeno.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mustard",
+   "name": "Mustard Sauce",
+   "image": "assets/products/mustard.webp",
+   "qr": "assets/qrcodes/mustard.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "salsa",
+   "name": "Ricos Chunky Salsa",
+   "image": "assets/products/salsa.webp",
+   "qr": "assets/qrcodes/salsa.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "nachos-chips",
+   "name": "Señorah Nacho Chips",
+   "image": "assets/products/nachos-chips.webp",
+   "qr": "assets/qrcodes/nachos-chips.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "ketchup",
+   "name": "Tomato Ketchup",
+   "image": "assets/products/ketchup.webp",
+   "qr": "assets/qrcodes/ketchup.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "slush-blue",
+   "name": "Slush Blue Raspberry",
+   "image": "assets/products/slush-blue.webp",
+   "qr": "assets/qrcodes/slush-blue.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "slush-glass-12",
+   "name": "Slush Glass 12 oz",
+   "image": "assets/products/slush-glass-12.webp",
+   "qr": "assets/qrcodes/slush-glass-12.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "slush-glass-16",
+   "name": "Slush Glass 16 oz",
+   "image": "assets/products/slush-glass-16.webp",
+   "qr": "assets/qrcodes/slush-glass-16.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "slush-pom",
+   "name": "Slush Pomegranate",
+   "image": "assets/products/slush-pom.webp",
+   "qr": "assets/qrcodes/slush-pom.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "slush-straw",
+   "name": "Slush Strawberry",
+   "image": "assets/products/slush-straw.webp",
+   "qr": "assets/qrcodes/slush-straw.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "brown-sugar",
+   "name": "Brown Sugar Sachet",
+   "image": "assets/products/brown-sugar.webp",
+   "qr": "assets/qrcodes/brown-sugar.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "coffee-cup-big",
+   "name": "Coffee Cup Big",
+   "image": "assets/products/coffee-cup-big.webp",
+   "qr": "assets/qrcodes/coffee-cup-big.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "coffee-cup-small",
+   "name": "Coffee Cup Small",
+   "image": "assets/products/coffee-cup-small.webp",
+   "qr": "assets/qrcodes/coffee-cup-small.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "lemon",
+   "name": "Lemon",
+   "image": "assets/products/lemon.webp",
+   "qr": "assets/qrcodes/lemon.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "mint",
+   "name": "Mint Leaves",
+   "image": "assets/products/mint.webp",
+   "qr": "assets/qrcodes/mint.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "sugar-sachet",
+   "name": "Sugar Sachet",
+   "image": "assets/products/sugar-sachet.webp",
+   "qr": "assets/qrcodes/sugar-sachet.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "sweet-low",
+   "name": "Sweet'N Low Sachet",
+   "image": "assets/products/sweet-low.webp",
+   "qr": "assets/qrcodes/sweet-low.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cups-16",
+   "name": "Cup 16 oz",
+   "image": "assets/products/cups-16.webp",
+   "qr": "assets/qrcodes/cups-16.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cups-24",
+   "name": "Cup 24 oz",
+   "image": "assets/products/cups-24.webp",
+   "qr": "assets/qrcodes/cups-24.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "cups-30",
+   "name": "Cup 30 oz",
+   "image": "assets/products/cups-30.webp",
+   "qr": "assets/qrcodes/cups-30.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "dip-cup-4",
+   "name": "Dip Cup 4 oz",
+   "image": "assets/products/dip-cup-4.webp",
+   "qr": "assets/qrcodes/dip-cup-4.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "hotdog-tray",
+   "name": "Hot Dog Tray",
+   "image": "assets/products/hotdog-tray.webp",
+   "qr": "assets/qrcodes/hotdog-tray.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "lids-16",
+   "name": "Lid 16 oz",
+   "image": "assets/products/lids-16.webp",
+   "qr": "assets/qrcodes/lids-16.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "lids-24",
+   "name": "Lid 24 oz",
+   "image": "assets/products/lids-24.webp",
+   "qr": "assets/qrcodes/lids-24.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "lids-30",
+   "name": "Lid 30 oz",
+   "image": "assets/products/lids-30.webp",
+   "qr": "assets/qrcodes/lids-30.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "nachos-tray-3",
+   "name": "Nachos Tray 3-Comp",
+   "image": "assets/products/nachos-tray-3.webp",
+   "qr": "assets/qrcodes/nachos-tray-3.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "nachos-tray-4",
+   "name": "Nachos Tray 4-Comp",
+   "image": "assets/products/nachos-tray-4.webp",
+   "qr": "assets/qrcodes/nachos-tray-4.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "napkin",
+   "name": "Paper Napkin",
+   "image": "assets/products/napkin.webp",
+   "qr": "assets/qrcodes/napkin.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "stirrer",
+   "name": "Stirrer",
+   "image": "assets/products/stirrer.webp",
+   "qr": "assets/qrcodes/stirrer.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "straw",
+   "name": "Straw",
+   "image": "assets/products/straw.webp",
+   "qr": "assets/qrcodes/straw.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "straw-spoon",
+   "name": "Straw with Spoon",
+   "image": "assets/products/straw-spoon.webp",
+   "qr": "assets/qrcodes/straw-spoon.png",
+   "dates": "js/expiry-data.js"
+  },
+  {
+   "id": "co2",
+   "name": "CO2 Gas",
+   "image": "assets/products/co2.webp",
+   "qr": "assets/qrcodes/co2.png",
+   "dates": "js/expiry-data.js"
+  }
+ ]
+}

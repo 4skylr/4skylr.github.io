@@ -72,4 +72,4 @@ export const AR = {
   "straw-spoon": "شفاط بملعقة",
   "co2": "غاز ثاني أكسيد الكربون"
 };
-export const LOC_AR = { mini: "ميني ستور", refuel: "ريفويل", stores: "المستودع الرئيسي" };
+export const LOC_AR = { mini: "ميني ستور", refuel: "كونسيشن", stores: "المستودع الرئيسي" };

@@ -76,3 +76,8 @@ body.card-only #modal-root { display: block; position: relative; z-index: 40; }
 
 .cut .bar, .cut small { display: none !important; }
 .cut b { display: block; margin-top: 6px; font-size: 12px; text-align: center; }
+
+.pc-locs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 12px; }
+.pc-locs span { background: rgba(255,255,255,.05); border-radius: 12px; padding: 8px 4px; text-align: center; }
+.pc-locs b { display: block; font-size: 16px; }
+.pc-locs i { font-style: normal; font-size: 11px; color: #c9c0d4; }

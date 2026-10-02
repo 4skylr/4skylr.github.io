@@ -12,7 +12,7 @@ const listeners = new Set();
 
 export const LOCATIONS = [
   { id: "mini", name: "Mini Store", short: "Mini", code: "MNI" },
-  { id: "refuel", name: "Refuel", short: "Refuel", code: "RFL" },
+  { id: "refuel", name: "Concession", short: "Concession", code: "CON" },
   { id: "stores", name: "Main Stores", short: "Stores", code: "STR" }
 ];
 

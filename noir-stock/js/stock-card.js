@@ -336,6 +336,13 @@ export async function exportLabelsPdf(products) {
       page.drawImage(img, { x: x + 28, y: y + 52, width: 62, height: 62 });
     }
     const name = String(p.name || p.id).slice(0, 28);
+    if (p.image) {
+      try {
+        const bytes = await fetch(p.image).then(r => r.arrayBuffer());
+        const photo = p.image.endsWith(".png") ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+        page.drawImage(photo, { x: x + 8, y: y + size - 78, width: 62, height: 62 });
+      } catch {}
+    }
     page.drawText(name, { x: x + 6, y: y + 16, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
     x += size + gap;
   }
