@@ -4,7 +4,8 @@ import { SEED_DATE } from "./seed-data.js?v=37";
 import { renderYield, productPanel } from "./analytics.js?v=37";
 import { mountGithubDash } from "./gh-dash.js?v=37";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=37";
-import { downloadCountCsv } from "./export-count.js?v=37";
+import { downloadCountCsv } from "./export-count.js?v=48";
+import { renderFinance } from "./finance-view.js?v=48";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
@@ -59,6 +60,7 @@ const ICON = {
   yield: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><circle cx="16" cy="8" r="2"/>',
   history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
   settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  finance: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="M4 9l6-4 6 3 6-4"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
@@ -178,7 +180,7 @@ function render() {
   $("#kicker").textContent = r.kicker;
   $("#page-title").innerHTML = r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, settings: viewSettings })[r.id]();
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -622,6 +624,7 @@ function viewScanProduct(p) {
     $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "تعذر فتح البطاقة")}</p></article>`;
   });
 }
+function viewFinance() { renderFinance($("#view")); }
 function viewYield() {
   $("#title-actions").innerHTML = "";
   renderYield($("#view"), helpers());
