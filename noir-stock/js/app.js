@@ -1,18 +1,44 @@
-import * as store from "./store.js?v=70";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=70";
-import { SEED_DATE } from "./seed-data.js?v=70";
-import { renderYield, productPanel } from "./analytics.js?v=70";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=70";
-import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=70";
+import * as store from "./store.js?v=71";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=71";
+import { SEED_DATE } from "./seed-data.js?v=71";
+import { renderYield, productPanel } from "./analytics.js?v=71";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=71";
+import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=71";
+import { usageOf } from "./consumption.js?v=71";
+import { AR as NAMES_AR } from "./names-ar.js?v=71";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const ghDash = lazy("./gh-dash.js?v=70");
-const exportCount = lazy("./export-count.js?v=70");
-const financeView = lazy("./finance-view.js?v=70");
-const unaizahView = lazy("./unaizah-view.js?v=70");
-const syncAdmin = lazy("./sync-admin.js?v=70");
-const toolsMod = lazy("./tools.js?v=70");
-const intelMod = lazy("./stock-intel.js?v=70");
+const exportCount = lazy("./export-count.js?v=71");
+const financeView = lazy("./finance-view.js?v=71");
+const unaizahView = lazy("./unaizah-view.js?v=71");
+const syncAdmin = lazy("./sync-admin.js?v=71");
+const toolsMod = lazy("./tools.js?v=71");
+const intelMod = lazy("./stock-intel.js?v=71");
+// GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
+const fuseMod = lazy("../vendor/fuse.min.mjs");
+const aaMod = lazy("../vendor/auto-animate.mjs");
+let FuseC = null, fuseIdx = null, fuseFor = null;
+fuseMod().then(m => { FuseC = m.default; if (ui.route === "products" && ui.q) renderResults(); }).catch(() => {});
+// product ids matching a search, typos and Arabic names included; null until Fuse has loaded
+function fuzzyIds(q) {
+  if (!FuseC || !q.trim()) return null;
+  if (fuseFor !== data.products) {
+    fuseIdx = new FuseC(data.products.map(p => ({ id: p.id, name: p.name, sku: p.sku || "", code: p.code || "", ar: NAMES_AR[p.id] || "" })),
+      { keys: [{ name: "name", weight: 3 }, "sku", "code", { name: "ar", weight: 2 }], threshold: .36, ignoreLocation: true });
+    fuseFor = data.products;
+  }
+  return new Set(fuseIdx.search(q.trim()).map(r => r.item.id));
+}
+// swap a list's children, keeping unchanged nodes so auto-animate can slide them into place
+function patchKids(parent, html) {
+  const t = document.createElement("template"); t.innerHTML = html;
+  const old = new Map([...parent.children].map(n => [n.dataset.key || n.dataset.edit, n]));
+  parent.replaceChildren(...[...t.content.children].map(n => {
+    const k = n.dataset.key || n.dataset.edit, o = k && old.get(k), html = n.outerHTML;
+    if (o && o._html === html) return o;
+    n._html = html; return n;
+  }));
+}
 
 // Device: phone / tablet / desktop from width + touch; kept current on rotate and resize.
 (function device() {
@@ -190,7 +216,7 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
-  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=70").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=71").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -239,6 +265,9 @@ function viewDashboard() {
   const low = P.filter(p => total(p) > 0 && ((Number(p.min) > 0 && total(p) <= Number(p.min)) || ["low", "crit"].includes(level(p).state)))
     .sort((a, b) => level(a).pct - level(b).pct);
   const drafts = data.sessions.filter(s => s.status === "draft");
+  // what moved most this year, in riyal: direct sales, or sales × recipe for ingredients
+  const movers = P.map(p => { const u = usageOf(p, P), mv = moveOf(p.id), q = u ? u.total : mv && mv.shared ? 0 : soldOf(p.id);
+    return { p, q, u: UNITS[p.unit] || "", v: q * (Number(p.rate) || 0), est: !!u && !u.exact }; }).filter(m => m.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
 
   $("#title-actions").innerHTML = `<button class="btn" id="dash-reorder">Reorder list</button><button class="btn hot" data-route="count">${icon("count")}Start a count</button>`;
   $("#dash-reorder").onclick = () => toolsMod().then(m => m.openReorder(toolHelpers()));
@@ -325,25 +354,21 @@ function viewDashboard() {
       </div>
     </section>
 
-    <section class="slab span-5" id="gh-count"></section>
-    <section class="slab span-7" id="gh-stock-bar"></section>
-    <section class="slab span-5" id="gh-apex"></section>
-    <section class="slab span-7" id="gh-loc"></section>
+    <section class="slab span-12 movers">
+      <div class="slab-h"><h2>Top movers</h2><span class="tag">${SALES_FROM} → ${SALES_TO}</span></div>
+      <div class="mv-list">${movers.map((m, i) => `<button class="mv" data-edit="${esc(m.p.id)}" style="--w:${(m.v / (movers[0]?.v || 1) * 100).toFixed(1)}%">
+        <span class="mv-n">${i + 1}</span>${pic(m.p, "pic")}<span class="mv-nm"><b>${esc(m.p.name)}</b><small>${m.est ? "≈ " : ""}${qty(m.q)} ${esc(m.u)}</small></span><span class="mv-v">${sar(m.v)}</span><i></i></button>`).join("")}</div>
+    </section>
   </div>`;
-  // the library charts sit below the fold: load them only when the user scrolls near them
-  const ghHost = document.getElementById("gh-count");
-  const mountGh = () => ghDash().then(m => { if (document.getElementById("gh-count")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
-  if (ghHost && "IntersectionObserver" in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); mountGh(); } }, { rootMargin: "400px" }); io.observe(ghHost); }
-  else mountGh();
 }
 
 // ── Collection ───────────────────────────────────────────────
 function filtered() {
-  const q = ui.q.trim().toLowerCase(), order = CATEGORIES.map(c => c.id);
+  const q = ui.q.trim().toLowerCase(), order = CATEGORIES.map(c => c.id), fz = fuzzyIds(q);
   const L = data.products.filter(p =>
     (ui.cat === "all" || p.category === ui.cat) &&
     (ui.loc === "all" || Number(p.stock?.[ui.loc]) > 0) &&
-    (!q || [p.name, p.sku, p.code].some(s => String(s || "").toLowerCase().includes(q))));
+    (!q || (fz ? fz.has(p.id) : [p.name, p.sku, p.code, NAMES_AR[p.id]].some(s => String(s || "").toLowerCase().includes(q)))));
   const S = {
     cat: (a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.name.localeCompare(b.name),
     name: (a, b) => a.name.localeCompare(b.name),
@@ -417,8 +442,14 @@ function renderResults() {
         <td class="r data">${sar(value(p))}</td></tr>`; }).join("")}</tbody></table></div>`;
     return;
   }
-  $("#results").innerHTML = head + `<div class="collection">
-    ${L.map((p, i, arr) => { const h = catHead(p, i, arr); return (h ? `<h3 class="coll-h"><b>${esc(h.name)}</b><span>${h.n} · ${sar(h.v)} SAR</span></h3>` : "") + token(p); }).join("")}</div>`;
+  const kids = L.map((p, i, arr) => { const h = catHead(p, i, arr); return (h ? `<h3 class="coll-h" data-key="h-${esc(p.category)}"><b>${esc(h.name)}</b><span>${h.n} · ${sar(h.v)} SAR</span></h3>` : "") + token(p); }).join("");
+  const coll = $("#results .collection");
+  if (coll) { $("#results .count-line").outerHTML = head; patchKids(coll, kids || `<p class="empty" data-key="none">No match.</p>`); }
+  else {
+    $("#results").innerHTML = head + `<div class="collection">${kids}</div>`;
+    [...$("#results .collection").children].forEach(n => { n._html = n.outerHTML; });
+    aaMod().then(m => { const c = $("#results .collection"); if (c && !c.dataset.aa) { c.dataset.aa = "1"; m.default(c, { duration: 260 }); } }).catch(() => {});
+  }
   bindTilt();
 }
 
@@ -435,14 +466,15 @@ function token(p) {
       : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
     <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
     <div class="token-foot"><span class="qty">${qty(t)} ${unit}</span><span class="val">${Number(p.rate || 0).toFixed(2)}<small>/${unit}</small></span></div>
-    ${soldOf(p.id) ? (mv => { const ar = siteLang() === "ar";
+    ${usageOf(p, data.products) ? (u => `<p class="token-sold">${siteLang() === "ar" ? "استهلاك" : "Used"} <b>${u.exact ? "" : "≈ "}${qty(u.total)}</b> ${esc(UNITS[p.unit] || "")}${u.exact ? "" : `<i>${siteLang() === "ar" ? "تقدير" : "est."}</i>`}</p>`)(usageOf(p, data.products)) : soldOf(p.id) ? (mv => { const ar = siteLang() === "ar";
       return `<p class="token-sold">${mv && mv.shared ? (ar ? "تحرك مع" : "Moved with") : (ar ? "مباع من بداية السنة" : "Sold this year")} <b>${qty(soldOf(p.id))}</b>${mv && mv.shared ? ` ${mv.unit[ar ? 1 : 0]}` : ""}${mv && !mv.shared ? `<i>${ar ? "مرتبط" : "linked"}</i>` : ""}</p>`; })(moveOf(p.id)) : ""}
   </button>`;
 }
 
 function bindTilt() {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches || matchMedia("(hover: none)").matches) return;
-  $$(".token").forEach(el => {
+  $$(".token:not([data-tilt])").forEach(el => {
+    el.dataset.tilt = "1";
     el.addEventListener("pointermove", e => {
       const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
       el.style.setProperty("--ry", `${(x - .5) * 12}deg`); el.style.setProperty("--rx", `${(.5 - y) * 12}deg`);
@@ -663,7 +695,7 @@ function renderHud() {
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
-const toolHelpers = () => ({ ...cardHelpers(), level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
+const toolHelpers = () => ({ ...cardHelpers(), fuzzyIds, namesAr: NAMES_AR, level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
 function viewLabels() {
   document.body.classList.remove("card-only");
   renderNav(); renderNet();
@@ -773,7 +805,7 @@ function viewSettings() {
         <label class="btn hot" for="up-stock-master">رفع تقرير الجرد</label><input id="up-stock-master" type="file" accept="application/pdf,.pdf" hidden>
         <label class="btn" for="up-sales">رفع المبيعات</label><input id="up-sales" type="file" accept="application/pdf,.pdf" hidden>
       </div>
-      <canvas id="sales-chart" height="120"></canvas>
+      <div id="sales-chart" style="height:340px"></div>
     </section>
     <section class="slab">
       <div class="slab-h"><h2>Backup &amp; export</h2></div>
@@ -807,7 +839,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=70");
+    const { parseStockPdf } = await import("./sync-admin.js?v=71");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -817,8 +849,7 @@ function viewSettings() {
   });
   $("#up-sales")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const pdfjs = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js");
-    pdfjs.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+    const pdfjs = await (await import("./sync-admin.js?v=71")).loadPdf();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -852,14 +883,20 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=70").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=71").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
 
 async function loadChart() {
-  if (!document.getElementById("sales-chart")) return;
-  if (!window.Chart) await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/chart.umd.min.js"; s.onload = res; s.onerror = rej; document.head.append(s); });
-  const top = data.products.map(p => ({ name: p.name, sold: soldOf(p.id), cost: soldOf(p.id) * Number(p.rate || 0) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 8);
-  new window.Chart(document.getElementById("sales-chart"), { type: "bar", data: { labels: top.map(x => x.name), datasets: [{ label: "مباع من بداية السنة", data: top.map(x => x.sold), backgroundColor: "#9b6bff" }] }, options: { plugins: { legend: { labels: { color: "#f4ede4" } } }, scales: { x: { ticks: { color: "#a4a4a4" } }, y: { ticks: { color: "#a4a4a4" } } } } });
+  const el = document.getElementById("sales-chart");
+  if (!el) return;
+  if (!window.echarts) await new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "vendor/echarts.min.js"; sc.onload = res; sc.onerror = rej; document.head.append(sc); });
+  const top = data.products.filter(p => !moveOf(p.id)).map(p => ({ name: p.name, sold: soldOf(p.id) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 10).reverse();
+  const c = window.echarts.init(el);
+  c.setOption({ grid: { left: 130, right: 30, top: 10, bottom: 20 }, tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
+    xAxis: { type: "value", axisLabel: { color: "#a4a4a4" }, splitLine: { lineStyle: { color: "rgba(255,255,255,.07)" } } },
+    yAxis: { type: "category", data: top.map(x => x.name), axisLabel: { color: "#f4ede4", width: 120, overflow: "truncate" } },
+    series: [{ type: "bar", data: top.map(x => x.sold), barWidth: 14, itemStyle: { color: "#9b6bff", borderRadius: [0, 6, 6, 0] }, label: { show: true, position: "right", color: "#f4ede4" } }] });
+  new ResizeObserver(() => c.resize()).observe(el);
 }

@@ -5,10 +5,11 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "./names-ar.js?v=70";
-import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=70";
-import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=70";
-import { placement, isBulk } from "./fefo-place.js?v=70";
+import { AR, LOC_AR } from "./names-ar.js?v=71";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=71";
+import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=71";
+import { placement, isBulk } from "./fefo-place.js?v=71";
+import { usageOf } from "./consumption.js?v=71";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -70,7 +71,7 @@ const langOf = () => sessionStorage.getItem(LANG_KEY) === "en" ? "en" : "ar";
 const T = {
   ar: { until: "حتى", past: "سابقة", day: "يوم", groups: "المجموعات", recipe: "الوصفة", qty: "الكمية الحالية", none: "بدون تاريخ · الكمية فقط",
         d: "يوم", h: "ساعة", m: "دقيقة", s: "ثانية", since: "انتهت منذ", left: "متبقي", total: "العدد الكلي", scanned: "تم المسح",
-        countdowns: "العد التنازلي للمجموعات", next: "الأقرب للانتهاء", share: "التوزيع", sold: "مباع من بداية السنة", moved: "تحرك مع", fifo: "الترتيب سليم",
+        countdowns: "العد التنازلي للمجموعات", next: "الأقرب للانتهاء", share: "التوزيع", sold: "مباع من بداية السنة", moved: "تحرك مع", used: "استهلاك من بداية السنة", est: (lo, hi, u) => `تقدير: النكهات بالتساوي لأن المبيعات بالحجم فقط · المدى ${lo}–${hi} ${u}`, fifo: "الترتيب سليم",
         bad: n => `${n} مجموعة بمكان غلط`, expd: n => `${n} مجموعة منتهية`, summary: (g, l) => `${g} ${g === 1 ? "مجموعة" : "مجموعات"} في ${l} ${l === 1 ? "موقع" : "مواقع"}`,
         lane: "مسار الصرف", laneSub: "الأقرب انتهاءً لازم يكون قدّام", bulkNote: "صنف قروب (كيلو / لتر): الكونسيشن والميني ستور مستوى واحد",
         pcsNote: "صنف بالحبة: كونسيشن ← ميني ستور ← ستور", pick: "اسحب", moveTo: l => `قدّمها إلى ${l}`, before: n => `تنتهي قبل ${n}`, writeOff: "اشطبها",
@@ -79,7 +80,7 @@ const T = {
         state: { exp: "منتهية", crit: "حرجة", soon: "قريبة", watch: "راقب", safe: "آمنة" } },
   en: { until: "Until", past: "Past", day: "days", groups: "Groups", recipe: "Recipe", qty: "On hand", none: "No date · quantity only",
         d: "Days", h: "Hrs", m: "Min", s: "Sec", since: "Expired", left: "Left", total: "Total", scanned: "Scanned",
-        countdowns: "Group countdowns", next: "Next to expire", share: "Split", sold: "Sold this year", moved: "Moved with", fifo: "Order is right",
+        countdowns: "Group countdowns", next: "Next to expire", share: "Split", sold: "Sold this year", moved: "Moved with", used: "Used this year", est: (lo, hi, u) => `Estimate: flavours split evenly (sales are by size only) · range ${lo}–${hi} ${u}`, fifo: "Order is right",
         bad: n => `${n} group${n === 1 ? "" : "s"} misplaced`, expd: n => `${n} expired`, summary: (g, l) => `${g} group${g === 1 ? "" : "s"} in ${l} location${l === 1 ? "" : "s"}`,
         lane: "Pick route", laneSub: "the earliest expiry must sit in front", bulkNote: "Group item (kg / L): Concession and Mini Store are one tier",
         pcsNote: "Sold by the piece: Concession → Mini Store → Store", pick: "Pick", moveTo: l => `Move to ${l}`, before: n => `expires before ${n}`, writeOff: "Write off",
@@ -189,7 +190,7 @@ export async function renderScanCard(root, p, ctx) {
   const worst = dated.length ? stateOf(dated[0].left) : "none";
   const locName = l => lang === "ar" ? (LOC_AR[l.id] || l.name) : (H.LOCATIONS.find(x => x.id === l.id)?.name || l.name);
   const misplaced = dated.filter(b => b.flag?.kind === "move").length, expiredN = dated.filter(b => b.left < 0).length;
-  const mv = moveOf(p.id), src = mv && mv.src.length <= 4 ? mv.src : null, moves = linkedTo(p.id).map(id => products.find(x => x.id === id)).filter(Boolean);
+  const mv = moveOf(p.id), use = usageOf(p, products), src = mv && !mv.shared ? mv.src : null, moves = linkedTo(p.id).map(id => products.find(x => x.id === id)).filter(Boolean);
   const nameOf = x => lang === "ar" ? (AR[x.id] || x.name) : x.name;
   const laneHtml = dated.length ? `<section class="lane ${plc.bulk ? "bulk" : ""}">
       <header><h2>${L.lane}</h2><span>${L.laneSub}</span></header>
@@ -234,7 +235,10 @@ export async function renderScanCard(root, p, ctx) {
       <div class="pass-foot">
         ${dated.length ? `<p class="fifo ${misplaced || expiredN ? "bad" : ""}"><b>${misplaced || expiredN ? "⚑" : "✓"}</b> ${misplaced ? L.bad(misplaced) : expiredN ? L.expd(expiredN) : L.fifo}</p>
         <p class="pc-groups">${L.summary(dated.length, plc.locs)}</p>` : ""}
-        <p class="pc-sold">${mv && mv.shared ? L.moved : L.sold} <b class="odo-xs" data-odo="${soldOf(p.id) || 0}" dir="ltr">0</b>${mv && mv.shared ? ` ${H.esc(mv.unit[lang === "ar" ? 1 : 0])}` : ""}</p>
+        ${use ? `<div class="pc-use"><p>${L.used} <b dir="ltr">${use.exact ? "" : "≈ "}${H.qty(use.total)}</b> ${H.esc(unit)}</p>
+          <div class="pc-use-parts">${use.parts.map(x => `<span><i>${H.esc(x.size[lang === "ar" ? 1 : 0])}</i><b dir="ltr">${H.qty(x.sold)} × ${H.qty(x.per)} ${H.esc(x.uom)}</b></span>`).join("")}</div>
+          ${use.exact ? "" : `<small>${L.est(H.qty(use.lo), H.qty(use.hi), H.esc(unit))}</small>`}</div>`
+        : `<p class="pc-sold">${mv && mv.shared ? L.moved : L.sold} <b class="odo-xs" data-odo="${soldOf(p.id) || 0}" dir="ltr">0</b>${mv && mv.shared ? ` ${H.esc(mv.unit[lang === "ar" ? 1 : 0])}` : ""}</p>`}
         ${src ? `<p class="pc-link">${L.via} ${src.map(id => products.find(x => x.id === id)).filter(Boolean).map(x => H.esc(nameOf(x))).join(" + ")}</p>` : ""}
         ${moves.length ? `<p class="pc-link">${L.alsoMoves}: ${moves.map(x => `${H.esc(nameOf(x))} <b dir="ltr">${H.qty(soldOf(x.id))}</b>`).join(" · ")}</p>` : ""}
       </div>

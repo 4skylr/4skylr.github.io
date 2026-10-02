@@ -57,7 +57,7 @@ export function openReorder(H) {
 export function openFinder(H) {
   const L = t();
   const pages = H.routes.map(r => ({ kind: "page", id: r.id, name: AR() ? (H.navAr[r.id] || r.label) : r.label, hay: `${r.label} ${H.navAr[r.id] || ""} ${r.kicker}` }));
-  const items = H.data().products.map(p => ({ kind: "item", p, name: p.name, hay: `${p.name} ${p.sku || ""} ${p.code || ""} ${p.id}` }));
+  const items = H.data().products.map(p => ({ kind: "item", p, name: AR() ? (H.namesAr?.[p.id] || p.name) : p.name, hay: `${p.name} ${p.sku || ""} ${p.code || ""} ${p.id} ${H.namesAr?.[p.id] || ""}` }));
   const m = H.openModal(`
     <div class="qf"><div class="seek">${H.icon("search")}<input id="qf-in" type="search" placeholder="${L.find}" aria-label="${L.find}" autocomplete="off"></div>
     <div class="qf-list" id="qf-list" role="listbox"></div><p class="qf-hint">${L.hint}</p></div>`, "narrow qf-sheet");
@@ -66,7 +66,8 @@ export function openFinder(H) {
   const draw = () => {
     const q = inp.value.trim();
     const rank = arr => q ? arr.map(x => ({ x, s: score(x.hay, q) })).filter(o => o.s >= 0).sort((a, b) => b.s - a.s).map(o => o.x) : arr;
-    const pg = rank(pages).slice(0, q ? 4 : 8), it = rank(items).slice(0, q ? 12 : 6);
+    const fz = q && H.fuzzyIds ? H.fuzzyIds(q) : null; // Fuse.js: typos and Arabic names
+    const pg = rank(pages).slice(0, q ? 4 : 8), it = (fz ? items.filter(x => fz.has(x.p.id)) : rank(items)).slice(0, q ? 12 : 6);
     hits = [...pg, ...it]; at = Math.min(at, Math.max(hits.length - 1, 0));
     const row = (h, i) => h.kind === "page"
       ? `<button class="qf-row" data-i="${i}" role="option" aria-selected="${i === at}">${H.icon(h.id)}<b>${H.esc(h.name)}</b></button>`
@@ -87,6 +88,28 @@ export function openFinder(H) {
   draw(); setTimeout(() => inp.focus(), 30);
 }
 
+// Guided tour (kamranahmedse/driver.js), shown once and again from the ? button
+const TOUR = {
+  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, Unaizah and settings."],
+    ["#qf-btn", "Quick find", "Search any product, code or page. Typos and Arabic names work. Shortcut: Ctrl K."],
+    ["#dash-reorder", "Reorder list", "Everything that is out or running low, with the quantity and cost to order."],
+    ["#lang-btn", "Language", "Switch the whole site between English and Arabic."],
+    ["#net", "Sync", "Shows whether you are live on Firebase or working in this browser."]],
+  ar: [["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، عنيزة، الإعدادات."],
+    ["#qf-btn", "بحث سريع", "ابحث عن أي منتج أو كود أو صفحة، حتى لو فيه غلط إملائي أو بالعربي. الاختصار Ctrl K."],
+    ["#dash-reorder", "قائمة الطلب", "كل شي نفد أو قارب، مع الكمية والتكلفة المقترحة للطلب."],
+    ["#lang-btn", "اللغة", "حوّل الموقع كامل بين العربي والإنجليزي."],
+    ["#net", "المزامنة", "يوضح إذا أنت متصل على Firebase أو شغال على هذا المتصفح."]]
+};
+export async function startTour() {
+  if (!document.querySelector('link[data-driver]')) { const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "vendor/driver.css"; l.dataset.driver = "1"; document.head.append(l); }
+  const { driver } = await import("../vendor/driver.mjs");
+  const ar = AR(), steps = TOUR[ar ? "ar" : "en"].filter(([sel]) => document.querySelector(sel))
+    .map(([element, title, description]) => ({ element, popover: { title, description } }));
+  driver({ showProgress: true, steps, popoverClass: "noir-tour", nextBtnText: ar ? "التالي" : "Next", prevBtnText: ar ? "السابق" : "Back", doneBtnText: ar ? "تم" : "Done",
+    progressText: "{{current}} / {{total}}", onDestroyed: () => { try { localStorage.setItem("noir-tour-v1", "1"); } catch {} } }).drive();
+}
+
 let deferred = null;
 export function mountTools(H) {
   document.addEventListener("keydown", e => {
@@ -98,7 +121,13 @@ export function mountTools(H) {
     b.type = "button"; b.id = "qf-btn"; b.className = "btn sm ghost icon"; b.title = AR() ? "بحث سريع (Ctrl K)" : "Quick find (Ctrl K)";
     b.setAttribute("aria-label", b.title); b.innerHTML = H.icon("search");
     b.onclick = () => openFinder(H); meta.prepend(b);
+    const help = document.createElement("button");
+    help.type = "button"; help.id = "tour-btn"; help.className = "btn sm ghost icon"; help.textContent = "?";
+    help.title = AR() ? "جولة تعريفية" : "Guided tour"; help.setAttribute("aria-label", help.title);
+    help.onclick = () => startTour().catch(() => {}); meta.prepend(help);
   }
+  let seen = null; try { seen = localStorage.getItem("noir-tour-v1"); } catch {}
+  if (!seen && !/[?&]p=|#p\//.test(location.href)) setTimeout(() => { if (!document.querySelector("#modal-root .veil, #skylr")) startTour().catch(() => {}); }, 2600);
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault(); deferred = e;
     if (document.getElementById("inst-btn") || !meta) return;

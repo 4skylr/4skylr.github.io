@@ -766,3 +766,26 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
   .si-t td[data-l]::before { content: attr(data-l); display: block; font-family: var(--f-body, inherit); font-size: 10px; color: var(--muted); margin-bottom: 2px; }
   .si-t td:last-child[data-l] { grid-column: auto; }
 }
+.si-est { font-style: normal; color: #ffc857; font-family: var(--f-body, inherit); }
+
+/* ── Top movers (dashboard) ── */
+.span-12 { grid-column: 1 / -1; }
+.mv-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; }
+.mv { position: relative; display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 14px;
+  border: 1px solid var(--line); background: rgba(255,255,255,.02); color: inherit; font: inherit; text-align: start; cursor: pointer; overflow: hidden; }
+.mv i { position: absolute; inset-inline-start: 0; bottom: 0; height: 3px; width: var(--w); border-radius: 3px; background: linear-gradient(90deg, #9b6bff, #ff4fd8); }
+.mv .pic { width: 38px; height: 38px; border-radius: 10px; object-fit: contain; background: #fff; }
+.mv-n { font-family: var(--f-data); font-size: 11px; color: var(--muted); }
+.mv-nm b { display: block; font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mv-nm small { font-family: var(--f-data); font-size: 11px; color: var(--muted); }
+.mv-v { font-family: var(--f-data); font-size: 13px; }
+@media (max-width: 760px) { .mv-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Guided tour (driver.js) in Noir colours ── */
+.driver-popover.noir-tour { background: #160f26; color: #f4ede4; border: 1px solid rgba(155,107,255,.45); border-radius: 18px; box-shadow: 0 20px 60px -20px rgba(155,107,255,.8); }
+.driver-popover.noir-tour .driver-popover-title { font-size: 16px; color: #fff; }
+.driver-popover.noir-tour .driver-popover-description { color: #d9cfe6; }
+.driver-popover.noir-tour .driver-popover-progress-text { color: #9a8cab; }
+.driver-popover.noir-tour button { background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.2); text-shadow: none; border-radius: 10px; padding: 6px 12px; }
+.driver-popover.noir-tour .driver-popover-next-btn { background: linear-gradient(120deg, #9b6bff, #ff4fd8); border: 0; }
+#tour-btn { font-weight: 700; width: 34px; }

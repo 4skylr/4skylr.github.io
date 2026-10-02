@@ -262,3 +262,9 @@ body.card-only { background: #12081a; }
 .rx-ings figure.lim figcaption i { color: #ffc857; }
 .rx-card footer { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 11.5px; color: var(--dim); }
 .rx-card footer b { color: #fff; }
+.pass-foot .pc-use { flex-basis: 100%; display: grid; justify-items: center; gap: 6px; }
+.pass-foot .pc-use p b { color: #fff; font-family: var(--f-data); font-size: 15px; }
+.pc-use-parts { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pc-use-parts span { display: grid; justify-items: center; padding: 5px 10px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); font-size: 11px; }
+.pc-use-parts i { font-style: normal; color: var(--dim); font-size: 10.5px; } .pc-use-parts b { font-family: var(--f-data); color: #fff; font-weight: 600; }
+.pass-foot .pc-use small { font-size: 10.5px; color: var(--dim); text-align: center; max-width: 320px; }

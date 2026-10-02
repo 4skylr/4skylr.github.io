@@ -22,7 +22,7 @@ const D = {
   // overview
   "Start a count": "ابدأ جرد", "Total inventory value · net of VAT": "إجمالي قيمة المخزون · بدون الضريبة", "SAR": "ريال",
   "units on hand": "وحدة متوفرة", "counts committed": "جرد معتمد", "three vaults": "ثلاث مستودعات",
-  "Value by category": "القيمة حسب الفئة", "where the money sits": "أين تتركز الأموال", "Top holdings": "الأعلى قيمة", "View all": "عرض الكل",
+  "Value by category": "القيمة حسب الفئة", "where the money sits": "أين تتركز الأموال", "Top holdings": "الأعلى قيمة", "Top movers": "الأكثر حركة", "View all": "عرض الكل",
   "Signals": "التنبيهات", "OUT": "نفد", "All quiet.": "لا توجد تنبيهات.", "Activity chain": "سجل النشاط", "latest first": "الأحدث أولاً",
   "just now": "الآن", "No activity yet.": "لا يوجد نشاط بعد.",
   "Set a minimum level on any product to get low-stock signals here.": "حدد حداً أدنى لأي منتج لتظهر تنبيهات النقص هنا.",

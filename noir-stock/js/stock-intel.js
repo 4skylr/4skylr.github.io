@@ -1,9 +1,10 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=70";
-import { placement, isBulk } from "./fefo-place.js?v=70";
-import { AR as NAME_AR } from "./names-ar.js?v=70";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=71";
+import { placement, isBulk } from "./fefo-place.js?v=71";
+import { usageOf } from "./consumption.js?v=71";
+import { AR as NAME_AR } from "./names-ar.js?v=71";
 
 const LEAD = 7, SAFETY = 7, FRONT_DAYS = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
@@ -11,7 +12,7 @@ const T = {
   en: {
     title: "Stock intelligence", sub: `Usage from sales ${SALES_FROM} → ${SALES_TO} (${SALES_DAYS} days). Lead time ${LEAD} d + safety ${SAFETY} d.`,
     k: { value: "Stock value", tracked: "Items with a usage rate", soon: "Run out within 14 days", risk: "Value expiring ≤ 30 days", mis: "Groups in the wrong place", over: "Overstock value (> 1 year cover)" },
-    cover: "Days of cover", coverSub: "how long each item lasts at its usage rate", item: "Item", have: "On hand", perDay: "Per day", days: "Cover", front: "Front cover", out: "Runs out", rop: "Reorder at", status: "Status",
+    cover: "Days of cover", coverSub: "how long each item lasts at its usage rate · ingredients use sales × recipe", item: "Item", have: "On hand", perDay: "Per day", days: "Cover", front: "Front cover", out: "Runs out", rop: "Reorder at", status: "Status",
     st: { now: "Order now", soon: "Order soon", ok: "Healthy", over: "Overstock" },
     moves: "Transfers to the front", movesSub: "move stock forward so the concession never runs dry · target 7 days at the front", from: "From", to: "To", qty: "Move", none: "Nothing to move right now.",
     fefo: "Expiry & placement", fefoSub: "groups that expire within 30 days or sit behind a later-expiring group", grp: "Group", loc: "Where", left: "Days left", atRisk: "SAR at risk", note: "Action",
@@ -23,7 +24,7 @@ const T = {
   ar: {
     title: "تحليل المخزون", sub: `الاستهلاك من المبيعات ${SALES_FROM} ← ${SALES_TO} (${SALES_DAYS} يوم). مدة التوريد ${LEAD} أيام + أمان ${SAFETY} أيام.`,
     k: { value: "قيمة المخزون", tracked: "أصناف لها معدل استهلاك", soon: "تنفد خلال 14 يوم", risk: "قيمة تنتهي خلال 30 يوم", mis: "مجموعات بمكان غلط", over: "قيمة مخزون زائد (أكثر من سنة)" },
-    cover: "أيام التغطية", coverSub: "كم يكفي كل صنف حسب استهلاكه", item: "الصنف", have: "المتوفر", perDay: "باليوم", days: "يكفي", front: "تغطية الواجهة", out: "ينفد", rop: "اطلب عند", status: "الحالة",
+    cover: "أيام التغطية", coverSub: "كم يكفي كل صنف حسب استهلاكه · المكونات = المبيعات × الوصفة", item: "الصنف", have: "المتوفر", perDay: "باليوم", days: "يكفي", front: "تغطية الواجهة", out: "ينفد", rop: "اطلب عند", status: "الحالة",
     st: { now: "اطلب الحين", soon: "اطلب قريب", ok: "سليم", over: "زائد" },
     moves: "تحويلات للواجهة", movesSub: "قدّم المخزون عشان الكونسيشن ما يفضى · الهدف 7 أيام في الواجهة", from: "من", to: "إلى", qty: "انقل", none: "لا يوجد تحويل مطلوب الحين.",
     fefo: "الصلاحية والترتيب", fefoSub: "مجموعات تنتهي خلال 30 يوم أو موجودة خلف مجموعة تنتهي بعدها", grp: "المجموعة", loc: "الموقع", left: "باقي", atRisk: "ريال معرض", note: "الإجراء",
@@ -46,13 +47,13 @@ function loadECharts() {
 export function analyse(H) {
   const P = H.data().products, total = H.total;
   const rows = P.map(p => {
-    const have = total(p), sold = soldOf(p.id), daily = dailyUse(p.id), rate = Number(p.rate) || 0;
+    const use = usageOf(p, P), have = total(p), sold = soldOf(p.id), daily = dailyUse(p.id) || (use ? use.total / SALES_DAYS : 0), est = !!use && !use.exact, rate = Number(p.rate) || 0;
     const frontIds = isBulk(p) ? ["refuel", "mini"] : ["refuel"];
     const front = frontIds.reduce((a, l) => a + (Number(p.stock?.[l]) || 0), 0);
     const cover = daily > 0 ? have / daily : null, fcover = daily > 0 ? front / daily : null;
     const rop = daily * (LEAD + SAFETY);
     const status = daily <= 0 ? null : have <= daily * LEAD ? "now" : have <= rop ? "soon" : cover > 365 ? "over" : "ok";
-    return { p, have, sold, daily, cover, fcover, rop, status, rate, value: have * rate, src: moveOf(p.id) && !moveOf(p.id).shared ? soldSource(p.id) : null };
+    return { p, have, sold, daily, cover, fcover, rop, status, rate, value: have * rate, src: moveOf(p.id) && !moveOf(p.id).shared ? soldSource(p.id) : null, est };
   });
   // transfers forward: pcs → fill the Concession from Mini Store first, then Store; bulk → fill the front from Store
   const moves = [];
@@ -112,7 +113,7 @@ export function renderIntel(host, H) {
       <section class="slab si-card">
         <div class="slab-h"><h2>${L.cover}</h2><span class="tag">${tracked.length}</span></div><p class="si-sub">${L.coverSub}</p>
         <div class="ledger-wrap"><table class="ledger si-t"><thead><tr><th>${L.item}</th><th class="r">${L.have}</th><th class="r">${L.perDay}</th><th>${L.days}</th><th class="r">${L.front}</th><th class="r">${L.out}</th><th class="r">${L.rop}</th><th>${L.status}</th></tr></thead><tbody>
-        ${tracked.map(r => `<tr data-edit="${esc(r.p.id)}"><td><div class="nm">${H.pic(r.p, "pic")}<div><b>${esc(nm(r.p))}</b><span>${r.src ? `${L.via} ${r.src.map(id => esc(nm(H.data().products.find(x => x.id === id) || { id, name: id }))).join(" + ")}` : esc(r.p.sku || "")}</span></div></div></td>
+        ${tracked.map(r => `<tr data-edit="${esc(r.p.id)}"><td><div class="nm">${H.pic(r.p, "pic")}<div><b>${esc(nm(r.p))}</b><span>${r.est ? `<em class="si-est">${AR() ? "تقدير من الوصفات" : "recipe estimate"}</em> ` : ""}${r.src ? `${L.via} ${r.src.map(id => esc(nm(H.data().products.find(x => x.id === id) || { id, name: id }))).join(" + ")}` : esc(r.p.sku || "")}</span></div></div></td>
           <td data-l="${L.have}" class="r data">${q(r.have)}</td><td data-l="${L.perDay}" class="r data">${q(r.daily)}</td>
           <td data-l="${L.days}"><span class="si-cover s-${r.status}"><i style="width:${Math.min(100, r.cover / 120 * 100).toFixed(1)}%"></i></span><b class="data si-cd">${r.cover > 999 ? "999+" : Math.round(r.cover)}</b></td>
           <td data-l="${L.front}" class="r data">${Math.round(r.fcover)}</td><td data-l="${L.out}" class="r data">${r.cover > 999 ? "—" : day(r.cover)}</td><td data-l="${L.rop}" class="r data">${q(Math.ceil(r.rop))}</td>
