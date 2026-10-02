@@ -3,14 +3,11 @@
 // this file only redraws the card around them.
 // Libraries (vendored from GitHub):
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
-//   vanilla-tilt.js github.com/micku7zu/vanilla-tilt.js   — 3D tilt + gyroscope on phones
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-//   product effects (snow, popcorn popping, steam…) live in fx.js
 import { AR, LOC_AR } from "./names-ar.js?v=37";
 import { RECIPES } from "./recipes-data.js?v=37";
 import { soldOf } from "./sales-data.js?v=37";
-import { playProductFx } from "./fx.js?v=67";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -42,7 +39,6 @@ function lib(src, global) {
 }
 window.odometerOptions = { auto: false };
 const loadAnime = () => lib("vendor/anime.min.js", "anime").catch(() => null);
-const loadTilt = () => lib("vendor/vanilla-tilt.min.js", "VanillaTilt").catch(() => null);
 const loadConfetti = () => lib("vendor/confetti.browser.js", "confetti").catch(() => null);
 const loadOdo = () => lib("vendor/odometer.min.js", "Odometer").catch(() => null);
 (function odoCss() {
@@ -217,7 +213,6 @@ export async function renderScanCard(root, p, ctx) {
   </article>`;
 
   mountGauges(root);
-  if (!H.quiet) playProductFx(p);
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
   else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
@@ -264,7 +259,6 @@ function settle(root) {
   root.querySelectorAll(".cd-arc").forEach(a => { a.style.strokeDashoffset = Number(a.dataset.full) * (1 - (Number(getComputedStyle(a.closest(".cd")).getPropertyValue("--frac")) || 0)); });
   root.querySelectorAll(".pl-arc").forEach(a => { a.style.strokeDashoffset = a.dataset.to; });
   root.querySelectorAll("[data-odo]").forEach(el => { const to = Number(el.dataset.odo) || 0; el.textContent = Math.abs(to % 1) > 1e-9 ? to.toFixed(2) : String(to); });
-  loadTilt().then(VT => { const hero = root.querySelector("[data-tilt]"); if (VT && hero && !calm()) VT.init(hero, { max: 9, glare: true, "max-glare": 0.22, gyroscope: true }); });
 }
 const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -284,11 +278,6 @@ async function animateIn(root, worst) {
     });
   });
 
-  // 3D tilt with phone gyroscope
-  loadTilt().then(VT => {
-    const hero = root.querySelector("[data-tilt]");
-    if (VT && hero && !calm()) VT.init(hero, { max: 9, speed: 600, glare: true, "max-glare": 0.22, gyroscope: true, gyroscopeMinAngleX: -25, gyroscopeMaxAngleX: 25, gyroscopeMinAngleY: -25, gyroscopeMaxAngleY: 25, scale: 1.01 });
-  });
 
   const anime = await loadAnime();
   const arcs = [...root.querySelectorAll(".cd-arc")];

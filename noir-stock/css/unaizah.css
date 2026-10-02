@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════
    UNAIZAH TREASURY — on-chain style finance board
    ════════════════════════════════════════════════════════════ */
-.uz { display: grid; gap: 18px; --card: rgba(18, 14, 34, .62); --edge: rgba(190, 170, 255, .14); }
+.uz { grid-template-columns: minmax(0, 1fr); display: grid; gap: 18px; --card: rgba(18, 14, 34, .62); --edge: rgba(190, 170, 255, .14); }
 .uz h3 { margin: 0; font-family: var(--f-display); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
 .uz h4 { margin: 0; font-size: 14px; font-weight: 600; }
 .uz p { margin: 0; }
@@ -29,7 +29,7 @@
 .uz-h p { color: var(--muted); font-size: 12.5px; margin-top: 4px; max-width: 60ch; }
 
 /* ── hero ── */
-.uz-hero { padding: 22px; display: grid; gap: 20px; overflow: hidden;
+.uz-hero { padding: 22px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; overflow: hidden;
   background:
     radial-gradient(600px 220px at 85% -10%, rgba(255,79,216,.22), transparent 70%),
     radial-gradient(500px 240px at 0% 120%, rgba(59,231,255,.16), transparent 70%),
@@ -85,8 +85,11 @@
 .uz-token-top { display: flex; align-items: center; gap: 10px; }
 .uz-token-top .uz-delta { margin-inline-start: auto; }
 .uz-coin { width: 44px; height: 44px; border-radius: 14px; background: #fff; display: grid; place-items: center; overflow: hidden; flex: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 55%, transparent), 0 6px 18px rgba(0,0,0,.35); }
-.uz-coin img { width: 86%; height: 86%; object-fit: contain; }
-.uz-others { font-family: var(--f-display); font-weight: 800; font-size: 8.5px; color: #111; letter-spacing: .02em; }
+.uz-coin img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.uz-coin:has(.uz-others) { background: linear-gradient(145deg, #2c2346, #17112a); }
+.uz-token-top > div:nth-child(2) { flex: 1; min-width: 0; }
+.uz-token-top h4 { margin: 0; font-size: 13.5px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.uz-others { font-family: var(--f-display); font-weight: 800; font-size: 9px; color: #e9e4ff; letter-spacing: .04em; }
 .uz-ticker { font-size: 10px; color: var(--c); }
 .uz-token > b { display: block; font-size: 22px; margin: 14px 0 8px; font-weight: 600; }
 .uz-share { height: 4px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; }

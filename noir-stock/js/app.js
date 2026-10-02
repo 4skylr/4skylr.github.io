@@ -2,15 +2,16 @@ import * as store from "./store.js?v=37";
 import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=37";
 import { SEED_DATE } from "./seed-data.js?v=37";
 import { renderYield, productPanel } from "./analytics.js?v=37";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=67";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=68";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
 const ghDash = lazy("./gh-dash.js?v=64");
 const exportCount = lazy("./export-count.js?v=48");
-const financeView = lazy("./finance-view.js?v=64");
-const unaizahView = lazy("./unaizah-view.js?v=64");
+const financeView = lazy("./finance-view.js?v=68");
+const unaizahView = lazy("./unaizah-view.js?v=68");
 const syncAdmin = lazy("./sync-admin.js?v=37");
+const toolsMod = lazy("./tools.js?v=68");
 const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
@@ -223,7 +224,8 @@ function viewDashboard() {
     .sort((a, b) => level(a).pct - level(b).pct);
   const drafts = data.sessions.filter(s => s.status === "draft");
 
-  $("#title-actions").innerHTML = `<button class="btn hot" data-route="count">${icon("count")}Start a count</button>`;
+  $("#title-actions").innerHTML = `<button class="btn" id="dash-reorder">Reorder list</button><button class="btn hot" data-route="count">${icon("count")}Start a count</button>`;
+  $("#dash-reorder").onclick = () => toolsMod().then(m => m.openReorder(toolHelpers()));
 
   // orbit rings: one ring per location, radius shrinks inward
   const cols = ["#7c2280", "#f4ede4", "#a4a4a4"];
@@ -334,9 +336,10 @@ function filtered() {
 }
 
 function viewProducts() {
-  $("#title-actions").innerHTML = `<button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button><button class="btn ghost" id="dl-csv">CSV</button>`;
+  $("#title-actions").innerHTML = `<button class="btn hot" id="reorder">Reorder list</button><button class="btn" id="scan-code">Scan</button><button class="btn" id="print-codes">Print barcodes</button><button class="btn ghost" id="dl-sheet">Excel</button><button class="btn ghost" id="dl-csv">CSV</button>`;
   $("#scan-code").onclick = () => openScanner(cardHelpers(), id => { const p = data.products.find(x => x.id === idFromCode(id)); if (!p) return toast("No product for that code", true); location.hash = "p/" + p.id; });
   $("#print-codes").onclick = () => { location.hash = "labels"; };
+  $("#reorder").onclick = () => toolsMod().then(m => m.openReorder(toolHelpers()));
   $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
   $("#dl-csv").onclick = () => exportLedger();
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
@@ -628,6 +631,7 @@ function renderHud() {
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
+const toolHelpers = () => ({ ...cardHelpers(), level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, openCard: p => openProductCard(p, cardHelpers()) });
 function viewLabels() {
   document.body.classList.remove("card-only");
   renderNav(); renderNet();
@@ -798,18 +802,10 @@ function viewSettings() {
   });
 }
 
-// ── Film grain ───────────────────────────────────────────────
+
 function exportLedger() {
   const rows = data.products.map(p => ({ sku: p.sku, name: p.name, unit: p.unit, mini: p.stock?.mini || 0, refuel: p.stock?.refuel || 0, stores: p.stock?.stores || 0, total: total(p), value: value(p).toFixed(2) }));
   exportCount().then(m => m.downloadCountCsv(rows, "noir-stock-count.csv")).then(() => toast("CSV exported")).catch(e => toast(e.message, true));
-}
-function grain() {
-  const el = $("#grain"); if (!el) return;
-  const c = document.createElement("canvas"), S = 220; c.width = c.height = S;
-  const ctx = c.getContext("2d"), img = ctx.createImageData(S, S);
-  for (let i = 0; i < img.data.length; i += 4) { const v = Math.random() * 255; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
-  ctx.putImageData(img, 0, 0);
-  el.style.backgroundImage = `url(${c.toDataURL()})`;
 }
 
 // ── Boot ─────────────────────────────────────────────────────
@@ -823,8 +819,9 @@ window.addEventListener("hashchange", () => {
   if (r === "labels" || r.startsWith("p/")) { render(); window.scrollTo(0, 0); return; }
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
-grain();
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
+if (siteLang() === "ar") import("./i18n-ar.js?v=68").then(m => m.startArabic()).catch(() => {});
+toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
 

@@ -1,0 +1,54 @@
+/* Analyst report (js/fin-analyst.js) */
+.an-host { display: grid; gap: 18px; min-width: 0; }
+.an-host:empty { display: none; }
+.an-head { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 22px; align-items: start; }
+.an-intro { grid-column: 2; }
+.an-head:not(:has(.an-score)) { grid-template-columns: minmax(0, 1fr); }
+.an-head:not(:has(.an-score)) .an-intro, .an-head:not(:has(.an-score)) .an-brief { grid-column: 1; }
+.an-intro h3 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.an-intro p { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 70ch; }
+
+.an-score { grid-row: 1 / span 2; position: relative; width: 140px; aspect-ratio: 1; display: grid; place-items: center; text-align: center; }
+.an-score svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.an-score circle { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 10; }
+.an-score circle.v { stroke: hsl(calc(var(--v) * 1.3) 85% 60%); stroke-linecap: round; filter: drop-shadow(0 0 8px hsl(calc(var(--v) * 1.3) 85% 55%)); }
+.an-score b { font-size: 40px; font-weight: 700; line-height: 1; }
+.an-score { align-content: center; justify-items: center; }
+.an-score span { position: relative; margin-top: 4px; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); max-width: 84px; line-height: 1.2; }
+.an-score { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+.an-brief { grid-column: 2; list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.an-brief li { --k: #9b6bff; position: relative; display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 10px; align-items: start;
+  padding: 12px 14px; border-radius: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--k) 12%, transparent), rgba(255,255,255,.015) 60%);
+  border: 1px solid color-mix(in srgb, var(--k) 28%, transparent); }
+.an-brief li.an-good { --k: #4cf0a8; } .an-brief li.an-warn { --k: #ffc857; } .an-brief li.an-bad { --k: #ff5c7a; } .an-brief li.an-info { --k: #3be7ff; }
+.an-ix { font-size: 10px; color: var(--muted); padding-top: 3px; }
+.an-ico { color: var(--k); font-size: 12px; padding-top: 2px; text-shadow: 0 0 10px var(--k); }
+.an-brief b { display: block; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.an-brief p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.an-brief em { font-style: normal; font-size: 13px; font-weight: 600; color: var(--k); white-space: nowrap; padding-top: 1px; }
+
+.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.an-card .uz-chart { height: 300px; }
+.an-table-wrap { overflow-x: auto; margin-top: 8px; }
+.an-table { width: 100%; min-width: 640px; }
+.an-table td, .an-table th { white-space: nowrap; }
+.an-table .pos { color: var(--good); } .an-table .neg { color: var(--bad); }
+.an-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); margin-inline-end: 8px; }
+.an-pill { display: inline-grid; place-items: center; min-width: 38px; padding: 3px 8px; border-radius: 99px; font-weight: 700; font-size: 12px;
+  color: #0b0914; background: hsl(calc(var(--s) * 1.3) 85% 60%); }
+.an-act { white-space: normal !important; color: var(--ink-2); font-size: 12.5px; min-width: 220px; }
+.an-flag { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 11px; border: 1px solid; }
+.an-flag.clean { color: var(--good); border-color: rgba(76,240,168,.4); }
+.an-flag.watch { color: var(--amber, #ffc857); border-color: rgba(255,200,87,.4); }
+.an-flag.review { color: var(--bad); border-color: rgba(255,92,122,.45); background: rgba(255,92,122,.08); }
+
+@media (max-width: 1000px) { .an-brief { grid-template-columns: minmax(0, 1fr); } .an-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .an-head { grid-template-columns: minmax(0, 1fr); }
+  .an-score { grid-row: auto; width: 120px; margin: 0 auto; }
+  .an-intro, .an-brief { grid-column: 1; }
+  .an-brief li { grid-template-columns: auto minmax(0, 1fr) auto; padding: 11px 12px; }
+  .an-brief .an-ix { display: none; }
+  .an-card .uz-chart { height: 260px; }
+}

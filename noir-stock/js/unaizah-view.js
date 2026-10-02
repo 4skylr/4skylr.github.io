@@ -12,15 +12,15 @@ const CDN = {
 const lang = () => sessionStorage.getItem("noir-lang") || "en";
 
 const TENDERS = {
-  cash:    { en: "Cash",        ar: "كاش",          icon: "assets/pay/cash.png",    color: "#4cf0a8", group: "cash" },
-  card:    { en: "Credit card", ar: "شبكة",         icon: "assets/pay/card.png",    color: "#3be7ff", group: "digital" },
-  online:  { en: "Online",      ar: "أونلاين",      icon: "assets/pay/online.png",  color: "#9b6bff", group: "digital" },
-  prepaid: { en: "Pre-paid",    ar: "مسبق الدفع",   icon: "assets/pay/prepaid.png", color: "#ffc857", group: "digital" },
-  jahez:   { en: "Jahez",       ar: "جاهز",         icon: "assets/pay/jahez.png",   color: "#ff3b5c", group: "delivery" },
-  hunger:  { en: "HungerStation", ar: "هنقرستيشن",  icon: "assets/pay/hunger.png",  color: "#ffd400", group: "delivery" },
-  voucher: { en: "Voucher",     ar: "قسيمة",        icon: "assets/pay/voucher.png", color: "#ff7a59", group: "promo" },
-  bogo:    { en: "Buy 1 get 1", ar: "اشتر ١ واحصل ١", icon: "assets/pay/bogo.png",  color: "#ff4fd8", group: "promo" },
-  comp:    { en: "Comp",        ar: "ضيافة",        icon: "assets/pay/noir.png",    color: "#a78bfa", group: "promo" },
+  cash:    { en: "Cash",        ar: "كاش",          icon: "assets/pay/cash.webp",    color: "#4cf0a8", group: "cash" },
+  card:    { en: "Credit card", ar: "شبكة",         icon: "assets/pay/card.webp",    color: "#3be7ff", group: "digital" },
+  online:  { en: "Online",      ar: "أونلاين",      icon: "assets/pay/online.webp",  color: "#9b6bff", group: "digital" },
+  prepaid: { en: "Pre-paid",    ar: "مسبق الدفع",   icon: "assets/pay/prepaid.webp", color: "#ffc857", group: "digital" },
+  jahez:   { en: "Jahez",       ar: "جاهز",         icon: "assets/pay/jahez.webp",   color: "#ff3b5c", group: "delivery" },
+  hunger:  { en: "HungerStation", ar: "هنقرستيشن",  icon: "assets/pay/hunger.webp",  color: "#ffd400", group: "delivery" },
+  voucher: { en: "Voucher",     ar: "قسيمة",        icon: "assets/pay/voucher.webp", color: "#ff7a59", group: "promo" },
+  bogo:    { en: "Buy 1 get 1", ar: "اشتر ١ واحصل ١", icon: "assets/pay/bogo.webp",  color: "#ff4fd8", group: "promo" },
+  comp:    { en: "Comp",        ar: "ضيافة",        icon: "assets/pay/noir.webp",    color: "#a78bfa", group: "promo" },
   other:   { en: "Other",       ar: "أخرى",         icon: null,                     color: "#bdb6d8", group: "promo" }
 };
 const KEYS = Object.keys(TENDERS);
@@ -231,7 +231,7 @@ export async function renderUnaizah(root) {
   <section class="uz" dir="${ar ? "rtl" : "ltr"}">
     <header class="uz-hero">
       <div class="uz-id">
-        <div class="uz-logo"><img src="assets/pay/noir.png" alt="Noir Cinema"></div>
+        <div class="uz-logo"><img src="assets/pay/noir.webp" alt="Noir Cinema"></div>
         <div>
           <p class="uz-net"><i></i>${t.chain} · ${t.synced} · <span class="data">#${fmt(days.length)}</span> ${t.blocks}</p>
           <p class="uz-addr data" title="${txHash(latest)}">${short(txHash(latest))} · ${latest.date}</p>
@@ -246,6 +246,7 @@ export async function renderUnaizah(root) {
     </header>
 
     <div class="uz-kpis" id="uz-kpis"></div>
+    <div id="uz-analyst" class="an-host"></div>
 
     <section class="uz-card">
       <div class="uz-h"><div><h3>${t.tokens}</h3><p>${t.tokensSub}</p></div></div>
@@ -310,6 +311,8 @@ export async function renderUnaizah(root) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
+  import("./fin-analyst.js?v=68").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+    .catch(e => console.warn("Analyst report unavailable", e));
 
   let view = { rows: [], prev: [] };
   const countTotal = new window.countUp.CountUp($("#uz-total"), 0, { duration: 1.4, separator: ",", decimalPlaces: 0 });
