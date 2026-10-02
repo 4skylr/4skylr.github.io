@@ -1,59 +1,50 @@
-// Budget board. Charts: github.com/apache/echarts (66k stars) and github.com/apexcharts/apexcharts.js
+// Financial board. github.com/simple-statistics/simple-statistics and github.com/tradingview/lightweight-charts
 const AR = { hafar: "حفر الباطن", khafji: "الخفجي", unaizah: "عنيزة", dammam: "الدمام", mithnab: "المذنب" };
 const EN = { hafar: "Hafar", khafji: "Khafji", unaizah: "Unaizah", dammam: "Dammam", mithnab: "Mithnab" };
 const sar = n => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(Number(n) || 0));
 const lang = () => sessionStorage.getItem("noir-lang") || "en";
 
-function load(src, key) {
-  if (window[key]) return Promise.resolve(window[key]);
-  return new Promise((res, rej) => {
-    const s = document.createElement("script");
-    s.src = src; s.onload = () => res(window[key]); s.onerror = rej; document.head.append(s);
-  });
+function load(src, test) {
+  if (test()) return Promise.resolve();
+  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); });
 }
 
 export async function renderFinance(root) {
   const ar = lang() === "ar";
   const name = b => ar ? (AR[b.id] || b.name) : (EN[b.id] || b.name);
-  const data = await fetch("finance/budget-2026.json?v=53").then(r => r.json());
-  const rows = data.branches.map(b => ({
-    ...b,
-    gap: Math.round(b.ytdRevTarget - b.ytdRevActual),
-    left: Math.round(b.yearRev - b.ytdRevActual),
-    hit: b.ytdRevTarget ? Math.round(b.ytdRevActual / b.ytdRevTarget * 100) : 0
-  })).sort((a, b) => b.gap - a.gap);
+  const data = await fetch("finance/budget-2026.json?v=54").then(r => r.json());
+  await load("https://cdn.jsdelivr.net/npm/simple-statistics@7.8.8/dist/simple-statistics.min.js", () => window.ss);
+  await load("https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js", () => window.LightweightCharts);
+  const rows = data.branches.map(b => {
+    const done = b.weeks.filter(w => w.a != null);
+    const points = done.map((w, i) => [i + 1, w.a]);
+    const line = window.ss.linearRegression(points);
+    const weeksLeft = Math.max(1, b.weeks.length - done.length);
+    const forecast = Math.round(b.ytdRevActual + line.m * weeksLeft * (done.length / Math.max(1, done.length)));
+    const need = Math.max(0, Math.round((b.yearRev - b.ytdRevActual) / weeksLeft));
+    return { ...b, gap: Math.round(b.ytdRevTarget - b.ytdRevActual), left: Math.round(b.yearRev - b.ytdRevActual), hit: Math.round(b.ytdRevActual / b.ytdRevTarget * 100), forecast, need, done };
+  }).sort((a, b) => b.gap - a.gap);
   const gap = rows.reduce((a, b) => a + b.gap, 0);
-  const left = rows.reduce((a, b) => a + b.left, 0);
   root.innerHTML = `
     <section class="fin-board" dir="${ar ? "rtl" : "ltr"}">
       <header class="fin-top">
-        <div><p>${ar ? "حتى ١ أكتوبر · الأسبوع ٣٩" : "As of 1 Oct · Week 39"}</p><h2>${ar ? "عجز الميزانية" : "Budget gap"}</h2></div>
-        <div class="fin-kpis">
-          <span><b>${sar(gap)}</b><i>${ar ? "عجز حالي" : "Current gap"}</i></span>
-          <span><b>${sar(left)}</b><i>${ar ? "باقي السنة" : "Left this year"}</i></span>
-        </div>
+        <div><p>${ar ? "تحليل حتى الأسبوع ٣٩" : "Analysis through week 39"}</p><h2>${ar ? "الفجوة المالية" : "Financial gap"}</h2></div>
+        <div class="fin-kpis"><span><b>${sar(gap)}</b><i>${ar ? "عجز حالي" : "Current gap"}</i></span></div>
       </header>
-      <div class="fin-grid">
-        <div id="fin-gap"></div>
-        <ol class="fin-rank">${rows.map((b, i) => `<li><em>${i + 1}</em><strong>${name(b)}</strong><span>${b.hit}%</span><b>${sar(b.gap)}</b></li>`).join("")}</ol>
-      </div>
-      <div id="fin-hit"></div>
+      <div id="fin-line" style="height:280px"></div>
+      <ol class="fin-rank">${rows.map(b => `<li><strong>${name(b)}</strong><span>${ar ? "مطلوب أسبوعياً" : "Need / week"} ${sar(b.need)}</span><b>${sar(b.gap)}</b></li>`).join("")}</ol>
     </section>`;
-  const echarts = await load("https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js", "echarts");
-  echarts.init(document.getElementById("fin-gap"), null, { renderer: "svg", height: 280 }).setOption({
-    backgroundColor: "transparent",
-    grid: { left: 90, right: 24, top: 10, bottom: 24 },
-    xAxis: { type: "value", axisLabel: { color: "#a4a4a4", formatter: v => sar(v) }, splitLine: { lineStyle: { color: "rgba(255,255,255,.06)" } } },
-    yAxis: { type: "category", data: rows.map(name).reverse(), axisLabel: { color: "#f4ede4" } },
-    series: [{ type: "bar", data: rows.map(b => b.gap).reverse(), barWidth: 16, itemStyle: { borderRadius: 8, color: "#c46bd4" } }]
+  const chart = window.LightweightCharts.createChart(document.getElementById("fin-line"), {
+    height: 280, layout: { background: { color: "transparent" }, textColor: "#f4ede4" },
+    grid: { vertLines: { color: "rgba(255,255,255,.05)" }, horzLines: { color: "rgba(255,255,255,.05)" } },
+    rightPriceScale: { borderColor: "rgba(255,255,255,.08)" }, timeScale: { borderColor: "rgba(255,255,255,.08)" }
   });
-  const Apex = await load("https://cdn.jsdelivr.net/npm/apexcharts@3.54.0/dist/apexcharts.min.js", "ApexCharts");
-  new Apex(document.getElementById("fin-hit"), {
-    chart: { type: "radialBar", height: 300, background: "transparent", foreColor: "#f4ede4", toolbar: { show: false } },
-    series: rows.map(b => b.hit),
-    labels: rows.map(name),
-    colors: ["#e23b4a", "#c46bd4", "#9b6bff", "#f4ede4", "#7c2280"],
-    plotOptions: { radialBar: { hollow: { size: "28%" }, dataLabels: { total: { show: true, label: ar ? "عجز" : "Gap", formatter: () => sar(gap) } } } },
-    stroke: { lineCap: "round" }
-  }).render();
+  const actual = chart.addLineSeries({ color: "#c46bd4", lineWidth: 2 });
+  const target = chart.addLineSeries({ color: "rgba(244,237,228,.45)", lineWidth: 1 });
+  const branch = rows[0];
+  const start = new Date("2026-01-05");
+  const day = i => { const d = new Date(start); d.setDate(start.getDate() + i * 7); return d.toISOString().slice(0, 10); };
+  actual.setData(branch.done.map((w, i) => ({ time: day(i), value: w.a })));
+  target.setData(branch.done.map((w, i) => ({ time: day(i), value: w.t })));
+  chart.timeScale().fitContent();
 }
