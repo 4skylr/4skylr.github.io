@@ -672,3 +672,17 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
 .fin-pick select { height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: #140f22; color: #f4ede4; padding: 0 12px; }
 .fin-page .fin-kpis { display: flex; gap: 10px; flex-wrap: wrap; }
 .fin-page .fin-kpis span { min-width: 160px; }
+
+.stmt { display: grid; gap: 16px; }
+.stmt-head, .stmt-legend { display: flex; justify-content: space-between; gap: 12px; align-items: end; }
+.stmt-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.stmt-kpis span, .stmt-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 14px; }
+.stmt-kpis i { display: block; color: #a4a4a4; font-style: normal; font-size: 12px; }
+.stmt-kpis b { display: block; margin-top: 6px; font-variant-numeric: tabular-nums; font-size: 18px; }
+.stmt-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.stmt-table th, .stmt-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.06); text-align: right; }
+.stmt-table th:first-child, .stmt-table td:first-child { text-align: left; }
+.stmt-table .total td { font-weight: 700; }
+.stmt-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-inline-end: 6px; }
+.stmt-legend .c { background: #f4ede4; } .stmt-legend .k { background: #c46bd4; }
+@media (max-width: 800px) { .stmt-kpis { grid-template-columns: 1fr 1fr; } }
