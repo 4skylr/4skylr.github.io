@@ -5,7 +5,8 @@ import { renderYield, productPanel } from "./analytics.js?v=37";
 import { mountGithubDash } from "./gh-dash.js?v=37";
 import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=37";
 import { downloadCountCsv } from "./export-count.js?v=48";
-import { renderFinance } from "./finance-view.js?v=57";
+import { renderFinance } from "./finance-view.js?v=58";
+import { renderUnaizah } from "./unaizah-view.js?v=58";
 import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
 import { renderAdmin } from "./sync-admin.js?v=37";
 
@@ -83,6 +84,7 @@ const ROUTES = [
   { id: "yield", label: "Yield", kicker: "Analytics", title: 'What stock <span class="voice">can sell</span>' },
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
   { id: "finance", label: "Budget", kicker: "Finance", title: 'Branch <span class="voice">budget</span>' },
+  { id: "unaizah", label: "Unaizah", kicker: "Unaizah", title: 'Unaizah <span class="voice">sales</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
 const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
@@ -136,7 +138,7 @@ const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace
 
 // ── Chrome ───────────────────────────────────────────────────
 const LANG_KEY = "noir-lang";
-const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", settings: "الإعدادات" };
+const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", unaizah: "عنيزة", settings: "الإعدادات" };
 function siteLang() { return sessionStorage.getItem(LANG_KEY) || "en"; }
 function renderNav() {
   $("#nav").innerHTML = ROUTES.map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span></button>`).join("");
@@ -191,7 +193,7 @@ function render() {
   $("#kicker").textContent = r.kicker;
   $("#page-title").innerHTML = r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, unaizah: viewUnaizah, settings: viewSettings })[r.id]();
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -635,6 +637,7 @@ function viewScanProduct(p) {
     $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "تعذر فتح البطاقة")}</p></article>`;
   });
 }
+function viewUnaizah() { renderUnaizah($("#view")); }
 function viewFinance() { renderFinance($("#view")); }
 function viewYield() {
   $("#title-actions").innerHTML = "";
