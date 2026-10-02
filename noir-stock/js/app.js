@@ -1,17 +1,29 @@
-import * as store from "./store.js?v=37";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=37";
-import { SEED_DATE } from "./seed-data.js?v=37";
-import { renderYield, productPanel } from "./analytics.js?v=37";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=68";
-import { soldOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=37";
+import * as store from "./store.js?v=69";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=69";
+import { SEED_DATE } from "./seed-data.js?v=69";
+import { renderYield, productPanel } from "./analytics.js?v=69";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=69";
+import { soldOf, soldSource, SALES_FROM, SALES_TO } from "./sales-data.js?v=69";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const ghDash = lazy("./gh-dash.js?v=64");
-const exportCount = lazy("./export-count.js?v=48");
-const financeView = lazy("./finance-view.js?v=68");
-const unaizahView = lazy("./unaizah-view.js?v=68");
-const syncAdmin = lazy("./sync-admin.js?v=37");
-const toolsMod = lazy("./tools.js?v=68");
+const ghDash = lazy("./gh-dash.js?v=69");
+const exportCount = lazy("./export-count.js?v=69");
+const financeView = lazy("./finance-view.js?v=69");
+const unaizahView = lazy("./unaizah-view.js?v=69");
+const syncAdmin = lazy("./sync-admin.js?v=69");
+const toolsMod = lazy("./tools.js?v=69");
+const intelMod = lazy("./stock-intel.js?v=69");
+
+// Device: phone / tablet / desktop from width + touch; kept current on rotate and resize.
+(function device() {
+  const set = () => {
+    const w = innerWidth, touch = matchMedia("(pointer: coarse)").matches, c = document.documentElement.classList;
+    const kind = w <= 640 || (touch && w <= 820) ? "phone" : w <= 1100 ? "tablet" : "desktop";
+    ["phone", "tablet", "desktop"].forEach(k => c.toggle("is-" + k, k === kind));
+    c.toggle("is-touch", touch);
+  };
+  set(); addEventListener("resize", () => requestAnimationFrame(set), { passive: true });
+})();
 const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
@@ -106,7 +118,10 @@ const ui = {
   q: "", cat: lsGet("cat", "all"), loc: lsGet("loc", "all"), sort: lsGet("sort", "cat"), view: lsGet("view", "grid"),
   session: null, countQ: "", countOnlyStock: lsGet("countOnlyStock", true), countCat: "all", setupLoc: "mini"
 };
-let data = store.snapshot();
+// Lemon and mint go into mocktails (slush glass), not hot drinks.
+const CAT_FIX = { lemon: "slush", mint: "slush" };
+const fixCats = snap => ({ ...snap, products: (snap.products || []).map(p => CAT_FIX[p.id] && p.category !== CAT_FIX[p.id] ? { ...p, category: CAT_FIX[p.id] } : p) });
+let data = fixCats(store.snapshot());
 const tokenNo = id => { const i = data.products.findIndex(p => p.id === id); return "#" + String(i + 1).padStart(3, "0"); };
 
 // ── Toast / Modal ────────────────────────────────────────────
@@ -315,7 +330,11 @@ function viewDashboard() {
     <section class="slab span-7" id="gh-loc"></section>
     <section class="slab" id="gh-grid"></section>
   </div>`;
-  ghDash().then(m => { if (document.getElementById("gh-grid")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
+  // the library charts sit below the fold: load them only when the user scrolls near them
+  const ghHost = document.getElementById("gh-count");
+  const mountGh = () => ghDash().then(m => { if (document.getElementById("gh-grid")) m.mountGithubDash({ products: P, locations: LOCATIONS, categories: CATEGORIES, units: UNITS, total, value, qty, sar, nf0 }); });
+  if (ghHost && "IntersectionObserver" in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); mountGh(); } }, { rootMargin: "400px" }); io.observe(ghHost); }
+  else mountGh();
 }
 
 // ── Collection ───────────────────────────────────────────────
@@ -353,6 +372,7 @@ function viewProducts() {
       <div class="seg" role="group" aria-label="View">
         <button data-view="grid" aria-pressed="${ui.view === "grid"}">${icon("grid")}Cards</button>
         <button data-view="list" aria-pressed="${ui.view === "list"}">${icon("list")}Ledger</button>
+        <button data-view="intel" aria-pressed="${ui.view === "intel"}">${icon("yield")}Analysis</button>
       </div>
     </div>
     <div class="cats" role="group" aria-label="Categories">
@@ -369,13 +389,24 @@ function viewProducts() {
 }
 
 function renderResults() {
+  if (ui.view === "intel") {
+    $("#results").innerHTML = `<div id="intel" class="intel-host"><p class="empty">…</p></div>`;
+    intelMod().then(m => { const h = $("#intel"); if (h) m.renderIntel(h, toolHelpers()); }).catch(e => toast(e.message, true));
+    return;
+  }
   const L = filtered();
+  // group headers when the list is sorted by category
+  const grouped = ui.sort === "cat";
+  const catHead = (p, i, arr) => grouped && (i === 0 || arr[i - 1].category !== p.category) ? (() => {
+    const g = arr.filter(x => x.category === p.category);
+    return { name: catName(p.category), n: g.length, v: g.reduce((a, x) => a + (ui.loc === "all" ? value(x) : value(x, ui.loc)), 0) };
+  })() : null;
   const v = L.reduce((a, p) => a + (ui.loc === "all" ? value(p) : value(p, ui.loc)), 0);
   const head = `<p class="count-line">${L.length} items · ${sar(v)} SAR${ui.loc !== "all" ? " · " + esc(loc(ui.loc).name) : ""}</p>`;
   if (ui.view === "list") {
     $("#results").innerHTML = head + `<div class="ledger-wrap"><table class="ledger"><thead><tr>
       <th>Token</th><th>Product</th><th>Category</th>${LOCATIONS.map(l => `<th class="r">${l.short}</th>`).join("")}<th class="r">Total</th><th>Level</th><th class="r">Unit cost</th><th class="r">Value SAR</th></tr></thead>
-      <tbody>${L.map(p => `<tr data-edit="${esc(p.id)}">
+      <tbody>${L.map((p, i, arr) => { const h = catHead(p, i, arr); return (h ? `<tr class="grp-row"><td colspan="${7 + LOCATIONS.length}"><b>${esc(h.name)}</b><span>${h.n} · ${sar(h.v)} SAR</span></td></tr>` : "") + `<tr data-edit="${esc(p.id)}">
         <td class="data" style="color:var(--muted)">${tokenNo(p.id)}</td>
         <td><div class="nm">${pic(p, "pic")}<div><b>${esc(p.name)}</b><span>${esc(p.sku || p.code || "—")}</span></div></div></td>
         <td>${esc(catName(p.category))}</td>
@@ -383,11 +414,11 @@ function renderResults() {
         <td class="r data">${qty(total(p))} <span style="color:var(--muted)">${esc(UNITS[p.unit] || "")}</span></td>
         <td>${(lv => `<span class="lvbar s-${lv.state}"><i style="width:${Math.min(lv.pct, 1) * 100}%"></i></span><span class="data lvpct">${pctText(lv)}</span>`)(level(p))}</td>
         <td class="r data">${Number(p.rate) ? sar(p.rate) : "—"}</td>
-        <td class="r data">${sar(value(p))}</td></tr>`).join("")}</tbody></table></div>`;
+        <td class="r data">${sar(value(p))}</td></tr>`; }).join("")}</tbody></table></div>`;
     return;
   }
   $("#results").innerHTML = head + `<div class="collection">
-    ${L.map(token).join("")}</div>`;
+    ${L.map((p, i, arr) => { const h = catHead(p, i, arr); return (h ? `<h3 class="coll-h"><b>${esc(h.name)}</b><span>${h.n} · ${sar(h.v)} SAR</span></h3>` : "") + token(p); }).join("")}</div>`;
   bindTilt();
 }
 
@@ -404,7 +435,7 @@ function token(p) {
       : `<span>Level</span><b class="data">${pctText(lv)}</b><em>${qty(lv.left)} of ${qty(lv.par)} ${unit} left</em>`}</div>
     <div class="bars">${LOCATIONS.map(l => { const n = Number(p.stock?.[l.id]) || 0; return `<div class="bar-row ${ui.loc === l.id ? "on" : ""}"><span>${l.code}</span><span class="meter"><i style="width:${(n / max * 100).toFixed(0)}%"></i></span><b>${qty(n)}</b></div>`; }).join("")}</div>
     <div class="token-foot"><span class="qty">${qty(t)} ${unit}</span><span class="val">${Number(p.rate || 0).toFixed(2)}<small>/${unit}</small></span></div>
-    <p class="token-sold">مباع من بداية السنة ${qty(soldOf(p.id))}</p>
+    ${soldOf(p.id) ? `<p class="token-sold">${siteLang() === "ar" ? "مباع من بداية السنة" : "Sold this year"} <b>${qty(soldOf(p.id))}</b>${soldSource(p.id) ? `<i>${siteLang() === "ar" ? "مرتبط" : "linked"}</i>` : ""}</p>` : ""}
   </button>`;
 }
 
@@ -631,7 +662,7 @@ function renderHud() {
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
-const toolHelpers = () => ({ ...cardHelpers(), level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, openCard: p => openProductCard(p, cardHelpers()) });
+const toolHelpers = () => ({ ...cardHelpers(), level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
 function viewLabels() {
   document.body.classList.remove("card-only");
   renderNav(); renderNet();
@@ -775,7 +806,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=35");
+    const { parseStockPdf } = await import("./sync-admin.js?v=69");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -810,7 +841,7 @@ function exportLedger() {
 
 // ── Boot ─────────────────────────────────────────────────────
 store.onChange(snap => {
-  data = snap;
+  data = fixCats(snap);
   if (ui.route === "count" && ui.session) { renderNet(); renderTicker(); return; }
   render();
 });
@@ -820,7 +851,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=68").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=69").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

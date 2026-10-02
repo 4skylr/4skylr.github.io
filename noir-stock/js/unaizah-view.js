@@ -311,7 +311,7 @@ export async function renderUnaizah(root) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=68").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=69").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
 
   let view = { rows: [], prev: [] };

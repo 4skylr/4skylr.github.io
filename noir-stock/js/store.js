@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=45";
-import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=9";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=69";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=69";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -11,8 +11,8 @@ let mem = { products: [], sessions: [], activity: [] };
 const listeners = new Set();
 
 export const LOCATIONS = [
-  { id: "mini", name: "Mini Store", short: "Mini", code: "MNI" },
   { id: "refuel", name: "Concession", short: "Concession", code: "CON" },
+  { id: "mini", name: "Mini Store", short: "Mini", code: "MNI" },
   { id: "stores", name: "Main Stores", short: "Stores", code: "STR" }
 ];
 
@@ -22,7 +22,7 @@ export const CATEGORIES = [
   { id: "snacks", name: "Candy & Snacks" },
   { id: "popcorn", name: "Popcorn & Floss" },
   { id: "food", name: "Food & Sauces" },
-  { id: "slush", name: "Slush" },
+  { id: "slush", name: "Slush & Mocktails" },
   { id: "icecream", name: "Ice Cream" },
   { id: "hot", name: "Hot Drinks" },
   { id: "packaging", name: "Packaging" },

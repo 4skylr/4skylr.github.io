@@ -2,7 +2,7 @@
 // Libraries (loaded on demand from jsDelivr):
 //   Apache ECharts — github.com/apache/echarts  (charts)
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "./recipes-data.js?v=9";
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "./recipes-data.js?v=69";
 
 const ECHARTS_URL = "vendor/echarts.min.js";
 const FUSE_URL = "https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.mjs";

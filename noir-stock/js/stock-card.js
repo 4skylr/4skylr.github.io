@@ -3,17 +3,17 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=13";
-import { productPanel } from "./analytics.js?v=13";
-import { BARCODES } from "./barcodes.js?v=13";
-import { fefoReport } from "./fefo.js?v=13";
-import { servingsFor } from "./servings.js?v=13";
-import { lastCount } from "./last-count.js?v=13";
-import { mountGauges } from "./indicators.js?v=13";
-import { saveEdits as saveEditsDb } from "./ledger-store.js?v=13";
-import { RECIPES } from "./recipes-data.js?v=16";
-import { AR, LOC_AR } from "./names-ar.js?v=16";
-import { renderScanCard } from "./scan-view.js?v=68";
+import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "./expiry-data.js?v=69";
+import { productPanel } from "./analytics.js?v=69";
+import { BARCODES } from "./barcodes.js?v=69";
+import { fefoReport } from "./fefo.js?v=69";
+import { servingsFor } from "./servings.js?v=69";
+import { lastCount } from "./last-count.js?v=69";
+import { mountGauges } from "./indicators.js?v=69";
+import { saveEdits as saveEditsDb } from "./ledger-store.js?v=69";
+import { RECIPES } from "./recipes-data.js?v=69";
+import { AR, LOC_AR } from "./names-ar.js?v=69";
+import { renderScanCard } from "./scan-view.js?v=69";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";

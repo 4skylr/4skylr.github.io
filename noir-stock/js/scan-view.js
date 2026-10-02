@@ -5,9 +5,10 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "./names-ar.js?v=37";
-import { RECIPES } from "./recipes-data.js?v=37";
-import { soldOf } from "./sales-data.js?v=37";
+import { AR, LOC_AR } from "./names-ar.js?v=69";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=69";
+import { soldOf, soldSource, linkedTo } from "./sales-data.js?v=69";
+import { placement, isBulk } from "./fefo-place.js?v=69";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -18,9 +19,26 @@ const GROUP_HUES = ["#9b6bff", "#ff4fd8", "#3be7ff", "#ffc857", "#4cf0a8", "#ff8
 const hueOf = n => GROUP_HUES[((Number(n) || 1) - 1) % GROUP_HUES.length];
 const HORIZON = 365; // days that count as a "full" ring
 
+const RCAT_AR = { popcorn: "فشار", combo: "كومبو", fountain: "مشروب نافورة", slush: "سلاش", nachos: "ناتشوز", hotdog: "هوت دوق",
+  mocktail: "موكتيل", floss: "غزل البنات", candy: "حلويات", packaged: "معلّب", refill: "تعبئة" };
+const LATE = { combo: 2, refill: 1 }; // single items first, combos last
 function recipesFor(p) {
   const key = (p.sku || p.name || "").toLowerCase();
-  return RECIPES.filter(r => r.lines.some(l => l.rm.toLowerCase() === key)).slice(0, 2);
+  // non-takeaway first, then the ones that use the most of this item
+  return RECIPES.filter(r => r.lines.some(l => l.rm.toLowerCase() === key))
+    .sort((a, b) => (a.ta ? 1 : 0) - (b.ta ? 1 : 0) || (LATE[a.cat] || 0) - (LATE[b.cat] || 0) || a.name.localeCompare(b.name)).slice(0, 6);
+}
+// how many of a recipe the current stock makes, and which ingredient runs out first
+function evalRecipe(r, products, H) {
+  const lines = r.lines.map(l => {
+    const item = findProduct(products, l.rm);
+    const key = Object.keys(RAW_MATERIALS).find(k => k.toLowerCase() === String(l.rm).toLowerCase());
+    const conv = (key && RAW_MATERIALS[key].conv) || 1;
+    const have = item ? H.total(item) * conv : 0;
+    return { l, item, make: l.qty > 0 ? Math.floor(have / l.qty + 1e-9) : Infinity };
+  });
+  const limit = lines.reduce((a, b) => (b.make < a.make ? b : a), lines[0]);
+  return { lines, limit, make: limit ? limit.make : 0 };
 }
 function findProduct(products, rm) {
   const k = String(rm || "").toLowerCase();
@@ -52,11 +70,21 @@ const langOf = () => sessionStorage.getItem(LANG_KEY) === "en" ? "en" : "ar";
 const T = {
   ar: { until: "حتى", past: "سابقة", day: "يوم", groups: "المجموعات", recipe: "الوصفة", qty: "الكمية الحالية", none: "بدون تاريخ · الكمية فقط",
         d: "يوم", h: "ساعة", m: "دقيقة", s: "ثانية", since: "انتهت منذ", left: "متبقي", total: "العدد الكلي", scanned: "تم المسح",
-        countdowns: "العد التنازلي للمجموعات", next: "الأقرب للانتهاء", share: "التوزيع", sold: "مباع من بداية السنة", fifo: "مطابق لـ FIFO",
+        countdowns: "العد التنازلي للمجموعات", next: "الأقرب للانتهاء", share: "التوزيع", sold: "مباع من بداية السنة", fifo: "الترتيب سليم",
+        bad: n => `${n} مجموعة بمكان غلط`, expd: n => `${n} مجموعة منتهية`, summary: (g, l) => `${g} ${g === 1 ? "مجموعة" : "مجموعات"} في ${l} ${l === 1 ? "موقع" : "مواقع"}`,
+        lane: "مسار الصرف", laneSub: "الأقرب انتهاءً لازم يكون قدّام", bulkNote: "صنف قروب (كيلو / لتر): الكونسيشن والميني ستور مستوى واحد",
+        pcsNote: "صنف بالحبة: كونسيشن ← ميني ستور ← ستور", pick: "اسحب", moveTo: l => `قدّمها إلى ${l}`, before: n => `تنتهي قبل ${n}`, writeOff: "اشطبها",
+        via: "محسوب من", alsoMoves: "يتحرك معه", recipeHead: "وصفات يدخل فيها", canMake: "تكفي لـ", per: "لكل طلب", noRecipe: "لا توجد وصفة مربوطة بهذا الاسم.",
+        limit: "يحدّه", cost: "التكلفة", empty: "فاضي",
         state: { exp: "منتهية", crit: "حرجة", soon: "قريبة", watch: "راقب", safe: "آمنة" } },
   en: { until: "Until", past: "Past", day: "days", groups: "Groups", recipe: "Recipe", qty: "On hand", none: "No date · quantity only",
         d: "Days", h: "Hrs", m: "Min", s: "Sec", since: "Expired", left: "Left", total: "Total", scanned: "Scanned",
-        countdowns: "Group countdowns", next: "Next to expire", share: "Split", sold: "Sold this year", fifo: "FIFO match",
+        countdowns: "Group countdowns", next: "Next to expire", share: "Split", sold: "Sold this year", fifo: "Order is right",
+        bad: n => `${n} group${n === 1 ? "" : "s"} misplaced`, expd: n => `${n} expired`, summary: (g, l) => `${g} group${g === 1 ? "" : "s"} in ${l} location${l === 1 ? "" : "s"}`,
+        lane: "Pick route", laneSub: "the earliest expiry must sit in front", bulkNote: "Group item (kg / L): Concession and Mini Store are one tier",
+        pcsNote: "Sold by the piece: Concession → Mini Store → Store", pick: "Pick", moveTo: l => `Move to ${l}`, before: n => `expires before ${n}`, writeOff: "Write off",
+        via: "Counted from", alsoMoves: "Moves with", recipeHead: "Recipes it goes into", canMake: "Makes", per: "per serve", noRecipe: "No recipe is tied to this name.",
+        limit: "Limited by", cost: "Cost", empty: "Empty",
         state: { exp: "Expired", crit: "Critical", soon: "Soon", watch: "Watch", safe: "Safe" } }
 };
 const stateOf = left => left < 0 ? "exp" : left <= 7 ? "crit" : left <= 30 ? "soon" : left <= 90 ? "watch" : "safe";
@@ -72,7 +100,7 @@ function setReel(el, n) {
 }
 
 // ── Countdown pod per group ──────────────────────────────────
-function podHtml(b, L, gname, H, unit, isNext) {
+function podHtml(b, L, gname, H, unit, isNext, locName) {
   const st = stateOf(b.left);
   const frac = Math.max(0, Math.min(1, b.left / HORIZON));
   const R = 52, C = 2 * Math.PI * R;
@@ -81,10 +109,11 @@ function podHtml(b, L, gname, H, unit, isNext) {
     return `<line x1="${70 + r1 * Math.sin(a)}" y1="${70 - r1 * Math.cos(a)}" x2="${70 + r2 * Math.sin(a)}" y2="${70 - r2 * Math.cos(a)}"/>`;
   }).join("");
   const dayDigits = Math.max(3, String(Math.abs(b.left)).length);
-  return `<section class="cd s-${st} ${isNext ? "is-next" : ""}" style="--g:${hueOf(b.n)};--frac:${frac.toFixed(4)}" data-date="${H.esc(String(b.date))}" data-n="${b.n}">
+  return `<section class="cd s-${st} ${isNext ? "is-next" : ""} ${b.flag?.kind === "move" ? "is-flag" : ""}" style="--g:${hueOf(b.n)};--frac:${frac.toFixed(4)}" data-date="${H.esc(String(b.date))}" data-n="${b.n}">
     ${st === "exp" ? `<div class="cd-tape" aria-hidden="true"><span>${L.state.exp} · ${L.state.exp} · ${L.state.exp} · ${L.state.exp} · ${L.state.exp}</span></div>` : ""}
+    ${b.flag?.kind === "move" ? `<div class="cd-flag"><b>⚑</b><span>${H.esc(L.moveTo(locName({ id: b.flag.to, name: b.flag.toLocation })))}<small>${H.esc(L.before(gname(b.flag.vs)))}</small></span></div>` : ""}
     <header class="cd-top">
-      <span class="cd-g"><i></i>${H.esc(gname(b.n))}</span>
+      <span class="cd-g"><i></i>${H.esc(gname(b.n))}<em class="cd-pick">${L.pick} #${b.pick}</em></span>
       <span class="cd-state">${isNext ? `<em>${L.next}</em>` : ""}${L.state[st]}</span>
     </header>
     <div class="cd-core">
@@ -109,7 +138,7 @@ function podHtml(b, L, gname, H, unit, isNext) {
       </div>
     </div>
     <div class="cd-fuse" aria-hidden="true"><i style="width:${(frac * 100).toFixed(2)}%"><b></b></i></div>
-    <footer class="cd-meta"><span><b>${H.qty(b.qty)}</b> ${H.esc(unit)}</span><span>${H.esc(b.location)}</span><span dir="ltr">${H.esc(b.when)}</span></footer>
+    <footer class="cd-meta"><span><b>${H.qty(b.qty)}</b> ${H.esc(unit)}</span><span class="cd-loc l-${H.esc(b.loc || "")}">${H.esc(locName({ id: b.loc, name: b.location }))}</span><span dir="ltr">${H.esc(b.when)}</span></footer>
   </section>`;
 }
 
@@ -143,9 +172,13 @@ export async function renderScanCard(root, p, ctx) {
   const gname = n => lang === "en" ? "Group " + n : groupName(n);
   const products = H.data?.().products || [];
   const dated = noDate(p) ? [] : rowsFor(p.id)
-    .flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date), row: r.row, when: fmtDate(b.date) })))
+    .flatMap(r => r.batches.map(b => ({ ...b, loc: r.loc, location: r.location, left: daysLeft(b.date), row: r.row, when: fmtDate(b.date), qty: b.qty })))
     .filter(b => b.left != null && Number(b.qty) > 0);
   dated.sort((a, b) => a.left - b.left);
+  // where each group sits and whether it is in the right place (see fefo-place.js)
+  const plc = placement(p, dated.map(b => ({ ...b, at: asDate(b.date), qty: Number(String(b.qty).replace(/[^\d.]/g, "")) || 0 })));
+  const byKey = new Map(plc.groups.map(g => [g.row + ":" + g.n, g]));
+  dated.forEach(b => { const g = byKey.get(b.row + ":" + b.n); if (g) { b.flag = g.flag; b.pick = g.pick; b.tier = g.tier; } });
   const next = dated.find(b => b.left >= 0) || null;
   const past = dated.filter(b => b.left < 0);
   const total = H.total(p);
@@ -154,7 +187,20 @@ export async function renderScanCard(root, p, ctx) {
   const hits = recipesFor(p);
   const mood = p.category === "hot" ? "hot" : (p.category === "drinks" || p.category === "slush" ? "cold" : "");
   const worst = dated.length ? stateOf(dated[0].left) : "none";
-  const locName = l => lang === "ar" ? (LOC_AR[l.id] || l.name) : l.name;
+  const locName = l => lang === "ar" ? (LOC_AR[l.id] || l.name) : (H.LOCATIONS.find(x => x.id === l.id)?.name || l.name);
+  const misplaced = dated.filter(b => b.flag?.kind === "move").length, expiredN = dated.filter(b => b.left < 0).length;
+  const src = soldSource(p.id), moves = linkedTo(p.id).map(id => products.find(x => x.id === id)).filter(Boolean);
+  const nameOf = x => lang === "ar" ? (AR[x.id] || x.name) : x.name;
+  const laneHtml = dated.length ? `<section class="lane ${plc.bulk ? "bulk" : ""}">
+      <header><h2>${L.lane}</h2><span>${L.laneSub}</span></header>
+      <div class="lane-track">${H.LOCATIONS.map((l, i) => {
+        const here = dated.filter(b => b.loc === l.id).sort((a, b) => a.left - b.left);
+        return `<div class="lane-stop l-${l.id}"><b class="lane-name"><i>${i + 1}</i>${H.esc(locName(l))}</b>
+          ${here.map(b => `<span class="lane-chip s-${stateOf(b.left)} ${b.flag?.kind === "move" ? "flag" : ""}" style="--g:${hueOf(b.n)}"><em>#${b.pick}</em>${H.esc(gname(b.n))}<small dir="ltr">${b.left < 0 ? L.state.exp : b.left + " " + L.day}</small>${b.flag?.kind === "move" ? "<b>⚑</b>" : ""}</span>`).join("") || `<span class="lane-empty">${L.empty}</span>`}
+        </div>`;
+      }).join("")}</div>
+      <p class="lane-note">${plc.bulk ? L.bulkNote : L.pcsNote}</p>
+    </section>` : "";
   const RS = 15, RC = 2 * Math.PI * RS;
 
   root.innerHTML = `<article class="phone-card pass shield ${mood} w-${worst}" dir="${lang === "ar" ? "rtl" : "ltr"}">
@@ -186,13 +232,17 @@ export async function renderScanCard(root, p, ctx) {
       }).join("")}</div>
 
       <div class="pass-foot">
-        <p class="fifo"><b>✓</b> ${L.fifo}</p>
+        ${dated.length ? `<p class="fifo ${misplaced || expiredN ? "bad" : ""}"><b>${misplaced || expiredN ? "⚑" : "✓"}</b> ${misplaced ? L.bad(misplaced) : expiredN ? L.expd(expiredN) : L.fifo}</p>
+        <p class="pc-groups">${L.summary(dated.length, plc.locs)}</p>` : ""}
         <p class="pc-sold">${L.sold} <b class="odo-xs" data-odo="${soldOf(p.id) || 0}" dir="ltr">0</b></p>
+        ${src ? `<p class="pc-link">${L.via} ${src.map(id => products.find(x => x.id === id)).filter(Boolean).map(x => H.esc(nameOf(x))).join(" + ")}</p>` : ""}
+        ${moves.length ? `<p class="pc-link">${L.alsoMoves}: ${moves.map(x => `${H.esc(nameOf(x))} <b dir="ltr">${H.qty(soldOf(x.id))}</b>`).join(" · ")}</p>` : ""}
       </div>
     </div>
 
+    ${laneHtml}
     ${dated.length ? `<h2 class="cd-title"><span>${L.countdowns}</span><i>${dated.length}</i></h2>
-      <div class="cd-stack">${dated.map(b => podHtml(b, L, gname, H, unit, next && b === next)).join("")}</div>
+      <div class="cd-stack">${dated.map(b => podHtml(b, L, gname, H, unit, next && b === next, locName)).join("")}</div>
       <div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="batch">${L.groups}</button><button type="button" data-open="recipe">${L.recipe}</button></div>`
     : `<p class="pc-note">${L.none}</p><div class="pc-actions"><button type="button" id="edit-card">تعديل</button><button type="button" data-open="recipe">${L.recipe}</button></div>`}
 
@@ -202,13 +252,21 @@ export async function renderScanCard(root, p, ctx) {
       <form class="pc-edit" id="group-form"><label>الرقم السري</label><input class="input" name="pin" inputmode="numeric"><label>المجموعة</label><select class="input" name="n">${dated.map(b => `<option value="${b.row}:${b.n}">${groupName(b.n)} · ${H.esc(b.location)}</option>`).join("")}</select><label>الكمية</label><input class="input" name="qty" inputmode="decimal"><label>تاريخ الصلاحية</label><input class="input" name="date" placeholder="2026-12-31"><button class="btn" type="submit">حفظ المجموعة</button></form>
       ${past[0] ? `<button class="btn warn" id="write-off" type="button">شطب ${groupName(past[0].n)}</button>` : ""}
     </section>
-    <section class="pc-sheet" id="sheet-recipe" hidden>
-      <h2>الوصفة</h2>
-      ${hits.length ? hits.map(r => `<article><h3>${H.esc(r.name)}</h3><div class="pc-ings">${r.lines.map(l => {
-        const item = findProduct(products, l.rm);
-        const img = item && item.image ? H.src(item.image) : "";
-        return `<figure>${img ? `<img src="${H.esc(img)}" alt="">` : `<span>${H.esc(String(l.rm).slice(0, 2))}</span>`}<figcaption>${H.esc(l.rm)}<i>${H.esc(String(l.qty))} ${H.esc(l.uom)}</i></figcaption></figure>`;
-      }).join("")}</div></article>`).join("") : `<p>لا توجد وصفة مربوطة بهذا الاسم.</p>`}
+    <section class="pc-sheet rx" id="sheet-recipe" hidden>
+      <h2>${L.recipeHead} <i>${hits.length}</i></h2>
+      ${hits.length ? hits.map((r, ri) => {
+        const ev = evalRecipe(r, products, H);
+        return `<article class="rx-card" style="--rx:${GROUP_HUES[ri % GROUP_HUES.length]}">
+          <header><span class="rx-cat">${H.esc((lang === "ar" ? RCAT_AR[r.cat] : null) || r.cat)}</span><h3>${H.esc(r.name)}</h3>
+            <div class="rx-make"><small>${L.canMake}</small><b dir="ltr">${ev.make === Infinity ? "∞" : H.qty(ev.make)}</b></div></header>
+          <div class="rx-ings">${ev.lines.map(x => {
+            const l = x.l, item = x.item;
+            const img = item && item.image ? H.src(item.image) : "";
+            return `<figure class="${x === ev.limit ? "lim" : ""} ${item && item.id === p.id ? "me" : ""}">${img ? `<img src="${H.esc(img)}" alt="">` : `<span>${H.esc(String(l.rm).slice(0, 2))}</span>`}<figcaption>${H.esc(item ? nameOf(item) : l.rm)}<i dir="ltr">${H.esc(String(l.qty))} ${H.esc(l.uom)}</i></figcaption></figure>`;
+          }).join("")}</div>
+          <footer>${ev.limit && ev.limit.item ? `<span>${L.limit}: <b>${H.esc(nameOf(ev.limit.item))}</b></span>` : "<span></span>"}${r.cost ? `<span>${L.cost} <b dir="ltr">${Number(r.cost).toFixed(2)}</b></span>` : ""}</footer>
+        </article>`;
+      }).join("") : `<p>${L.noRecipe}</p>`}
     </section>
   </article>`;
 

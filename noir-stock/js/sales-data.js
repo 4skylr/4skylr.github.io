@@ -10,7 +10,25 @@ export const SALES_YTD = {
 };
 export const SALES_FROM = "2026-01-01";
 export const SALES_TO = "2026-10-01";
-export function soldOf(id) {
-  const over = JSON.parse(localStorage.getItem("noir-sales-ytd") || "{}");
-  return Number(over[id] ?? SALES_YTD[id] ?? 0);
+// Items that are used one-for-one with a sold item: every 30 oz cup gets a 30 oz lid, every
+// fountain cup gets a straw, every slush glass gets a straw-spoon. Their "sold" follows the source.
+export const LINKED = {
+  "lids-16": ["cups-16"], "lids-24": ["cups-24"], "lids-30": ["cups-30"],
+  "straw": ["cups-16", "cups-24", "cups-30"],
+  "straw-spoon": ["slush-glass-12", "slush-glass-16"]
+};
+export const linkedTo = id => Object.entries(LINKED).filter(([, src]) => src.includes(id)).map(([k]) => k);
+function direct(id) {
+  let over = {};
+  try { over = JSON.parse(localStorage.getItem("noir-sales-ytd") || "{}"); } catch {}
+  const v = over[id] ?? SALES_YTD[id];
+  return v == null ? null : Number(v) || 0;
 }
+export function soldOf(id) {
+  const d = direct(id);
+  if (d != null) return d;
+  return LINKED[id] ? LINKED[id].reduce((a, s) => a + (direct(s) || 0), 0) : 0;
+}
+export const soldSource = id => direct(id) == null && LINKED[id] ? LINKED[id] : null;
+export const SALES_DAYS = Math.round((new Date(SALES_TO) - new Date(SALES_FROM)) / 86400000);
+export const dailyUse = id => soldOf(id) / SALES_DAYS;

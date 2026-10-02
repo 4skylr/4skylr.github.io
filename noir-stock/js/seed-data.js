@@ -896,7 +896,7 @@ export const SEED_PRODUCTS = [
   "name": "Lemon",
   "sku": "Lemon Whole",
   "code": "",
-  "category": "hot",
+  "category": "slush",
   "unit": "kg",
   "image": "assets/products/lemon.webp",
   "stock": {
@@ -913,7 +913,7 @@ export const SEED_PRODUCTS = [
   "name": "Mint Leaves",
   "sku": "Mint Leaves",
   "code": "",
-  "category": "hot",
+  "category": "slush",
   "unit": "kg",
   "image": "assets/products/mint.webp",
   "stock": {
