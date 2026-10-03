@@ -3,17 +3,17 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "../data/expiry-data.js?v=82";
-import { productPanel } from "./analytics.js?v=82";
-import { BARCODES } from "../data/barcodes.js?v=82";
-import { fefoReport } from "./fefo.js?v=82";
-import { servingsFor } from "./servings.js?v=82";
-import { lastCount } from "./last-count.js?v=82";
-import { mountGauges } from "./indicators.js?v=82";
-import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=82";
-import { RECIPES } from "../data/recipes-data.js?v=82";
-import { AR, LOC_AR } from "../core/names-ar.js?v=82";
-import { renderScanCard } from "./scan-view.js?v=82";
+import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "../data/expiry-data.js?v=83";
+import { productPanel } from "./analytics.js?v=83";
+import { BARCODES } from "../data/barcodes.js?v=83";
+import { fefoReport } from "./fefo.js?v=83";
+import { servingsFor } from "./servings.js?v=83";
+import { lastCount } from "./last-count.js?v=83";
+import { mountGauges } from "./indicators.js?v=83";
+import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=83";
+import { RECIPES } from "../data/recipes-data.js?v=83";
+import { AR, LOC_AR } from "../core/names-ar.js?v=83";
+import { renderScanCard } from "./scan-view.js?v=83";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -259,7 +259,7 @@ async function paintOps(host, p) {
   const report = await fefoReport(rows, Number(p.rate) || 0);
   const first = report.first;
   const pct = first && first.left != null ? Math.max(0, Math.min(1, first.left / 30)) : 0;
-  const color = !first ? "#7f789c" : first.left < 0 ? "#ff5c7a" : first.left <= 7 ? "#ffc857" : "#4cf0a8";
+  const color = !first ? "#687286" : first.left < 0 ? "#ff5468" : first.left <= 7 ? "#ffb547" : "#3ed69e";
   const serves = servingsFor(p);
   const last = lastCount(H.data().sessions, p.id);
   host.innerHTML = `<section class="ops">

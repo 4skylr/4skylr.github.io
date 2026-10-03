@@ -1,5 +1,6 @@
-// System clock for the header: 24-hour time, date, ISO week number, the week as seven days
-// (Sunday first, as the branch works) and a ring for how much of the day has gone.
+// System clock for the header: cinema timecode (HH:MM:SS:FF, 24 frames a second), date, ISO week number,
+// the week as a seven-frame film strip (Sunday first, as the branch works) and a ring for how much of the day has gone.
+// Frames stop when the tab is hidden or the viewer asks for reduced motion.
 // one-letter day marks; Arabic uses the calendar letters (ح ن ث ر خ ج س) so no two days share a letter
 const DAYS = { en: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"], ar: ["ح", "ن", "ث", "ر", "خ", "ج", "س"] };
 const DAYS_LONG = { en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], ar: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"] };
@@ -19,9 +20,11 @@ export function mountClock(el, lang = "en") {
   if (!el) return;
   const L = lang === "ar" ? "ar" : "en", R = 17, C = 2 * Math.PI * R;
   el.innerHTML = `<div class="clk-ring" aria-hidden="true"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="${R}" class="t"/><circle cx="22" cy="22" r="${R}" class="v" stroke-dasharray="0 ${C}" transform="rotate(-90 22 22)"/></svg><i></i></div>
-    <div class="clk-main"><b class="clk-t data" dir="ltr"><span class="hm">--:--</span><span class="sec">:--</span></b><span class="clk-d" dir="${L === "ar" ? "rtl" : "ltr"}"><span class="dn"></span><span class="dt"></span></span></div>
+    <div class="clk-main"><b class="clk-t data" dir="ltr"><span class="hm">--:--</span><span class="sec">:--</span><span class="ff" aria-hidden="true">:00</span></b><span class="clk-d" dir="${L === "ar" ? "rtl" : "ltr"}"><span class="dn"></span><span class="dt"></span></span></div>
     <div class="clk-wk"><span class="clk-w data"></span><span class="clk-days" dir="${L === "ar" ? "rtl" : "ltr"}" lang="${L}">${DAYS[L].map((d, i) => `<i data-d="${i}" title="${DAYS_LONG[L][i]}">${d}</i>`).join("")}</span><span class="clk-yr"><u></u></span></div>`;
-  const $ = s => el.querySelector(s), ring = $(".v");
+  const $ = s => el.querySelector(s), ring = $(".v"), ff = $(".ff");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  if (still.matches) ff.remove();
   let last = "";
   const tick = () => {
     const d = new Date(), hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -33,13 +36,17 @@ export function mountClock(el, lang = "en") {
     $(".dn").textContent = `${DAYS_LONG[L][d.getDay()]} · `;
     $(".dt").textContent = `${pad(d.getDate())} ${MONTHS[L][d.getMonth()]} ${d.getFullYear()}`;
     const w = isoWeek(d), total = weeksIn(w.year);
-    $(".clk-w").textContent = L === "ar" ? `الأسبوع ${w.week}` : `W${pad(w.week)}`;
+    $(".clk-w").innerHTML = L === "ar" ? `الأسبوع <b>${w.week}</b> / ${total}` : `W <b>${pad(w.week)}</b> / ${total}`;
     $(".clk-w").title = L === "ar" ? `الأسبوع ${w.week} من ${total}` : `Week ${w.week} of ${total}`;
     el.querySelectorAll(".clk-days i").forEach(i => { const n = Number(i.dataset.d); i.className = n === d.getDay() ? "now" : n < d.getDay() ? "past" : ""; });
     $(".clk-yr u").style.width = `${(w.week / total * 100).toFixed(1)}%`;
     el.setAttribute("aria-label", `${hm} · ${$(".clk-d").textContent} · ${$(".clk-w").title}`);
   };
-  tick();
+  // frames: one text node, written only when the frame number changes
+  let raf = 0, lastF = -1;
+  const frame = () => { const f = Math.floor(new Date().getMilliseconds() * 24 / 1000); if (f !== lastF) { lastF = f; ff.textContent = ":" + pad(f); } raf = requestAnimationFrame(frame); };
+  const run = () => { if (ff.isConnected && !document.hidden) raf = requestAnimationFrame(frame); };
+  tick(); run();
   let timer = setInterval(tick, 1000);
-  document.addEventListener("visibilitychange", () => { clearInterval(timer); if (!document.hidden) { last = ""; tick(); timer = setInterval(tick, 1000); } });
+  document.addEventListener("visibilitychange", () => { clearInterval(timer); cancelAnimationFrame(raf); if (!document.hidden) { last = ""; tick(); timer = setInterval(tick, 1000); run(); } });
 }

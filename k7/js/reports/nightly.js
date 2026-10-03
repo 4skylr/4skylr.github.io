@@ -2,7 +2,7 @@
 // a full financial analysis of every day on file, and the morning Team Brief card.
 //   pdf.js (mozilla/pdf.js) reads the PDF · fflate (101arrowz/fflate) writes the workbook
 //   ECharts (apache/echarts) charts · html-to-image (bubkoo/html-to-image) renders the brief
-import { parsePerformancePdf } from "./nightly-parse.js?v=82";
+import { parsePerformancePdf } from "./nightly-parse.js?v=83";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "nightly";
@@ -93,7 +93,7 @@ function paint(H) {
       <div class="nr-acts">
         <label class="btn hot" for="nr-pdf">⬆ ${L.upload}</label><input id="nr-pdf" type="file" accept="application/pdf,.pdf" multiple hidden>
         <button class="btn" id="nr-xlsx">⬇ ${L.excel}</button>
-        <button class="btn brief-btn" id="nr-brief">📣 ${L.brief}</button>
+        <button class="btn brief-btn" id="nr-brief">${L.brief}</button>
       </div>
     </header>
     ${miss.length ? `<p class="nr-miss">${L.missing}: ${miss.slice(-12).map(m => `<span class="data">${m}</span>`).join("")}${miss.length > 12 ? " …" : ""}</p>` : ""}
@@ -116,14 +116,14 @@ function paint(H) {
   };
   host.querySelector("#nr-xlsx").onclick = async () => {
     try {
-      const { buildWorkbook } = await import("./nightly-xlsx.js?v=82");
+      const { buildWorkbook } = await import("./nightly-xlsx.js?v=83");
       const blob = await buildWorkbook(D);
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = `NC Performance Unaizah ${isoOf(new Date())}.xlsx`; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000); H.toast(L.built);
     } catch (err) { console.error(err); H.toast(err.message, true); }
   };
-  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=82").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
+  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=83").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
   drawCharts(D, L, ar);
 }
 
@@ -226,8 +226,8 @@ function drawCharts(D, L, ar) {
   const els = ["nr-ch-daily", "nr-ch-pace", "nr-ch-week", "nr-ch-month", "nr-ch-unit"].map(id => document.getElementById(id)).filter(Boolean);
   const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); draw(e.target.id); }), { rootMargin: "300px" });
   els.forEach(el => io.observe(el));
-  const ink = "#d9cfe6", grid = "rgba(255,255,255,.07)";
-  const base = { textStyle: { fontFamily: "Inter, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#140f22", borderColor: "#3a2a5a", textStyle: { color: "#f4ede4" }, trigger: "axis" },
+  const ink = "#d3dae6", grid = "rgba(255,255,255,.07)";
+  const base = { textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" }, trigger: "axis" },
     legend: { top: 0, textStyle: { color: ink } }, grid: { left: 54, right: 20, top: 36, bottom: 40 } };
   const ax = { axisLabel: { color: ink }, axisLine: { lineStyle: { color: grid } }, splitLine: { lineStyle: { color: grid } } };
   const ec = () => window.echarts ? Promise.resolve(window.echarts) : new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => res(window.echarts); s.onerror = rej; document.head.append(s); });
@@ -239,33 +239,33 @@ function drawCharts(D, L, ar) {
       mk(id, { xAxis: { type: "category", data: D.map(d => d.date), ...ax, splitLine: { show: false } }, yAxis: { type: "value", ...ax },
         dataZoom: [{ type: "inside", start: Math.max(0, 100 - 9000 / D.length) }, { type: "slider", height: 16, bottom: 8, borderColor: "transparent", textStyle: { color: ink } }],
         grid: { ...base.grid, bottom: 50 },
-        series: [{ name: ar ? "التذاكر" : "Box office", type: "bar", stack: "r", data: D.map(d => +d.bor.toFixed(0)), itemStyle: { color: "#9b6bff" } },
-          { name: ar ? "الكونسيشن" : "Concessions", type: "bar", stack: "r", data: D.map(d => +d.conc.toFixed(0)), itemStyle: { color: "#ff4fd8" } },
-          { name: ar ? "متوسط ٧ أيام" : "7-day avg", type: "line", data: ma, symbol: "none", smooth: true, lineStyle: { color: "#3be7ff", width: 2 } }] });
+        series: [{ name: ar ? "التذاكر" : "Box office", type: "bar", stack: "r", data: D.map(d => +d.bor.toFixed(0)), itemStyle: { color: "#5b7bff" } },
+          { name: ar ? "الكونسيشن" : "Concessions", type: "bar", stack: "r", data: D.map(d => +d.conc.toFixed(0)), itemStyle: { color: "#dce6ff" } },
+          { name: ar ? "متوسط ٧ أيام" : "7-day avg", type: "line", data: ma, symbol: "none", smooth: true, lineStyle: { color: "#6ccbff", width: 2 } }] });
     }
     if (id === "nr-ch-pace") {
       const y = D[D.length - 1].date.slice(0, 4), rows = D.filter(d => d.date.startsWith(y)), b = state.base.budget, bud = (b.bor || 0) + (b.conc || 0);
       let run = 0; const cum = rows.map(d => (run += d.total));
       const ydays = Number(y) % 4 ? 365 : 366;
       mk(id, { xAxis: { type: "category", data: rows.map(d => d.date), ...ax, splitLine: { show: false } }, yAxis: { type: "value", ...ax },
-        series: [{ name: ar ? "الفعلي" : "Actual", type: "line", data: cum.map(v => +v.toFixed(0)), symbol: "none", areaStyle: { color: "rgba(155,107,255,.18)" }, lineStyle: { color: "#9b6bff", width: 2 } },
-          { name: ar ? "الميزانية" : "Budget", type: "line", data: rows.map(d => +(bud * ((dayD(d.date) - dayD(`${y}-01-01`)) / 86400000 + 1) / ydays).toFixed(0)), symbol: "none", lineStyle: { color: "#ffc857", type: "dashed" } }] });
+        series: [{ name: ar ? "الفعلي" : "Actual", type: "line", data: cum.map(v => +v.toFixed(0)), symbol: "none", areaStyle: { color: "rgba(91,123,255,.18)" }, lineStyle: { color: "#5b7bff", width: 2 } },
+          { name: ar ? "الميزانية" : "Budget", type: "line", data: rows.map(d => +(bud * ((dayD(d.date) - dayD(`${y}-01-01`)) / 86400000 + 1) / ydays).toFixed(0)), symbol: "none", lineStyle: { color: "#ffb547", type: "dashed" } }] });
     }
     if (id === "nr-ch-week") {
       const order = [6, 0, 1, 2, 3, 4, 5];
       const wd = order.map(w => { const r = D.filter(d => dayD(d.date).getDay() === w); return { w, avg: r.length ? sum(r, "total") / r.length : 0, sph: agg(r).sph }; });
       mk(id, { xAxis: { type: "category", data: wd.map(x => (ar ? WD_AR : WD_EN)[x.w]), ...ax }, yAxis: [{ type: "value", ...ax }, { type: "value", ...ax, splitLine: { show: false } }],
-        series: [{ name: ar ? "متوسط الإيراد" : "Avg revenue", type: "bar", data: wd.map(x => +x.avg.toFixed(0)), itemStyle: { color: "#9b6bff", borderRadius: [6, 6, 0, 0] } },
-          { name: "SPH", type: "line", yAxisIndex: 1, data: wd.map(x => +x.sph.toFixed(2)), lineStyle: { color: "#4cf0a8" }, itemStyle: { color: "#4cf0a8" } }] });
+        series: [{ name: ar ? "متوسط الإيراد" : "Avg revenue", type: "bar", data: wd.map(x => +x.avg.toFixed(0)), itemStyle: { color: "#5b7bff", borderRadius: [6, 6, 0, 0] } },
+          { name: "SPH", type: "line", yAxisIndex: 1, data: wd.map(x => +x.sph.toFixed(2)), lineStyle: { color: "#3ed69e" }, itemStyle: { color: "#3ed69e" } }] });
     }
     if (id === "nr-ch-month" || id === "nr-ch-unit") {
       const ks = [...new Set(D.map(d => d.date.slice(0, 7)))], M = ks.map(k => ({ k, ...agg(D.filter(d => d.date.startsWith(k))) }));
       if (id === "nr-ch-month") mk(id, { xAxis: { type: "category", data: M.map(r => mn(r.k)), ...ax }, yAxis: { type: "value", ...ax },
-        series: [{ name: ar ? "التذاكر" : "Box office", type: "bar", stack: "m", data: M.map(r => +r.bor.toFixed(0)), itemStyle: { color: "#9b6bff" } },
-          { name: ar ? "الكونسيشن" : "Concessions", type: "bar", stack: "m", data: M.map(r => +r.conc.toFixed(0)), itemStyle: { color: "#ff4fd8", borderRadius: [6, 6, 0, 0] } }] });
+        series: [{ name: ar ? "التذاكر" : "Box office", type: "bar", stack: "m", data: M.map(r => +r.bor.toFixed(0)), itemStyle: { color: "#5b7bff" } },
+          { name: ar ? "الكونسيشن" : "Concessions", type: "bar", stack: "m", data: M.map(r => +r.conc.toFixed(0)), itemStyle: { color: "#dce6ff", borderRadius: [6, 6, 0, 0] } }] });
       else mk(id, { xAxis: { type: "category", data: M.map(r => mn(r.k)), ...ax }, yAxis: { type: "value", ...ax },
-        series: [{ name: "ATP", type: "line", smooth: true, data: M.map(r => +r.atp.toFixed(2)), lineStyle: { color: "#9b6bff", width: 2 }, itemStyle: { color: "#9b6bff" } },
-          { name: "SPH", type: "line", smooth: true, data: M.map(r => +r.sph.toFixed(2)), lineStyle: { color: "#ff4fd8", width: 2 }, itemStyle: { color: "#ff4fd8" } }] });
+        series: [{ name: "ATP", type: "line", smooth: true, data: M.map(r => +r.atp.toFixed(2)), lineStyle: { color: "#5b7bff", width: 2 }, itemStyle: { color: "#5b7bff" } },
+          { name: "SPH", type: "line", smooth: true, data: M.map(r => +r.sph.toFixed(2)), lineStyle: { color: "#dce6ff", width: 2 }, itemStyle: { color: "#dce6ff" } }] });
     }
   }
 }

@@ -4,7 +4,7 @@
 //   indicators  github.com/anandanand84/technicalindicators  (SMA · Bollinger · RSI · MACD)
 //   counters    github.com/inorganik/countUp.js
 // Vendored copies of the npm releases live in vendor/ so the board works offline.
-import { timePinOk } from "../core/time-pin.js?v=82";
+import { timePinOk } from "../core/time-pin.js?v=83";
 const CDN = {
   echarts: "vendor/echarts.min.js",
   ta: "vendor/technicalindicators.min.js",
@@ -13,23 +13,23 @@ const CDN = {
 const lang = () => sessionStorage.getItem("noir-lang") || "en";
 
 const TENDERS = {
-  cash:    { en: "Cash",        ar: "كاش",          icon: "assets/pay/cash.webp",    color: "#4cf0a8", group: "cash" },
-  card:    { en: "Credit card", ar: "شبكة",         icon: "assets/pay/card.webp",    color: "#3be7ff", group: "digital" },
-  online:  { en: "Online",      ar: "أونلاين",      icon: "assets/pay/online.webp",  color: "#9b6bff", group: "digital" },
-  prepaid: { en: "Pre-paid",    ar: "مسبق الدفع",   icon: "assets/pay/prepaid.webp", color: "#ffc857", group: "digital" },
+  cash:    { en: "Cash",        ar: "كاش",          icon: "assets/pay/cash.webp",    color: "#3ed69e", group: "cash" },
+  card:    { en: "Credit card", ar: "شبكة",         icon: "assets/pay/card.webp",    color: "#6ccbff", group: "digital" },
+  online:  { en: "Online",      ar: "أونلاين",      icon: "assets/pay/online.webp",  color: "#5b7bff", group: "digital" },
+  prepaid: { en: "Pre-paid",    ar: "مسبق الدفع",   icon: "assets/pay/prepaid.webp", color: "#ffb547", group: "digital" },
   jahez:   { en: "Jahez",       ar: "جاهز",         icon: "assets/pay/jahez.webp",   color: "#ff3b5c", group: "delivery" },
   hunger:  { en: "HungerStation", ar: "هنقرستيشن",  icon: "assets/pay/hunger.webp",  color: "#ffd400", group: "delivery" },
   voucher: { en: "Voucher",     ar: "قسيمة",        icon: "assets/pay/voucher.webp", color: "#ff7a59", group: "promo" },
-  bogo:    { en: "Buy 1 get 1", ar: "اشتر ١ واحصل ١", icon: "assets/pay/bogo.webp",  color: "#ff4fd8", group: "promo" },
-  comp:    { en: "Comp",        ar: "ضيافة",        icon: "assets/pay/noir.webp",    color: "#a78bfa", group: "promo" },
-  other:   { en: "Other",       ar: "أخرى",         icon: null,                     color: "#bdb6d8", group: "promo" }
+  bogo:    { en: "Buy 1 get 1", ar: "اشتر ١ واحصل ١", icon: "assets/pay/bogo.webp",  color: "#dce6ff", group: "promo" },
+  comp:    { en: "Comp",        ar: "ضيافة",        icon: "assets/pay/noir.webp",    color: "#8fa6ff", group: "promo" },
+  other:   { en: "Other",       ar: "أخرى",         icon: null,                     color: "#a3adbf", group: "promo" }
 };
 const KEYS = Object.keys(TENDERS);
 const GROUPS = {
-  cash:     { en: "Cash vault",      ar: "خزنة الكاش",   color: "#4cf0a8" },
-  digital:  { en: "Digital rails",   ar: "الدفع الرقمي", color: "#3be7ff" },
+  cash:     { en: "Cash vault",      ar: "خزنة الكاش",   color: "#3ed69e" },
+  digital:  { en: "Digital rails",   ar: "الدفع الرقمي", color: "#6ccbff" },
   delivery: { en: "Delivery apps",   ar: "تطبيقات التوصيل", color: "#ffd400" },
-  promo:    { en: "Promo & vouchers", ar: "العروض والقسائم", color: "#ff4fd8" }
+  promo:    { en: "Promo & vouchers", ar: "العروض والقسائم", color: "#dce6ff" }
 };
 
 const T = {
@@ -121,8 +121,8 @@ function dispose() {
   charts.forEach(c => c.dispose()); charts = []; observer?.disconnect();
 }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(190,170,255,.18)" } }, axisLabel: { color: "#7f789c", fontFamily: "Martian Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.07)" } } };
-const TIP = { backgroundColor: "rgba(12,9,22,.94)", borderColor: "rgba(155,107,255,.45)", textStyle: { color: "#f2efff", fontFamily: "Bricolage Grotesque, system-ui", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(155,107,255,.25)" };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#687286", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontFamily: "Geist, system-ui", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 // ── period filter ───────────────────────────────────────────────────
 function window_(days, period) {
@@ -220,7 +220,7 @@ export async function renderUnaizah(root, H = {}) {
       load(CDN.echarts), load(CDN.ta), load(CDN.countup)
     ]);
     // DCS months uploaded from Settings sit on top of the built ledger
-    if (dcsUps.length) data = (await import("./fin-dcs.js?v=82")).mergeLedger(data, dcsUps);
+    if (dcsUps.length) data = (await import("./fin-dcs.js?v=83")).mergeLedger(data, dcsUps);
     rdr = [rdrBase, ...rdrUps].filter(Boolean).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""))[0] || null;
   } catch (e) {
     root.innerHTML = `<div class="uz-error">${ar ? "تعذر تحميل بيانات عنيزة." : "Could not load the Unaizah ledger."} <small>${esc(e.message)}</small></div>`;
@@ -321,9 +321,9 @@ export async function renderUnaizah(root, H = {}) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=82").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=83").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
-  import("./fin-audit.js?v=82").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
+  import("./fin-audit.js?v=83").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
     .catch(e => console.warn("Cash office audit unavailable", e));
 
   let view = { rows: [], prev: [] };
@@ -397,30 +397,30 @@ export async function renderUnaizah(root, H = {}) {
     let osc = [];
     if (ui.osc === "rsi") {
       const r = series(base, 14, RSI);
-      osc = [{ name: "RSI", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: r.map(v => v && +v.toFixed(1)), showSymbol: false, lineStyle: { color: "#ffc857", width: 1.4 },
-        markLine: { silent: true, symbol: "none", label: { color: "#7f789c", fontSize: 9 }, lineStyle: { type: "dashed", color: "rgba(255,92,122,.5)" }, data: [{ yAxis: 70 }, { yAxis: 30, lineStyle: { color: "rgba(76,240,168,.5)" } }] },
-        markArea: { silent: true, itemStyle: { color: "rgba(155,107,255,.06)" }, data: [[{ yAxis: 30 }, { yAxis: 70 }]] } }];
+      osc = [{ name: "RSI", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: r.map(v => v && +v.toFixed(1)), showSymbol: false, lineStyle: { color: "#ffb547", width: 1.4 },
+        markLine: { silent: true, symbol: "none", label: { color: "#687286", fontSize: 9 }, lineStyle: { type: "dashed", color: "rgba(255,84,104,.5)" }, data: [{ yAxis: 70 }, { yAxis: 30, lineStyle: { color: "rgba(62,214,158,.5)" } }] },
+        markArea: { silent: true, itemStyle: { color: "rgba(91,123,255,.06)" }, data: [[{ yAxis: 30 }, { yAxis: 70 }]] } }];
     } else {
       const m = base.length >= 35 ? pad(MACD.calculate({ values: base, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }), base.length) : Array(base.length).fill(null);
       osc = [
-        { name: "Histogram", type: "bar", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.histogram != null ? { value: +v.histogram.toFixed(0), itemStyle: { color: v.histogram >= 0 ? "rgba(76,240,168,.75)" : "rgba(255,92,122,.75)" } } : null), barMaxWidth: 6 },
-        { name: "MACD", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.MACD != null ? +v.MACD.toFixed(0) : null), showSymbol: false, lineStyle: { color: "#3be7ff", width: 1.2 } },
-        { name: "Signal", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.signal != null ? +v.signal.toFixed(0) : null), showSymbol: false, lineStyle: { color: "#ff4fd8", width: 1.2 } }
+        { name: "Histogram", type: "bar", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.histogram != null ? { value: +v.histogram.toFixed(0), itemStyle: { color: v.histogram >= 0 ? "rgba(62,214,158,.75)" : "rgba(255,84,104,.75)" } } : null), barMaxWidth: 6 },
+        { name: "MACD", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.MACD != null ? +v.MACD.toFixed(0) : null), showSymbol: false, lineStyle: { color: "#6ccbff", width: 1.2 } },
+        { name: "Signal", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: m.map(v => v && v.signal != null ? +v.signal.toFixed(0) : null), showSymbol: false, lineStyle: { color: "#dce6ff", width: 1.2 } }
       ];
     }
     const main = weekly
-      ? [{ name: ar ? "أسبوع" : "Week", type: "candlestick", data: w.map(d => [d.o, d.c, d.l, d.h]), itemStyle: { color: "#4cf0a8", color0: "#ff5c7a", borderColor: "#4cf0a8", borderColor0: "#ff5c7a" } },
-         { name: ar ? "إجمالي الأسبوع" : "Week total", type: "bar", yAxisIndex: 2, data: w?.map(d => Math.round(d.sum)), itemStyle: { color: "rgba(155,107,255,.18)" }, barMaxWidth: 14, z: 0 }]
-      : [{ name: ar ? "الإيراد" : "Revenue", type: "line", data: close, showSymbol: false, smooth: .25, lineStyle: { width: 1.8, color: "#f2efff" },
-           areaStyle: { color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "rgba(255,79,216,.35)" }, { offset: 1, color: "rgba(155,107,255,0)" }]) } }];
+      ? [{ name: ar ? "أسبوع" : "Week", type: "candlestick", data: w.map(d => [d.o, d.c, d.l, d.h]), itemStyle: { color: "#3ed69e", color0: "#ff5468", borderColor: "#3ed69e", borderColor0: "#ff5468" } },
+         { name: ar ? "إجمالي الأسبوع" : "Week total", type: "bar", yAxisIndex: 2, data: w?.map(d => Math.round(d.sum)), itemStyle: { color: "rgba(91,123,255,.18)" }, barMaxWidth: 14, z: 0 }]
+      : [{ name: ar ? "الإيراد" : "Revenue", type: "line", data: close, showSymbol: false, smooth: .25, lineStyle: { width: 1.8, color: "#edf1f8" },
+           areaStyle: { color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "rgba(220,230,255,.35)" }, { offset: 1, color: "rgba(91,123,255,0)" }]) } }];
     const bandSeries = [
       { name: "BB low", type: "line", data: lower, stack: "bb", lineStyle: { opacity: 0 }, showSymbol: false, silent: true, tooltip: { show: false } },
-      { name: "Bollinger", type: "line", data: band, stack: "bb", lineStyle: { opacity: 0 }, showSymbol: false, areaStyle: { color: "rgba(59,231,255,.08)" }, silent: true, tooltip: { show: false } }
+      { name: "Bollinger", type: "line", data: band, stack: "bb", lineStyle: { opacity: 0 }, showSymbol: false, areaStyle: { color: "rgba(108,203,255,.08)" }, silent: true, tooltip: { show: false } }
     ];
     el.price.setOption({
       animationDuration: 900, backgroundColor: "transparent",
-      legend: { top: 0, textStyle: { color: "#bdb6d8", fontSize: 11 }, icon: "roundRect", itemWidth: 10, itemHeight: 4, data: [main[0].name, `SMA ${f1}`, `SMA ${f2}`, "Bollinger", ...osc.map(o => o.name)] },
-      tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "cross", lineStyle: { color: "rgba(255,79,216,.5)" }, crossStyle: { color: "rgba(255,79,216,.5)" }, label: { backgroundColor: "#2a1f4a" } },
+      legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, icon: "roundRect", itemWidth: 10, itemHeight: 4, data: [main[0].name, `SMA ${f1}`, `SMA ${f2}`, "Bollinger", ...osc.map(o => o.name)] },
+      tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "cross", lineStyle: { color: "rgba(220,230,255,.5)" }, crossStyle: { color: "rgba(220,230,255,.5)" }, label: { backgroundColor: "#1a2440" } },
         valueFormatter: v => (Array.isArray(v) ? v.map(fmt).join(" / ") : v == null ? "—" : fmt(v)) },
       axisPointer: { link: [{ xAxisIndex: "all" }] },
       grid: [{ left: 8, right: 8, top: 34, height: "58%", containLabel: true }, { left: 8, right: 8, top: "76%", height: "14%", containLabel: true }],
@@ -429,10 +429,10 @@ export async function renderUnaizah(root, H = {}) {
       yAxis: [{ scale: false, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
               { gridIndex: 1, ...AXIS, splitNumber: 2, axisLabel: { ...AXIS.axisLabel, formatter: compact }, ...(ui.osc === "rsi" ? { min: 0, max: 100 } : {}) },
               { show: false, gridIndex: 0 }],
-      dataZoom: [{ type: "inside", xAxisIndex: [0, 1] }, { type: "slider", xAxisIndex: [0, 1], bottom: 0, height: 16, borderColor: "transparent", backgroundColor: "rgba(155,107,255,.06)", fillerColor: "rgba(155,107,255,.18)", handleStyle: { color: "#9b6bff" }, textStyle: { color: "#7f789c" }, dataBackground: { lineStyle: { color: "#9b6bff" }, areaStyle: { color: "rgba(155,107,255,.15)" } } }],
+      dataZoom: [{ type: "inside", xAxisIndex: [0, 1] }, { type: "slider", xAxisIndex: [0, 1], bottom: 0, height: 16, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#687286" }, dataBackground: { lineStyle: { color: "#5b7bff" }, areaStyle: { color: "rgba(91,123,255,.15)" } } }],
       series: [...bandSeries, ...main,
-        { name: `SMA ${f1}`, type: "line", data: sma1, showSymbol: false, smooth: true, lineStyle: { color: "#ffc857", width: 1.3 } },
-        { name: `SMA ${f2}`, type: "line", data: sma2, showSymbol: false, smooth: true, lineStyle: { color: "#3be7ff", width: 1.3, type: "dashed" } },
+        { name: `SMA ${f1}`, type: "line", data: sma1, showSymbol: false, smooth: true, lineStyle: { color: "#ffb547", width: 1.3 } },
+        { name: `SMA ${f2}`, type: "line", data: sma2, showSymbol: false, smooth: true, lineStyle: { color: "#6ccbff", width: 1.3, type: "dashed" } },
         ...osc]
     }, true);
   }
@@ -446,12 +446,12 @@ export async function renderUnaizah(root, H = {}) {
     el.heat.resize();
     el.heat.setOption({
       tooltip: { ...TIP, formatter: p => `<b>${p.value[0]}</b><br>${fmt(p.value[1])} ${t.sar}` },
-      visualMap: { min: 0, max: Math.round(max * .8), show: true, orient: "horizontal", left: "center", bottom: 0, itemHeight: 140, itemWidth: 10, textStyle: { color: "#7f789c", fontSize: 10 }, formatter: v => compact(v),
-        inRange: { color: ["#161227", "#3a1f6e", "#7b3dd6", "#ff4fd8", "#3be7ff"] } },
-      calendar: ys.map((y, i) => ({ top: 24 + i * h, left: 34, right: 8, cellSize: ["auto", 13], range: y, itemStyle: { color: "rgba(255,255,255,.025)", borderColor: "#05040a", borderWidth: 3 },
-        splitLine: { show: false }, yearLabel: { color: "#bdb6d8", fontFamily: "Unbounded, sans-serif", fontSize: 11, position: ar ? "right" : "left", margin: 26 },
-        dayLabel: { color: "#7f789c", fontSize: 9, firstDay: 0, nameMap: ar ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"] },
-        monthLabel: { color: "#7f789c", fontSize: 10, nameMap: ar ? ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"] : "EN" } })),
+      visualMap: { min: 0, max: Math.round(max * .8), show: true, orient: "horizontal", left: "center", bottom: 0, itemHeight: 140, itemWidth: 10, textStyle: { color: "#687286", fontSize: 10 }, formatter: v => compact(v),
+        inRange: { color: ["#161227", "#1d2a4a", "#4c6bff", "#dce6ff", "#6ccbff"] } },
+      calendar: ys.map((y, i) => ({ top: 24 + i * h, left: 34, right: 8, cellSize: ["auto", 13], range: y, itemStyle: { color: "rgba(255,255,255,.025)", borderColor: "#000000", borderWidth: 3 },
+        splitLine: { show: false }, yearLabel: { color: "#a3adbf", fontFamily: "Geist, sans-serif", fontSize: 11, position: ar ? "right" : "left", margin: 26 },
+        dayLabel: { color: "#687286", fontSize: 9, firstDay: 0, nameMap: ar ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"] },
+        monthLabel: { color: "#687286", fontSize: 10, nameMap: ar ? ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"] : "EN" } })),
       series: ys.map((y, i) => ({ type: "heatmap", coordinateSystem: "calendar", calendarIndex: i, data: rows.filter(r => r.date.startsWith(y)).map(r => [r.date, r.total]) }))
     }, true);
   }
@@ -464,9 +464,9 @@ export async function renderUnaizah(root, H = {}) {
     el.flow.setOption({
       tooltip: { ...TIP, trigger: "item", valueFormatter: v => `${fmt(v)} ${t.sar}` },
       series: [{ type: "sankey", left: 4, right: 70, top: 10, bottom: 10, nodeWidth: 10, nodeGap: 10, draggable: false, emphasis: { focus: "adjacency" },
-        label: { color: "#f2efff", fontSize: 11, fontFamily: "Bricolage Grotesque, system-ui", formatter: p => (p.value / (view.total || 1) > .004 ? p.name : "") },
+        label: { color: "#edf1f8", fontSize: 11, fontFamily: "Geist, system-ui", formatter: p => (p.value / (view.total || 1) > .004 ? p.name : "") },
         lineStyle: { color: "gradient", opacity: .35, curveness: .5 },
-        data: [...vals.map(([k]) => ({ name: L(k), itemStyle: { color: TENDERS[k].color } })), ...groups.map(g => ({ name: G(g), itemStyle: { color: GROUPS[g].color } })), { name: t.rail, itemStyle: { color: "#9b6bff" } }],
+        data: [...vals.map(([k]) => ({ name: L(k), itemStyle: { color: TENDERS[k].color } })), ...groups.map(g => ({ name: G(g), itemStyle: { color: GROUPS[g].color } })), { name: t.rail, itemStyle: { color: "#5b7bff" } }],
         links: [...vals.map(([k, v]) => ({ source: L(k), target: G(TENDERS[k].group), value: Math.round(v) })),
                 ...groups.map(g => ({ source: G(g), target: t.rail, value: Math.round(vals.filter(([k]) => TENDERS[k].group === g).reduce((a, [, v]) => a + v, 0)) }))] }]
     }, true);
@@ -479,10 +479,10 @@ export async function renderUnaizah(root, H = {}) {
     const top = Math.max(...avg);
     el.week.setOption({
       tooltip: { ...TIP, valueFormatter: v => `${fmt(v)} ${t.sar}` },
-      angleAxis: { type: "category", data: t.weekdays, ...AXIS, axisLabel: { ...AXIS.axisLabel, fontSize: 11, color: "#bdb6d8" } },
-      radiusAxis: { ...AXIS, axisLabel: { show: false }, splitLine: { lineStyle: { color: "rgba(190,170,255,.08)" } } },
+      angleAxis: { type: "category", data: t.weekdays, ...AXIS, axisLabel: { ...AXIS.axisLabel, fontSize: 11, color: "#a3adbf" } },
+      radiusAxis: { ...AXIS, axisLabel: { show: false }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
       polar: { radius: ["12%", "78%"] },
-      series: [{ type: "bar", coordinateSystem: "polar", name: t.avg, data: avg.map(v => ({ value: v, itemStyle: { color: v === top ? "#ff4fd8" : new window.echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: "#9b6bff" }, { offset: 1, color: "#3be7ff" }]) } })), roundCap: true, barWidth: 14 }]
+      series: [{ type: "bar", coordinateSystem: "polar", name: t.avg, data: avg.map(v => ({ value: v, itemStyle: { color: v === top ? "#dce6ff" : new window.echarts.graphic.LinearGradient(0, 0, 1, 1, [{ offset: 0, color: "#5b7bff" }, { offset: 1, color: "#6ccbff" }]) } })), roundCap: true, barWidth: 14 }]
     }, true);
   }
 
@@ -491,7 +491,7 @@ export async function renderUnaizah(root, H = {}) {
     const ks = KEYS.filter(k => months.some(m => m[k] > 0));
     el.mix.setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => fmt(v) },
-      legend: { type: "scroll", bottom: 0, textStyle: { color: "#bdb6d8", fontSize: 10 }, itemWidth: 10, itemHeight: 6, pageIconColor: "#9b6bff", pageTextStyle: { color: "#7f789c" } },
+      legend: { type: "scroll", bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 6, pageIconColor: "#5b7bff", pageTextStyle: { color: "#687286" } },
       grid: { left: 8, right: 8, top: 14, bottom: 34, containLabel: true },
       xAxis: { type: "category", data: months.map(m => monthLabel(m.month, ar)), boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
@@ -504,14 +504,14 @@ export async function renderUnaizah(root, H = {}) {
     const months = byMonth(view.rows);
     el.recon.setOption({
       tooltip: { ...TIP, trigger: "axis" },
-      legend: { bottom: 0, textStyle: { color: "#bdb6d8", fontSize: 10 }, itemWidth: 10, itemHeight: 6 },
+      legend: { bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 6 },
       grid: { left: 8, right: 8, top: 14, bottom: 34, containLabel: true },
       xAxis: { type: "category", data: months.map(m => monthLabel(m.month, ar)), ...AXIS, splitLine: { show: false } },
       yAxis: [{ ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } }, { ...AXIS, min: v => Math.min(98, Math.floor(v.min)), max: 100, splitLine: { show: false }, axisLabel: { ...AXIS.axisLabel, formatter: v => `${v}%` } }],
       series: [
-        { name: t.cols.excess, type: "bar", stack: "v", data: months.map(m => Math.round(m.excess)), itemStyle: { color: "#4cf0a8", borderRadius: [4, 4, 0, 0] }, barMaxWidth: 16, tooltip: { valueFormatter: v => `${fmt(v)} ${t.sar}` } },
-        { name: t.cols.shortage, type: "bar", stack: "v", data: months.map(m => -Math.round(m.shortage)), itemStyle: { color: "#ff5c7a", borderRadius: [0, 0, 4, 4] }, barMaxWidth: 16, tooltip: { valueFormatter: v => `${fmt(Math.abs(v))} ${t.sar}` } },
-        { name: t.cols.acc, type: "line", yAxisIndex: 1, smooth: true, symbol: "circle", symbolSize: 5, lineStyle: { color: "#ffc857", width: 1.5 }, itemStyle: { color: "#ffc857" },
+        { name: t.cols.excess, type: "bar", stack: "v", data: months.map(m => Math.round(m.excess)), itemStyle: { color: "#3ed69e", borderRadius: [4, 4, 0, 0] }, barMaxWidth: 16, tooltip: { valueFormatter: v => `${fmt(v)} ${t.sar}` } },
+        { name: t.cols.shortage, type: "bar", stack: "v", data: months.map(m => -Math.round(m.shortage)), itemStyle: { color: "#ff5468", borderRadius: [0, 0, 4, 4] }, barMaxWidth: 16, tooltip: { valueFormatter: v => `${fmt(Math.abs(v))} ${t.sar}` } },
+        { name: t.cols.acc, type: "line", yAxisIndex: 1, smooth: true, symbol: "circle", symbolSize: 5, lineStyle: { color: "#ffb547", width: 1.5 }, itemStyle: { color: "#ffb547" },
           data: months.map(m => +((1 - (m.excess + m.shortage) / (m.report || m.total || 1)) * 100).toFixed(2)), tooltip: { valueFormatter: v => `${v}%` } }
       ]
     }, true);
@@ -575,7 +575,7 @@ export async function renderUnaizah(root, H = {}) {
         committee: "Committee", audit: "Audit", inquiry: "Inquiry", rule: "Committee ≥ 500 SAR · Audit ≥ 100 SAR · Inquiry under 100", none: "None",
         day: "Day", amt: "Amount", why: "Reason", cashSafe: "Cash ≠ counted to safe", short: "Shortage", over: "Excess", cashier: "Cashier", shifts: "shifts", lock: "Lock" };
     if (sessionStorage.getItem("noir-admin") !== "1") {
-      host.innerHTML = `<div class="uz-h"><div><h3>🔒 ${A.title}</h3><p>${A.sub}</p></div></div>
+      host.innerHTML = `<div class="uz-h"><div><h3><svg class="ic-lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> ${A.title}</h3><p>${A.sub}</p></div></div>
         <form class="uz-lock" id="uz-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${A.pin}" aria-label="${A.pin}"><button class="uz-btn" type="submit">${A.open}</button></form>`;
       host.querySelector("#uz-lock").onsubmit = e => {
         e.preventDefault();
@@ -597,7 +597,7 @@ export async function renderUnaizah(root, H = {}) {
     host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
       <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
         ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
-    import("./fin-analyst.js?v=82").then(m => {
+    import("./fin-analyst.js?v=83").then(m => {
       const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
       if (!cz.length || !host.isConnected) return;
       host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);

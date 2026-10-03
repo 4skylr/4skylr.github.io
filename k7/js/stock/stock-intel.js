@@ -1,11 +1,11 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=82";
-import { placement, isBulk } from "./fefo-place.js?v=82";
-import { usageOf } from "./consumption.js?v=82";
-import { salesSpace } from "./sales-space.js?v=82";
-import { AR as NAME_AR } from "../core/names-ar.js?v=82";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=83";
+import { placement, isBulk } from "./fefo-place.js?v=83";
+import { usageOf } from "./consumption.js?v=83";
+import { salesSpace } from "./sales-space.js?v=83";
+import { AR as NAME_AR } from "../core/names-ar.js?v=83";
 
 const LEAD = 7, SAFETY = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
@@ -114,7 +114,7 @@ export function renderIntel(host, H) {
       <section class="slab si-card">
         <div class="slab-h"><h2>${L.moves}</h2><span class="tag">${A.moves.length}</span></div><p class="si-sub">${L.movesSub}</p>
         ${A.moves.length ? `<ol class="si-moves">${A.moves.map(m => `<li data-edit="${esc(m.r.p.id)}" class="t-${m.sp.tone}">${H.pic(m.r.p, "pic")}<div><b>${esc(nm(m.r.p))}</b>
-          <span class="si-act">${esc(m.sp.act[AR() ? 1 : 0])}</span>${m.sp.why[0] ? `<small class="si-why">${esc(m.sp.why[0][AR() ? 1 : 0])}</small>` : ""}<small class="si-spot">📍 ${esc(m.sp.space[AR() ? 1 : 0])}</small></div></li>`).join("")}</ol>` : `<p class="empty">${L.none}</p>`}
+          <span class="si-act">${esc(m.sp.act[AR() ? 1 : 0])}</span>${m.sp.why[0] ? `<small class="si-why">${esc(m.sp.why[0][AR() ? 1 : 0])}</small>` : ""}<small class="si-spot"><svg class="ic-pin" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg> ${esc(m.sp.space[AR() ? 1 : 0])}</small></div></li>`).join("")}</ol>` : `<p class="empty">${L.none}</p>`}
       </section>
     </div>
 
@@ -130,32 +130,32 @@ export function renderIntel(host, H) {
   // charts load only when scrolled near, so the phone opens the table first
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); draw(e.target.id); } }), { rootMargin: "200px" });
   host.querySelectorAll(".si-chart").forEach(el => io.observe(el));
-  const ink = "#d9cfe6", grid = "rgba(255,255,255,.07)";
-  const base = { textStyle: { fontFamily: "Inter, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#140f22", borderColor: "#3a2a5a", textStyle: { color: "#f4ede4" } } };
+  const ink = "#d3dae6", grid = "rgba(255,255,255,.07)";
+  const base = { textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" } } };
   const mk = (id, opt) => loadECharts().then(ec => { const el = document.getElementById(id); if (!el) return; const c = ec.init(el, null, { renderer: "canvas" }); c.setOption({ ...base, ...opt }); charts.push(c); new ResizeObserver(() => c.resize()).observe(el); }).catch(() => {});
   function draw(id) {
     if (id === "si-pareto") {
-      const top = A.byVal.slice(0, 25), col = { A: "#9b6bff", B: "#3be7ff", C: "#6b5a80" };
+      const top = A.byVal.slice(0, 25), col = { A: "#5b7bff", B: "#6ccbff", C: "#6b5a80" };
       mk(id, { grid: { left: 50, right: 44, top: 20, bottom: 80 },
         xAxis: { type: "category", data: top.map(r => nm(r.p)), axisLabel: { rotate: 55, color: ink, fontSize: 10, width: 90, overflow: "truncate" }, axisLine: { lineStyle: { color: grid } } },
         yAxis: [{ type: "value", axisLabel: { color: ink }, splitLine: { lineStyle: { color: grid } } }, { type: "value", max: 100, axisLabel: { formatter: "{value}%", color: ink }, splitLine: { show: false } }],
         tooltip: { ...base.tooltip, trigger: "axis" },
         series: [{ type: "bar", data: top.map(r => ({ value: +r.value.toFixed(2), itemStyle: { color: col[r.abc], borderRadius: [6, 6, 0, 0] } })) },
-          { type: "line", yAxisIndex: 1, smooth: true, symbolSize: 5, data: top.map(r => +(r.cum * 100).toFixed(1)), lineStyle: { color: "#ff4fd8", width: 2 }, itemStyle: { color: "#ff4fd8" },
-            markLine: { silent: true, symbol: "none", lineStyle: { color: "#ffc857", type: "dashed" }, data: [{ yAxis: 80 }], label: { show: false } } }] });
+          { type: "line", yAxisIndex: 1, smooth: true, symbolSize: 5, data: top.map(r => +(r.cum * 100).toFixed(1)), lineStyle: { color: "#dce6ff", width: 2 }, itemStyle: { color: "#dce6ff" },
+            markLine: { silent: true, symbol: "none", lineStyle: { color: "#ffb547", type: "dashed" }, data: [{ yAxis: 80 }], label: { show: false } } }] });
     }
     if (id === "si-tree") {
       const cats = H.CATEGORIES.map((c, i) => ({ name: AR() ? (CAT_AR[c.id] || c.name) : c.name,
         children: A.rows.filter(r => r.p.category === c.id && r.value > 0).map(r => ({ name: nm(r.p), value: +r.value.toFixed(2) })) })).filter(c => c.children.length);
       mk(id, { tooltip: { ...base.tooltip, formatter: i => `${i.name}<br><b>${sar(i.value)} SAR</b>` },
         series: [{ type: "treemap", roam: false, nodeClick: false, breadcrumb: { show: false }, width: "100%", height: "100%", data: cats,
-          levels: [{ itemStyle: { borderColor: "#0c0814", borderWidth: 3, gapWidth: 3 }, color: ["#7c2280", "#9b6bff", "#3be7ff", "#ff4fd8", "#ffc857", "#4cf0a8", "#5a1860", "#c46bd4", "#ff8a5c"] },
+          levels: [{ itemStyle: { borderColor: "#06090e", borderWidth: 3, gapWidth: 3 }, color: ["#5b7bff", "#5b7bff", "#6ccbff", "#dce6ff", "#ffb547", "#3ed69e", "#33427a", "#7f95ff", "#ff8a5c"] },
             { itemStyle: { borderColor: "rgba(0,0,0,.35)", borderWidth: 1, gapWidth: 1 }, colorSaturation: [.35, .6] }],
           label: { color: "#fff", fontSize: 11, overflow: "truncate" }, upperLabel: { show: true, height: 20, color: "#fff", fontWeight: 700 } }] });
     }
     if (id === "si-mix") {
       const cats = H.CATEGORIES.filter(c => A.rows.some(r => r.p.category === c.id && r.value > 0));
-      const cols = { refuel: "#3be7ff", mini: "#9b6bff", stores: "#ff4fd8" };
+      const cols = { refuel: "#6ccbff", mini: "#5b7bff", stores: "#dce6ff" };
       mk(id, { grid: { left: 110, right: 20, top: 30, bottom: 30 }, legend: { top: 0, textStyle: { color: ink } }, tooltip: { ...base.tooltip, trigger: "axis", axisPointer: { type: "shadow" } },
         xAxis: { type: "value", axisLabel: { color: ink }, splitLine: { lineStyle: { color: grid } } },
         yAxis: { type: "category", data: cats.map(c => AR() ? (CAT_AR[c.id] || c.name) : c.name), axisLabel: { color: ink } },

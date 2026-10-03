@@ -1,13 +1,13 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
 // price and margin, sales / usage, cover and reorder, recipes, sales-space advice and the stock history from reports.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=82";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=82";
-import { usageOf } from "./consumption.js?v=82";
-import { MENU, VAT } from "../data/menu-data.js?v=82";
-import { RECIPES } from "../data/recipes-data.js?v=82";
-import { salesSpace } from "./sales-space.js?v=82";
-import { historyOf } from "./stock-history.js?v=82";
+import { placement, isBulk } from "./fefo-place.js?v=83";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=83";
+import { usageOf } from "./consumption.js?v=83";
+import { MENU, VAT } from "../data/menu-data.js?v=83";
+import { RECIPES } from "../data/recipes-data.js?v=83";
+import { salesSpace } from "./sales-space.js?v=83";
+import { historyOf } from "./stock-history.js?v=83";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -85,7 +85,7 @@ export function open360(p, H) {
 
     <section class="p3-sec p3-space t-${sp.tone}"><h3>${L.space}</h3>
       <div class="p3-sp">
-        <div class="p3-sp-where"><i>📍</i><div><small>${L.spot}</small><b>${esc(sp.space[ar ? 1 : 0])}</b></div></div>
+        <div class="p3-sp-where"><i><svg class="ic-pin" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></i><div><small>${L.spot}</small><b>${esc(sp.space[ar ? 1 : 0])}</b></div></div>
         <div class="p3-sp-act"><small>${L.now}</small><b>${esc(sp.act[ar ? 1 : 0])}</b>
           ${sp.why.map(w => `<p>↳ ${esc(w[ar ? 1 : 0])}</p>`).join("")}${sp.tips.map(w => `<p class="tip">★ ${esc(w[ar ? 1 : 0])}</p>`).join("")}</div>
       </div>
@@ -108,8 +108,8 @@ export function open360(p, H) {
     const go = ec => { const c = ec.init(g); const v = Math.min(Math.round(cover), 365);
       c.setOption({ series: [{ type: "gauge", min: 0, max: 365, startAngle: 210, endAngle: -30, radius: "100%", progress: { show: true, width: 8, roundCap: true },
         axisLine: { lineStyle: { width: 8, color: [[1, "rgba(255,255,255,.08)"]] } }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, pointer: { show: false },
-        itemStyle: { color: st === "now" ? "#ff5c7a" : st === "soon" ? "#ffc857" : st === "over" ? "#3be7ff" : "#4cf0a8" },
-        detail: { valueAnimation: true, offsetCenter: [0, "8%"], fontSize: 18, color: "#fff", fontFamily: "JetBrains Mono, monospace", formatter: () => cover > 999 ? "999+" : String(Math.round(cover)) },
+        itemStyle: { color: st === "now" ? "#ff5468" : st === "soon" ? "#ffb547" : st === "over" ? "#6ccbff" : "#3ed69e" },
+        detail: { valueAnimation: true, offsetCenter: [0, "8%"], fontSize: 18, color: "#fff", fontFamily: "Geist Mono, monospace", formatter: () => cover > 999 ? "999+" : String(Math.round(cover)) },
         data: [{ value: v }] }] }); };
     if (window.echarts) go(window.echarts); else { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => go(window.echarts); document.head.append(s); }
   }

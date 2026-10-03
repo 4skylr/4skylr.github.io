@@ -5,18 +5,18 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=82";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=82";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=82";
-import { placement } from "./fefo-place.js?v=82";
-import { usageOf } from "./consumption.js?v=82";
+import { AR, LOC_AR } from "../core/names-ar.js?v=83";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=83";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=83";
+import { placement } from "./fefo-place.js?v=83";
+import { usageOf } from "./consumption.js?v=83";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
 const noDate = p => p.category === "packaging" || p.category === "other" || /^(cups-|lids-|tub-|slush-glass|cotton-candy-tub|dip-cup|hotdog-tray|nachos-tray|napkin|straw|stirrer|co2)/.test(p.id);
 
 // every group gets its own signature colour
-const GROUP_HUES = ["#9b6bff", "#ff4fd8", "#3be7ff", "#ffc857", "#4cf0a8", "#ff8a5c"];
+const GROUP_HUES = ["#5b7bff", "#dce6ff", "#6ccbff", "#ffb547", "#3ed69e", "#ff8a5c"];
 const hueOf = n => GROUP_HUES[((Number(n) || 1) - 1) % GROUP_HUES.length];
 const HORIZON = 365; // days that count as a "full" ring
 
@@ -184,7 +184,7 @@ export async function renderScanCard(root, p, ctx) {
   const past = dated.filter(b => b.left < 0);
   const total = H.total(p);
   const unit = H.UNITS[p.unit] || "";
-  const locRows = H.LOCATIONS.map((l, i) => ({ l, n: Number(p.stock?.[l.id]) || 0, hue: ["#9b6bff", "#ff4fd8", "#3be7ff"][i % 3] }));
+  const locRows = H.LOCATIONS.map((l, i) => ({ l, n: Number(p.stock?.[l.id]) || 0, hue: ["#5b7bff", "#dce6ff", "#6ccbff"][i % 3] }));
   const hits = recipesFor(p);
   const mood = p.category === "hot" ? "hot" : (p.category === "drinks" || p.category === "slush" ? "cold" : "");
   const worst = dated.length ? stateOf(dated[0].left) : "none";
@@ -236,7 +236,7 @@ export async function renderScanCard(root, p, ctx) {
         ${dated.length ? `<p class="fifo ${misplaced || expiredN ? "bad" : ""}"><b>${misplaced || expiredN ? "⚑" : "✓"}</b> ${misplaced ? L.bad(misplaced) : expiredN ? L.expd(expiredN) : L.fifo}</p>
         <p class="pc-groups">${L.summary(dated.length, plc.locs)}</p>` : ""}
         ${use ? (() => {
-          const HUE = ["#3be7ff", "#9b6bff", "#ff4fd8", "#ffc857"], ar = lang === "ar";
+          const HUE = ["#6ccbff", "#5b7bff", "#dce6ff", "#ffb547"], ar = lang === "ar";
           const parts = use.parts.map((x, i) => ({ ...x, out: x.sold * x.per / x.conv, hue: HUE[i % HUE.length] }));
           const tot = parts.reduce((a, x) => a + x.out, 0) || 1, span = use.hi - use.lo || 1, mark = ((use.total - use.lo) / span * 100).toFixed(1);
           return `<section class="cx">
@@ -254,7 +254,7 @@ export async function renderScanCard(root, p, ctx) {
           </section>`; })()
         : (() => { const n = soldOf(p.id) || 0, rank = !mv && n ? Object.entries(SALES_YTD).sort((x, y) => y[1] - x[1]).findIndex(([k]) => k === p.id) + 1 : 0;
             return `<div class="sold-chip ${rank && rank <= 6 ? "hot" : ""}">
-              <span class="sc-ico">${rank && rank <= 6 ? "🔥" : "◆"}</span>
+              <span class="sc-ico">${rank && rank <= 6 ? "▲" : "◆"}</span>
               <div class="sc-main"><small>${mv && mv.shared ? L.moved : L.sold}</small><b class="odo-sm" data-odo="${n}" dir="ltr">0</b>${mv && mv.shared ? `<em>${H.esc(mv.unit[lang === "ar" ? 1 : 0])}</em>` : ""}</div>
               ${n ? `<div class="sc-side"><span dir="ltr">≈ ${H.qty(n / SALES_DAYS)}</span><small>${lang === "ar" ? "باليوم" : "per day"}</small></div>` : ""}
               ${rank && rank <= 6 ? `<i class="sc-rank">TOP #${rank}</i>` : ""}
@@ -387,6 +387,6 @@ async function burst(colors, power = 0.5) {
   c({
     particleCount: Math.round(70 * power), spread: 75, startVelocity: 32 * power + 12, ticks: 160, scalar: 0.8,
     origin: { x: (r.left + r.width / 2) / innerWidth, y: (r.top + r.height / 2) / innerHeight },
-    colors: colors || ["#9b6bff", "#ff4fd8", "#3be7ff", "#ffc857", "#ffffff"], disableForReducedMotion: true
+    colors: colors || ["#5b7bff", "#dce6ff", "#6ccbff", "#ffb547", "#ffffff"], disableForReducedMotion: true
   });
 }

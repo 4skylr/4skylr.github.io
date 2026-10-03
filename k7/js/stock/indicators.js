@@ -15,11 +15,11 @@ export async function mountGauges(root) {
   rings.splice(0).forEach(r => r.destroy());
   root.querySelectorAll("[data-gauge]").forEach(el => {
     const pct = Math.max(0, Math.min(1, Number(el.dataset.gauge) || 0));
-    const color = el.dataset.color || "#9b6bff";
+    const color = el.dataset.color || "#5b7bff";
     const bar = new PB.Circle(el, {
-      color, strokeWidth: 8, trailWidth: 8, trailColor: "rgba(190,170,255,.16)",
+      color, strokeWidth: 8, trailWidth: 8, trailColor: "rgba(150,170,210,.16)",
       svgStyle: { width: "100%", height: "100%" },
-      text: { value: el.dataset.label || "", style: { color: "#f2efff", fontSize: "11px", fontFamily: "JetBrains Mono Web, monospace" } }
+      text: { value: el.dataset.label || "", style: { color: "#edf1f8", fontSize: "11px", fontFamily: "Geist Mono, monospace" } }
     });
     bar.animate(pct, { duration: 700 });
     rings.push(bar);

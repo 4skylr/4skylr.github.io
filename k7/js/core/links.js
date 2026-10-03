@@ -33,7 +33,7 @@ export async function renderLinks(el, H) {
       <input class="input" name="name" placeholder="${T.name}" required maxlength="60">
       <input class="input" name="url" placeholder="https://…" required dir="ltr" inputmode="url">
       <input class="input" name="note" placeholder="${T.note}" maxlength="160">
-      <button class="btn hot" type="submit">${T.save}</button></form>` : `<p class="note lk-lock">🔒 ${T.lock}</p>`}
+      <button class="btn hot" type="submit">${T.save}</button></form>` : `<p class="note lk-lock"><svg class="ic-lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> ${T.lock}</p>`}
   </div>`;
   el.querySelector("#lk-form")?.addEventListener("submit", async e => {
     e.preventDefault();

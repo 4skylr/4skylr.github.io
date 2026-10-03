@@ -1,8 +1,8 @@
 // Cash office audit: the system's RDR Exception Register against the DCS sheets.
 // For every F&B shift: what the POS sold, what the cashier dropped, what the team leader verified,
 // and what the DCS sheet recorded. Gaps are explained by cause, not just totalled.
-import { timePinOk } from "../core/time-pin.js?v=82";
-import { nameKey } from "./fin-dcs.js?v=82";
+import { timePinOk } from "../core/time-pin.js?v=83";
+import { nameKey } from "./fin-dcs.js?v=83";
 
 const MONEY = ["cash", "card", "prepaid", "voucher", "others"];
 const TN = { cash: ["Cash", "كاش"], card: ["Card", "شبكة"], prepaid: ["Pre-paid / online", "مسبق الدفع / أونلاين"], voucher: ["Voucher", "قسائم"], others: ["Others", "أخرى"], comp: ["Comp", "ضيافة"] };
@@ -200,7 +200,7 @@ export function renderRdrAudit(host, { rdr, days, ar, echarts }) {
 
 function paintPrivate(el, A, t, ar, admin, rerender) {
   if (!admin) {
-    el.innerHTML = `<div class="ra-lock"><p>🔒 ${t.lock}</p><form id="ra-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${t.pin}" aria-label="${t.pin}"><button class="uz-btn" type="submit">${t.open}</button></form></div>`;
+    el.innerHTML = `<div class="ra-lock"><p><svg class="ic-lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> ${t.lock}</p><form id="ra-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${t.pin}" aria-label="${t.pin}"><button class="uz-btn" type="submit">${t.open}</button></form></div>`;
     el.querySelector("#ra-lock").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; e.target.pin.placeholder = t.bad; return; } sessionStorage.setItem("noir-admin", "1"); rerender(); };
     return;
   }
@@ -245,13 +245,13 @@ function monthChart(ec, el, A, ar) {
   const L = A.months, lab = L.map(m => m.m.slice(5) + "/" + m.m.slice(2, 4));
   c.setOption({
     animationDuration: 700, grid: { left: 48, right: 12, top: 34, bottom: 26 }, tooltip: { trigger: "axis", valueFormatter: v => fmt(v) + " SAR" },
-    legend: { top: 0, textStyle: { color: "#bdb6d8", fontSize: 11 }, itemWidth: 10, itemHeight: 10 },
-    xAxis: { type: "category", data: lab, axisLabel: { color: "#bdb6d8", fontSize: 10 }, axisLine: { lineStyle: { color: "rgba(190,170,255,.2)" } } },
-    yAxis: { type: "value", axisLabel: { color: "#7f789c", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.08)" } } },
+    legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 10, itemHeight: 10 },
+    xAxis: { type: "category", data: lab, axisLabel: { color: "#a3adbf", fontSize: 10 }, axisLine: { lineStyle: { color: "rgba(150,170,210,.2)" } } },
+    yAxis: { type: "value", axisLabel: { color: "#687286", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
     series: [
-      { name: ar ? "عجز" : "Short", type: "bar", stack: "n", data: L.map(m => m.short), itemStyle: { color: "#ff5c7a", borderRadius: [0, 0, 5, 5] } },
-      { name: ar ? "زيادة" : "Over", type: "bar", stack: "n", data: L.map(m => m.over), itemStyle: { color: "#4cf0a8", borderRadius: [5, 5, 0, 0] } },
-      { name: ar ? "تبديل" : "Swaps", type: "line", smooth: true, symbol: "circle", symbolSize: 6, data: L.map(m => m.swap), lineStyle: { color: "#ffc857", width: 2 }, itemStyle: { color: "#ffc857" } },
+      { name: ar ? "عجز" : "Short", type: "bar", stack: "n", data: L.map(m => m.short), itemStyle: { color: "#ff5468", borderRadius: [0, 0, 5, 5] } },
+      { name: ar ? "زيادة" : "Over", type: "bar", stack: "n", data: L.map(m => m.over), itemStyle: { color: "#3ed69e", borderRadius: [5, 5, 0, 0] } },
+      { name: ar ? "تبديل" : "Swaps", type: "line", smooth: true, symbol: "circle", symbolSize: 6, data: L.map(m => m.swap), lineStyle: { color: "#ffb547", width: 2 }, itemStyle: { color: "#ffb547" } },
       { name: ar ? "الصافي" : "Net", type: "line", data: L.map(m => m.net), lineStyle: { color: "#fff", width: 2, type: "dashed" }, itemStyle: { color: "#fff" }, symbolSize: 5 }
     ]
   });

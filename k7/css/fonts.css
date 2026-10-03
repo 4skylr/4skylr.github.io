@@ -1,28 +1,17 @@
-/* Fonts from GitHub, loaded as published webfonts.
-   Inter — github.com/rsms/inter
-   JetBrains Mono — github.com/JetBrains/JetBrainsMono */
-@font-face {
-  font-family: "Inter Var";
-  src: url("https://cdn.jsdelivr.net/gh/rsms/inter@v4.1/docs/font-files/InterVariable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-@font-face {
-  font-family: "JetBrains Mono Web";
-  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "JetBrains Mono Web";
-  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
+/* Type, self-hosted (no CDN): one family for Latin and Arabic UI, one mono for codes and time.
+   Geist + Geist Mono — github.com/vercel/geist-font (OFL)
+   IBM Plex Sans Arabic — github.com/IBM/plex (OFL) — picks up every Arabic glyph Geist does not have. */
+@font-face { font-family: "Geist"; src: url("../vendor/fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("../vendor/fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Plex Arabic"; src: url("../vendor/fonts/plex-arabic-400.woff2") format("woff2"); font-weight: 400; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
+@font-face { font-family: "Plex Arabic"; src: url("../vendor/fonts/plex-arabic-500.woff2") format("woff2"); font-weight: 500; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
+@font-face { font-family: "Plex Arabic"; src: url("../vendor/fonts/plex-arabic-600.woff2") format("woff2"); font-weight: 600; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
+@font-face { font-family: "Plex Arabic"; src: url("../vendor/fonts/plex-arabic-700.woff2") format("woff2"); font-weight: 700 900; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
 :root {
-  --f-display: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
-  --f-text: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
-  --f-data: "JetBrains Mono Web", "Martian Mono", ui-monospace, monospace;
+  --f-display: "Geist", "Plex Arabic", system-ui, sans-serif;
+  --f-text: "Geist", "Plex Arabic", system-ui, sans-serif;
+  --f-voice: "Geist", "Plex Arabic", system-ui, sans-serif;
+  --f-data: "Geist Mono", "Plex Arabic", ui-monospace, monospace;
 }
 
 .label-sheet { display: grid; grid-template-columns: repeat(2, 8cm); gap: 0; justify-content: center; }

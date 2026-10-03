@@ -1,9 +1,9 @@
 // Menu Lab — the price boards joined to recipe costs, sales and stock.
 //   Menu engineering (Kasavana & Smith): popularity × contribution margin → Stars / Plowhorses / Puzzles / Dogs
 //   Charts: apache/echarts (vendored)
-import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=82";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=82";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=82";
+import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=83";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=83";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=83";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -28,7 +28,7 @@ const T = {
     sim: "محاكي الأسعار", simSub: "حرّك السعر، والكمية نفس مبيعات هذه السنة", item: "الصنف", newP: "السعر الجديد", delta: "التغير في ربح السنة",
     range: "نكهات", groupsTitle: "اللوحات", showcase: "الكومبو والعروض", newTag: "جديد", blocked: "ما ينسوى الحين: خلص" }
 };
-const QCOL = { star: "#ffc857", horse: "#3be7ff", puzzle: "#ff4fd8", dog: "#8c7aa3" };
+const QCOL = { star: "#ffb547", horse: "#6ccbff", puzzle: "#dce6ff", dog: "#747e93" };
 const low = s => String(s || "").toLowerCase();
 let charts = [];
 
@@ -86,7 +86,7 @@ export function renderMenuLab(host, H) {
   const ar = AR(), L = T[ar ? "ar" : "en"], A = analyseMenu(H.data().products), esc = H.esc;
   const n0 = v => H.nf0.format(Math.round(v)), m2 = v => H.sar(v), pct = v => `${Math.round(v * 100)}%`;
   const name = i => ar ? i.ar : i.en;
-  const ring = fc => { const R = 18, C = 2 * Math.PI * R, v = Math.min(1, fc); const col = fc < .15 ? "#4cf0a8" : fc < .3 ? "#ffc857" : "#ff5c7a";
+  const ring = fc => { const R = 18, C = 2 * Math.PI * R, v = Math.min(1, fc); const col = fc < .15 ? "#3ed69e" : fc < .3 ? "#ffb547" : "#ff5468";
     return `<svg viewBox="0 0 44 44" class="ml-ring"><circle cx="22" cy="22" r="${R}" class="t"/><circle cx="22" cy="22" r="${R}" stroke="${col}" stroke-dasharray="${(v * C).toFixed(1)} ${C}" transform="rotate(-90 22 22)"/><text x="22" y="25" text-anchor="middle">${pct(fc)}</text></svg>`; };
 
   host.innerHTML = `<div class="ml">
@@ -165,16 +165,16 @@ export function renderMenuLab(host, H) {
     const go = ec => {
       const el = host.querySelector("#ml-matrix"); if (!el) return;
       const c = ec.init(el); charts.push(c);
-      const ink = "#d9cfe6", grid = "rgba(255,255,255,.07)", maxP = Math.max(...A.items.map(i => i.profit), 1);
+      const ink = "#d3dae6", grid = "rgba(255,255,255,.07)", maxP = Math.max(...A.items.map(i => i.profit), 1);
       c.setOption({
-        textStyle: { fontFamily: "Inter, system-ui, sans-serif", color: ink },
+        textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink },
         grid: { left: 52, right: 20, top: 20, bottom: 46 },
-        tooltip: { backgroundColor: "#140f22", borderColor: "#3a2a5a", textStyle: { color: "#f4ede4" },
+        tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" },
           formatter: p => { const i = p.data.i; return `<b>${esc(name(i))}</b><br>${L.q[i.q]} · ${pct(i.share)}<br>${L.margin}: ${m2(i.margin)} SAR<br>${L.sold}: ${n0(i.units)}`; } },
         xAxis: { type: "value", name: ar ? "الشعبية في المجموعة" : "share of group", nameLocation: "middle", nameGap: 28, axisLabel: { formatter: v => pct(v), color: ink }, splitLine: { lineStyle: { color: grid } } },
         yAxis: { type: "value", name: L.margin, axisLabel: { color: ink }, splitLine: { lineStyle: { color: grid } } },
         series: [{ type: "scatter", data: A.items.map(i => ({ value: [i.share, +i.margin.toFixed(2)], i, symbolSize: 10 + 34 * Math.sqrt(Math.max(i.profit, 0) / maxP),
-          itemStyle: { color: QCOL[i.q], opacity: .85, borderColor: "#0c0814" }, label: { show: i.profit > maxP * .12, formatter: name(i), position: "top", color: "#fff", fontSize: 10 } })) }]
+          itemStyle: { color: QCOL[i.q], opacity: .85, borderColor: "#06090e" }, label: { show: i.profit > maxP * .12, formatter: name(i), position: "top", color: "#fff", fontSize: 10 } })) }]
       });
       new ResizeObserver(() => c.resize()).observe(el);
     };

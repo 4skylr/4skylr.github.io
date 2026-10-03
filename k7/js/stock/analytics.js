@@ -2,7 +2,7 @@
 // Libraries (loaded on demand from jsDelivr):
 //   Apache ECharts — github.com/apache/echarts  (charts)
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=82";
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=83";
 
 const ECHARTS_URL = "vendor/echarts.min.js";
 const FUSE_URL = "../../vendor/fuse.min.mjs"; // krisk/Fuse, vendored
@@ -21,8 +21,8 @@ const SIZES = [
   { oz: 130, name: "X-Large", prefix: "Xtra Large Tub" }
 ];
 const FLAVORS = [
-  { id: "Caramel", color: "#ffc857" }, { id: "Salted", color: "#3be7ff" },
-  { id: "Cheese", color: "#ff8a5c" }, { id: "Pizza Savory", color: "#ff4fd8" }
+  { id: "Caramel", color: "#ffb547" }, { id: "Salted", color: "#6ccbff" },
+  { id: "Cheese", color: "#ff8a5c" }, { id: "Pizza Savory", color: "#dce6ff" }
 ];
 const POPCORN_MATERIALS = ["POPCORN OIL", "CORN Mushroom", "CORN Butterfly", "CARAMEL", "SALT", "CHEESE MASALA", "Pizza Savory Mix"];
 
@@ -242,10 +242,10 @@ async function renderCharts() {
   const popEl = document.getElementById("chart-pop"), bnEl = document.getElementById("chart-bn");
   if (!popEl || !bnEl) return;
   const css = getComputedStyle(document.documentElement);
-  const ink2 = css.getPropertyValue("--ink-2").trim() || "#bdb6d8", muted = css.getPropertyValue("--muted").trim() || "#7f789c", line = "rgba(190,170,255,.12)";
-  const font = "Martian Mono, ui-monospace, monospace";
+  const ink2 = css.getPropertyValue("--ink-2").trim() || "#a3adbf", muted = css.getPropertyValue("--muted").trim() || "#687286", line = "rgba(150,170,210,.12)";
+  const font = "Geist Mono, ui-monospace, monospace";
   const base = { backgroundColor: "transparent", textStyle: { fontFamily: font, color: ink2 }, animationDuration: 1100, animationEasing: "cubicOut" };
-  const tip = { backgroundColor: "rgba(14,11,26,.95)", borderColor: "rgba(200,180,255,.3)", textStyle: { color: "#f2efff", fontFamily: font, fontSize: 11 } };
+  const tip = { backgroundColor: "rgba(8,11,17,.95)", borderColor: "rgba(160,180,220,.3)", textStyle: { color: "#edf1f8", fontFamily: font, fontSize: 11 } };
 
   const pop = ec.init(popEl, null, { renderer: "canvas" }); charts.push(pop);
   pop.setOption({
@@ -273,8 +273,8 @@ async function renderCharts() {
     xAxis: { type: "value", splitLine: { lineStyle: { color: line } }, axisLabel: { color: muted, fontSize: 10 }, minInterval: 1 },
     yAxis: { type: "category", data: rows.map(r => r[0]), axisLine: { lineStyle: { color: line } }, axisTick: { show: false }, axisLabel: { color: ink2, fontSize: 10, formatter: clip } },
     series: [
-      { name: "Out of stock", type: "bar", stack: "t", data: rows.map(r => r[1].zero), itemStyle: { color: "#ff5c7a", borderRadius: 0 }, barMaxWidth: 16 },
-      { name: "Limits the item", type: "bar", stack: "t", data: rows.map(r => r[1].n - r[1].zero), itemStyle: { color: "#9b6bff", borderRadius: [0, 6, 6, 0] }, barMaxWidth: 16 }
+      { name: "Out of stock", type: "bar", stack: "t", data: rows.map(r => r[1].zero), itemStyle: { color: "#ff5468", borderRadius: 0 }, barMaxWidth: 16 },
+      { name: "Limits the item", type: "bar", stack: "t", data: rows.map(r => r[1].n - r[1].zero), itemStyle: { color: "#5b7bff", borderRadius: [0, 6, 6, 0] }, barMaxWidth: 16 }
     ]
   });
   const ro = new ResizeObserver(() => charts.forEach(c => c.resize()));

@@ -2,28 +2,28 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=82";
-import { timePinOk } from "./core/time-pin.js?v=82";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=82";
-import { SEED_DATE } from "./data/seed-data.js?v=82";
-import { renderYield } from "./stock/analytics.js?v=82";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=82";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=82";
-import { usageOf } from "./stock/consumption.js?v=82";
-import { AR as NAMES_AR } from "./core/names-ar.js?v=82";
-import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=82";
-import { mountClock } from "./core/clock.js?v=82";
+import * as store from "./core/store.js?v=83";
+import { timePinOk } from "./core/time-pin.js?v=83";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=83";
+import { SEED_DATE } from "./data/seed-data.js?v=83";
+import { renderYield } from "./stock/analytics.js?v=83";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=83";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=83";
+import { usageOf } from "./stock/consumption.js?v=83";
+import { AR as NAMES_AR } from "./core/names-ar.js?v=83";
+import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=83";
+import { mountClock } from "./core/clock.js?v=83";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./stock/export-count.js?v=82");
-const financeView = lazy("./finance/finance-view.js?v=82");
-const unaizahView = lazy("./finance/unaizah-view.js?v=82");
-const syncAdmin = lazy("./reports/sync-admin.js?v=82");
-const toolsMod = lazy("./core/tools.js?v=82");
-const intelMod = lazy("./stock/stock-intel.js?v=82");
-const menuMod = lazy("./stock/menu-lab.js?v=82");
-const labMod = lazy("./stock/stock-lab.js?v=82");
-const p360Mod = lazy("./stock/product-360.js?v=82");
+const exportCount = lazy("./stock/export-count.js?v=83");
+const financeView = lazy("./finance/finance-view.js?v=83");
+const unaizahView = lazy("./finance/unaizah-view.js?v=83");
+const syncAdmin = lazy("./reports/sync-admin.js?v=83");
+const toolsMod = lazy("./core/tools.js?v=83");
+const intelMod = lazy("./stock/stock-intel.js?v=83");
+const menuMod = lazy("./stock/menu-lab.js?v=83");
+const labMod = lazy("./stock/stock-lab.js?v=83");
+const p360Mod = lazy("./stock/product-360.js?v=83");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -159,7 +159,7 @@ const TITLE_AR = {
   history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'],
   unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], halls: ["القاعات", 'القاعات <span class="voice">والمقاعد</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], alerts: ["المخزون", 'تنبيهات <span class="voice">المخزون</span>'], petty: ["المصروفات", 'بيتي <span class="voice">كاش</span>'], links: ["الأنظمة", 'روابط <span class="voice">سريعة</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
 };
-const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
+const CAT_COLORS = ["#5b7bff", "#4c6bff", "#edf1f8", "#8c95a8", "#7f95ff", "#33427a", "#c9d4e6", "#7c8599", "#ffffff", "#a3adbf", "#26305a"];
 
 // ── State ────────────────────────────────────────────────────
 const ui = {
@@ -226,7 +226,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock/stock-history.js?v=82");
+const histMod = lazy("./stock/stock-history.js?v=83");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -255,7 +255,7 @@ document.addEventListener("click", e => {
 });
 function go(route) {
   if (CARD_DOOR) return;
-  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=82").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=83").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -313,13 +313,13 @@ function viewDashboard() {
   $("#dash-reorder").onclick = () => toolsMod().then(m => m.openReorder(toolHelpers()));
 
   // orbit rings: one ring per location, radius shrinks inward
-  const cols = ["#7c2280", "#f4ede4", "#a4a4a4"];
+  const cols = ["#5b7bff", "#edf1f8", "#8c95a8"];
   const rings = byLoc.map((l, i) => {
     const R = 112 - i * 22, C = 2 * Math.PI * R, share = grand ? l.v / grand : 0;
     return `<circle cx="130" cy="130" r="${R}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="12"/>
       <circle cx="130" cy="130" r="${R}" fill="none" stroke="${cols[i]}" stroke-width="12" stroke-linecap="round"
         stroke-dasharray="${Math.max(share * C, 2)} ${C}" transform="rotate(-90 130 130)" style="filter:drop-shadow(0 0 6px ${cols[i]})"/>
-      <text x="122" y="${130 - R + 3.5}" text-anchor="end" fill="${cols[i]}" font-family="Martian Mono, monospace" font-size="9">${l.code} ${Math.round(share * 100)}%</text>`;
+      <text x="122" y="${130 - R + 3.5}" text-anchor="end" fill="${cols[i]}" font-family="Geist Mono, monospace" font-size="9">${l.code} ${Math.round(share * 100)}%</text>`;
   }).join("");
 
   const AL = stockAlerts(P), ar = siteLang() === "ar", needs = AL.items.filter(a => a.level === "critical" || a.level === "warn").slice(0, 4);
@@ -743,7 +743,7 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const pettyMod = lazy("../petty/petty.js?v=82");
+const pettyMod = lazy("../petty/petty.js?v=83");
 function viewPetty() {
   if ($("#petty-host .pc, #petty-host .pc-lock")) return; // a store sync must not reset an open review
   $("#title-actions").innerHTML = "";
@@ -756,14 +756,14 @@ function viewAlerts() {
   $("#view").innerHTML = `<div id="alerts-host"></div>`;
   renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
 }
-const linksMod = lazy("./core/links.js?v=82");
+const linksMod = lazy("./core/links.js?v=83");
 function viewLinks() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="links-host"></div>`;
   linksMod().then(m => { if (ui.route === "links") m.renderLinks($("#links-host"), { allDocs: store.allDocs, localDocs: store.localDocs, putDoc: store.putDoc, toast }); })
     .catch(e => toast(e.message, true));
 }
-const hallsMod = lazy("./reports/halls.js?v=82");
+const hallsMod = lazy("./reports/halls.js?v=83");
 function viewHalls() {
   if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
   $("#title-actions").innerHTML = "";
@@ -771,7 +771,7 @@ function viewHalls() {
   hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
     .catch(e => toast(e.message, true));
 }
-const nightlyMod = lazy("./reports/nightly.js?v=82");
+const nightlyMod = lazy("./reports/nightly.js?v=83");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -841,7 +841,7 @@ function exportSession(s) {
 }
 
 // ── Settings ─────────────────────────────────────────────────
-const reportsMod = lazy("./reports/reports-admin.js?v=82");
+const reportsMod = lazy("./reports/reports-admin.js?v=83");
 // every upload of a system report is logged, so Settings can show when each one last came in
 async function markUpload(key, file) { await store.putDoc("uploads", key, { at: new Date().toISOString(), file: String(file || "") }); }
 const fmtN = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -854,10 +854,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=82"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=82"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=83"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=83"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=82")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=83")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -873,7 +873,7 @@ function reportHandlers() {
       toast(T(`Done · ${fmtN(d.tickets)} tickets · ${d.from} → ${d.to}`, `تم · ${fmtN(d.tickets)} تذكرة · ${d.from} → ${d.to}`) + (d.grand && d.grand !== d.tickets ? ` (${T("report", "التقرير")} ${d.grand})` : ""));
     },
     dcs: async (files, step) => {
-      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=82")]);
+      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=83")]);
       const XLSX = await loadXLSX();
       const ledger = await fetch("unaizah/ledger.json").then(r => r.json()).catch(() => ({ days: [] }));
       const known = [...new Set(ledger.days.flatMap(d => (d.cashiers || []).map(c => c.user)))];
@@ -890,7 +890,7 @@ function reportHandlers() {
       toast(`DCS · ${n} ${T("days", "يوم")} · ${from} → ${to}`);
     },
     rdr: async ([f]) => {
-      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=82")]);
+      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=83")]);
       const d = await parseRdrFile(f, await loadXLSX());
       await store.putDoc("rdr", "latest", d);
       await store.log("report", `RDR Exception Register · ${d.shifts.length} shifts · ${d.from} → ${d.to}`);
@@ -974,7 +974,7 @@ if (CARD_DOOR) {
 } else {
   mountClock($("#clock"), siteLang());
   if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-  if (siteLang() === "ar") import("./core/i18n-ar.js?v=82").then(m => m.startArabic()).catch(() => {});
+  if (siteLang() === "ar") import("./core/i18n-ar.js?v=83").then(m => m.startArabic()).catch(() => {});
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })
@@ -988,8 +988,8 @@ async function loadChart() {
   const top = data.products.filter(p => !moveOf(p.id)).map(p => ({ name: p.name, sold: soldOf(p.id) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 10).reverse();
   const c = window.echarts.init(el);
   c.setOption({ grid: { left: 130, right: 30, top: 10, bottom: 20 }, tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    xAxis: { type: "value", axisLabel: { color: "#a4a4a4" }, splitLine: { lineStyle: { color: "rgba(255,255,255,.07)" } } },
-    yAxis: { type: "category", data: top.map(x => x.name), axisLabel: { color: "#f4ede4", width: 120, overflow: "truncate" } },
-    series: [{ type: "bar", data: top.map(x => x.sold), barWidth: 14, itemStyle: { color: "#9b6bff", borderRadius: [0, 6, 6, 0] }, label: { show: true, position: "right", color: "#f4ede4" } }] });
+    xAxis: { type: "value", axisLabel: { color: "#8c95a8" }, splitLine: { lineStyle: { color: "rgba(255,255,255,.07)" } } },
+    yAxis: { type: "category", data: top.map(x => x.name), axisLabel: { color: "#edf1f8", width: 120, overflow: "truncate" } },
+    series: [{ type: "bar", data: top.map(x => x.sold), barWidth: 14, itemStyle: { color: "#5b7bff", borderRadius: [0, 6, 6, 0] }, label: { show: true, position: "right", color: "#edf1f8" } }] });
   new ResizeObserver(() => c.resize()).observe(el);
 }

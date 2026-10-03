@@ -4,11 +4,11 @@ const LIBS = { echarts: "vendor/echarts.min.js", countup: "vendor/countUp.umd.js
 const lang = () => sessionStorage.getItem("noir-lang") || "en";
 
 const BRANCH = {
-  hafar:   { en: "Hafar Al-Batin", ar: "حفر الباطن", code: "HFR", color: "#9b6bff" },
-  khafji:  { en: "Khafji",         ar: "الخفجي",     code: "KHF", color: "#3be7ff" },
-  unaizah: { en: "Unaizah",        ar: "عنيزة",      code: "UNZ", color: "#ff4fd8" },
-  dammam:  { en: "Dammam",         ar: "الدمام",     code: "DMM", color: "#ffc857" },
-  mithnab: { en: "Mithnab",        ar: "المذنب",     code: "MTN", color: "#4cf0a8" }
+  hafar:   { en: "Hafar Al-Batin", ar: "حفر الباطن", code: "HFR", color: "#5b7bff" },
+  khafji:  { en: "Khafji",         ar: "الخفجي",     code: "KHF", color: "#6ccbff" },
+  unaizah: { en: "Unaizah",        ar: "عنيزة",      code: "UNZ", color: "#dce6ff" },
+  dammam:  { en: "Dammam",         ar: "الدمام",     code: "DMM", color: "#ffb547" },
+  mithnab: { en: "Mithnab",        ar: "المذنب",     code: "MTN", color: "#3ed69e" }
 };
 const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
@@ -64,8 +64,8 @@ let observer = null;
 let renderId = 0;
 function dispose() { charts.forEach(c => c.dispose()); charts = []; observer?.disconnect(); }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(190,170,255,.18)" } }, axisLabel: { color: "#7f789c", fontFamily: "Martian Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.07)" } } };
-const TIP = { backgroundColor: "rgba(12,9,22,.94)", borderColor: "rgba(155,107,255,.45)", textStyle: { color: "#f2efff", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(155,107,255,.25)" };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#687286", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 const weekNo = label => parseInt(label.match(/\d+/)?.[0] || "0", 10);
 
@@ -218,7 +218,7 @@ export async function renderFinance(root) {
     const ranked = rows.slice().sort((a, b) => b.hit - a.hit);
     $("#fx-body").innerHTML = `
       <div class="fx-nodes">${ranked.map((b, i) => {
-        const c = BRANCH[b.id]?.color || "#9b6bff";
+        const c = BRANCH[b.id]?.color || "#5b7bff";
         const lw = b.last ? b.last.a / (b.last.t || 1) : 0;
         return `<button type="button" class="fx-node" data-b="${b.id}" style="--c:${c}" aria-label="${t.open}: ${name(b.id)}">
           <div class="fx-node-top"><span class="fx-rank data">#${i + 1}</span><span class="fx-code data">${BRANCH[b.id]?.code || b.id}</span><span class="fx-status s-${b.status}">${t.status[b.status]}</span></div>
@@ -263,41 +263,41 @@ export async function renderFinance(root) {
     });
     mk($("#fx-burn")).setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
-      legend: { top: 0, textStyle: { color: "#bdb6d8", fontSize: 11 }, itemWidth: 12, itemHeight: 4 },
+      legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 12, itemHeight: 4 },
       grid: { left: 8, right: 12, top: 36, bottom: 40, containLabel: true },
-      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(155,107,255,.06)", fillerColor: "rgba(155,107,255,.18)", handleStyle: { color: "#9b6bff" }, textStyle: { color: "#7f789c" } }],
+      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#687286" } }],
       xAxis: { type: "category", data: labels, boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
-        { name: t.target, type: "line", data: cumT, showSymbol: false, lineStyle: { color: "rgba(242,239,255,.55)", width: 1.5, type: "dashed" } },
-        { name: t.actual, type: "line", data: cumA, showSymbol: false, smooth: .2, lineStyle: { width: 2.5, color: "#ff4fd8" },
-          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "rgba(255,79,216,.35)" }, { offset: 1, color: "rgba(155,107,255,0)" }]) },
-          markLine: { silent: true, symbol: "none", lineStyle: { color: "rgba(59,231,255,.5)" }, label: { color: "#3be7ff", fontSize: 10, formatter: asOf }, data: [{ xAxis: doneCount - 1 }] } },
-        { name: t.forecast, type: "line", data: cumF, showSymbol: false, lineStyle: { width: 2, color: "#3be7ff", type: "dotted" } }
+        { name: t.target, type: "line", data: cumT, showSymbol: false, lineStyle: { color: "rgba(237,241,248,.55)", width: 1.5, type: "dashed" } },
+        { name: t.actual, type: "line", data: cumA, showSymbol: false, smooth: .2, lineStyle: { width: 2.5, color: "#dce6ff" },
+          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: "rgba(220,230,255,.35)" }, { offset: 1, color: "rgba(91,123,255,0)" }]) },
+          markLine: { silent: true, symbol: "none", lineStyle: { color: "rgba(108,203,255,.5)" }, label: { color: "#6ccbff", fontSize: 10, formatter: asOf }, data: [{ xAxis: doneCount - 1 }] } },
+        { name: t.forecast, type: "line", data: cumF, showSymbol: false, lineStyle: { width: 2, color: "#6ccbff", type: "dotted" } }
       ]
     });
 
     // pace by branch (cumulative hit %)
     mk($("#fx-pace")).setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${v}%`) },
-      legend: { bottom: 0, textStyle: { color: "#bdb6d8", fontSize: 10 }, itemWidth: 10, itemHeight: 4 },
+      legend: { bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 4 },
       grid: { left: 8, right: 12, top: 14, bottom: 32, containLabel: true },
       xAxis: { type: "category", data: labels.slice(0, doneCount), boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => `${v}%` }, min: v => Math.max(0, Math.floor(v.min / 10) * 10) },
       series: rows.map(b => ({ name: name(b.id), type: "line", smooth: true, showSymbol: false, lineStyle: { width: 2, color: BRANCH[b.id]?.color }, itemStyle: { color: BRANCH[b.id]?.color },
         data: b.done.map(w => +(w.ca / (w.ct || 1) * 100).toFixed(1)),
-        markLine: b === rows[0] ? { silent: true, symbol: "none", label: { show: false }, lineStyle: { color: "rgba(242,239,255,.35)", type: "dashed" }, data: [{ yAxis: 100 }] } : undefined }))
+        markLine: b === rows[0] ? { silent: true, symbol: "none", label: { show: false }, lineStyle: { color: "rgba(237,241,248,.35)", type: "dashed" }, data: [{ yAxis: 100 }] } : undefined }))
     });
 
     // share
     mk($("#fx-share")).setOption({
       tooltip: { ...TIP, valueFormatter: v => `${fmt(v)} ${t.sar}` },
-      series: [{ type: "pie", radius: ["48%", "78%"], center: ["50%", "52%"], padAngle: 2, itemStyle: { borderRadius: 8, borderColor: "#05040a", borderWidth: 2 },
-        label: { color: "#f2efff", fontSize: 11, formatter: p => `${p.name}\n{b|${p.percent.toFixed(1)}%}`, rich: { b: { color: "#bdb6d8", fontFamily: "Martian Mono, monospace", fontSize: 10, padding: [3, 0, 0, 0] } } },
-        labelLine: { lineStyle: { color: "rgba(190,170,255,.35)" } },
+      series: [{ type: "pie", radius: ["48%", "78%"], center: ["50%", "52%"], padAngle: 2, itemStyle: { borderRadius: 8, borderColor: "#000000", borderWidth: 2 },
+        label: { color: "#edf1f8", fontSize: 11, formatter: p => `${p.name}\n{b|${p.percent.toFixed(1)}%}`, rich: { b: { color: "#a3adbf", fontFamily: "Geist Mono, monospace", fontSize: 10, padding: [3, 0, 0, 0] } } },
+        labelLine: { lineStyle: { color: "rgba(150,170,210,.35)" } },
         data: rows.map(b => ({ name: name(b.id), value: Math.round(b.ytdRevActual), itemStyle: { color: BRANCH[b.id]?.color } })) }],
-      graphic: [{ type: "text", left: "center", top: "46%", style: { text: compact(net.actual), fill: "#f2efff", font: "600 18px Martian Mono, monospace", textAlign: "center" } },
-                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#7f789c", font: "11px sans-serif", textAlign: "center" } }]
+      graphic: [{ type: "text", left: "center", top: "46%", style: { text: compact(net.actual), fill: "#edf1f8", font: "600 18px Geist Mono, monospace", textAlign: "center" } },
+                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#687286", font: "11px sans-serif", textAlign: "center" } }]
     });
 
     // matrix
@@ -307,22 +307,22 @@ export async function renderFinance(root) {
       tooltip: { ...TIP, formatter: p => `<b>${name(rows[p.value[1]].id)}</b> · ${labels[p.value[0]]}<br>${p.value[2]}% · ${fmt(rows[p.value[1]].weeks[p.value[0]].a)} / ${fmt(rows[p.value[1]].weeks[p.value[0]].t)}` },
       grid: { left: 8, right: 8, top: 6, bottom: 52, containLabel: true },
       xAxis: { type: "category", data: labels.slice(0, doneCount), ...AXIS, splitLine: { show: false }, axisLabel: { ...AXIS.axisLabel, interval: 3 } },
-      yAxis: { type: "category", data: rows.map(b => name(b.id)), ...AXIS, axisLabel: { ...AXIS.axisLabel, color: "#bdb6d8", fontSize: 11 } },
-      visualMap: { type: "piecewise", orient: "horizontal", left: "center", bottom: 0, textStyle: { color: "#7f789c", fontSize: 10 }, itemWidth: 12, itemHeight: 8,
-        pieces: [{ lt: 50, color: "#ff3b5c", label: "<50%" }, { gte: 50, lt: 80, color: "#a3304f", label: "50–80" }, { gte: 80, lt: 100, color: "#5b3a7a", label: "80–100" }, { gte: 100, lt: 130, color: "#2f9e7a", label: "100–130" }, { gte: 130, color: "#4cf0a8", label: "130%+" }] },
-      series: [{ type: "heatmap", data: mData, itemStyle: { borderColor: "#05040a", borderWidth: 2, borderRadius: 3 }, emphasis: { itemStyle: { borderColor: "#fff" } } }]
+      yAxis: { type: "category", data: rows.map(b => name(b.id)), ...AXIS, axisLabel: { ...AXIS.axisLabel, color: "#a3adbf", fontSize: 11 } },
+      visualMap: { type: "piecewise", orient: "horizontal", left: "center", bottom: 0, textStyle: { color: "#687286", fontSize: 10 }, itemWidth: 12, itemHeight: 8,
+        pieces: [{ lt: 50, color: "#ff3b5c", label: "<50%" }, { gte: 50, lt: 80, color: "#a3304f", label: "50–80" }, { gte: 80, lt: 100, color: "#33427a", label: "80–100" }, { gte: 100, lt: 130, color: "#2f9e7a", label: "100–130" }, { gte: 130, color: "#3ed69e", label: "130%+" }] },
+      series: [{ type: "heatmap", data: mData, itemStyle: { borderColor: "#000000", borderWidth: 2, borderRadius: 3 }, emphasis: { itemStyle: { borderColor: "#fff" } } }]
     });
 
     // months
     const months = MONTH_KEYS.map((_, m) => ({ m, t: rows.reduce((s, b) => s + b.months[m].t, 0), a: rows.some(b => b.months[m].a != null) ? rows.reduce((s, b) => s + (b.months[m].a || 0), 0) : null, td: rows.reduce((s, b) => s + b.months[m].tDone, 0) }));
     mk($("#fx-months")).setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
-      legend: { top: 0, textStyle: { color: "#bdb6d8", fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
+      legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
       grid: { left: 8, right: 8, top: 34, bottom: 8, containLabel: true },
       xAxis: { type: "category", data: months.map(m => monthName(m.m, ar)), ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
-        { name: t.target, type: "bar", data: months.map(m => Math.round(m.t)), itemStyle: { color: "rgba(242,239,255,.14)", borderRadius: [6, 6, 0, 0] }, barGap: "-100%", barMaxWidth: 34 },
+        { name: t.target, type: "bar", data: months.map(m => Math.round(m.t)), itemStyle: { color: "rgba(237,241,248,.14)", borderRadius: [6, 6, 0, 0] }, barGap: "-100%", barMaxWidth: 34 },
         ...rows.map(b => ({ name: name(b.id), type: "bar", stack: "a", data: b.months.map(x => (x.a == null ? null : Math.round(x.a))), itemStyle: { color: BRANCH[b.id]?.color }, barMaxWidth: 34, emphasis: { focus: "series" } }))
       ]
     });
@@ -332,7 +332,7 @@ export async function renderFinance(root) {
 
   // ── single branch ──
   function paintOne(b) {
-    const c = BRANCH[b.id]?.color || "#9b6bff";
+    const c = BRANCH[b.id]?.color || "#5b7bff";
     $("#fx-hero-body").innerHTML = heroHtml({ label: `${name(b.id)} · ${t.ytd.split("·").pop().trim()}`, actual: b.ytdRevActual, target: b.ytdRevTarget, year: b.yearRev, hit: b.hit, forecast: b.forecast, need: b.need, left: b.left, adm: b.ytdAdmActual, admT: b.ytdAdmTarget, timeUsed: b.ytdRevTarget / b.yearRev });
     count(b.ytdRevActual);
     const lw = b.last ? b.last.a / (b.last.t || 1) : 0;
@@ -357,14 +357,14 @@ export async function renderFinance(root) {
     const avg4 = b.weeks.map((w, i) => { if (w.a == null || i < 3) return null; const s = b.weeks.slice(i - 3, i + 1); return s.every(x => x.a != null) ? Math.round(s.reduce((a, x) => a + x.a, 0) / 4) : null; });
     mk($("#fx-weekly")).setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
-      legend: { top: 0, textStyle: { color: "#bdb6d8", fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
+      legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
       grid: { left: 8, right: 8, top: 36, bottom: 40, containLabel: true },
-      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(155,107,255,.06)", fillerColor: "rgba(155,107,255,.18)", handleStyle: { color: c }, textStyle: { color: "#7f789c" } }],
+      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: c }, textStyle: { color: "#687286" } }],
       xAxis: { type: "category", data: labels, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
-        { name: t.actual, type: "bar", barMaxWidth: 16, data: b.weeks.map(w => (w.a == null ? null : { value: Math.round(w.a), itemStyle: { color: w.a >= w.t ? "#4cf0a8" : "#ff5c7a", borderRadius: [4, 4, 0, 0] } })) },
-        { name: t.target, type: "line", step: "middle", data: b.weeks.map(w => Math.round(w.t)), showSymbol: false, lineStyle: { color: "rgba(242,239,255,.6)", width: 1.4, type: "dashed" } },
+        { name: t.actual, type: "bar", barMaxWidth: 16, data: b.weeks.map(w => (w.a == null ? null : { value: Math.round(w.a), itemStyle: { color: w.a >= w.t ? "#3ed69e" : "#ff5468", borderRadius: [4, 4, 0, 0] } })) },
+        { name: t.target, type: "line", step: "middle", data: b.weeks.map(w => Math.round(w.t)), showSymbol: false, lineStyle: { color: "rgba(237,241,248,.6)", width: 1.4, type: "dashed" } },
         { name: t.avg4, type: "line", data: avg4, smooth: true, showSymbol: false, lineStyle: { color: c, width: 2.2 } }
       ]
     });
@@ -377,14 +377,14 @@ export async function renderFinance(root) {
     const cumF = b.weeks.map((w, i) => { if (w.a != null) { if (i === b.done.length - 1) f = lastA; return i === b.done.length - 1 ? lastA : null; } f = (f ?? lastA) + w.t * recent; return Math.round(f); });
     mk($("#fx-burn1")).setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
-      legend: { bottom: 0, textStyle: { color: "#bdb6d8", fontSize: 10 }, itemWidth: 10, itemHeight: 4 },
+      legend: { bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 4 },
       grid: { left: 8, right: 12, top: 14, bottom: 32, containLabel: true },
       xAxis: { type: "category", data: labels, boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
-        { name: t.target, type: "line", data: cumT, showSymbol: false, lineStyle: { color: "rgba(242,239,255,.5)", type: "dashed" } },
+        { name: t.target, type: "line", data: cumT, showSymbol: false, lineStyle: { color: "rgba(237,241,248,.5)", type: "dashed" } },
         { name: t.actual, type: "line", data: cumA, showSymbol: false, lineStyle: { color: c, width: 2.5 }, areaStyle: { color: c, opacity: .14 } },
-        { name: t.forecast, type: "line", data: cumF, showSymbol: false, lineStyle: { color: "#3be7ff", type: "dotted", width: 2 } }
+        { name: t.forecast, type: "line", data: cumF, showSymbol: false, lineStyle: { color: "#6ccbff", type: "dotted", width: 2 } }
       ]
     });
   }
@@ -401,6 +401,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=82").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#9b6bff" }))
+  import("./fin-analyst.js?v=83").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

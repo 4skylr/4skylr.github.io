@@ -16,9 +16,9 @@ const pct = (n, d = 1) => `${((Number(n) || 0) * 100).toFixed(d)}%`;
 const sgn = (n, d = 1) => `${n >= 0 ? "+" : "−"}${pct(Math.abs(n), d)}`;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(190,170,255,.18)" } }, axisLabel: { color: "#8f88ab", fontFamily: "JetBrains Mono Web, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.07)" } } };
-const TIP = { backgroundColor: "rgba(12,9,22,.95)", borderColor: "rgba(155,107,255,.45)", textStyle: { color: "#f2efff", fontSize: 12 }, extraCssText: "border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.45)" };
-const LEG = { top: 0, itemGap: 16, icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle: { color: "#bdb6d8", fontSize: 11 } };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#7c8599", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const TIP = { backgroundColor: "rgba(8,11,16,.95)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.45)" };
+const LEG = { top: 0, itemGap: 16, icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle: { color: "#a3adbf", fontSize: 11 } };
 
 const SEV = { good: "▲", warn: "◆", bad: "▼", info: "●" };
 function brief(items, ar) {
@@ -160,8 +160,8 @@ export async function budgetReport(host, rows, net, ctx) {
     xAxis: { type: "category", data: cats, ...AXIS, axisLabel: { ...AXIS.axisLabel, interval: 0, rotate: 30 } }, yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
     series: [
       { type: "bar", stack: "w", data: base, itemStyle: { color: "transparent" }, emphasis: { disabled: true } },
-      { type: "bar", stack: "w", data: up.map((v, i) => ({ value: v, itemStyle: { color: i === 0 ? "#6b5ca5" : i === cats.length - 1 ? "#9b6bff" : "#4cf0a8", borderRadius: 6 } })), barMaxWidth: 34 },
-      { type: "bar", stack: "w", data: down.map(v => ({ value: v, itemStyle: { color: "#ff5c7a", borderRadius: 6 } })), barMaxWidth: 34 }
+      { type: "bar", stack: "w", data: up.map((v, i) => ({ value: v, itemStyle: { color: i === 0 ? "#6b5ca5" : i === cats.length - 1 ? "#5b7bff" : "#3ed69e", borderRadius: 6 } })), barMaxWidth: 34 },
+      { type: "bar", stack: "w", data: down.map(v => ({ value: v, itemStyle: { color: "#ff5468", borderRadius: 6 } })), barMaxWidth: 34 }
     ]
   });
 
@@ -172,8 +172,8 @@ export async function budgetReport(host, rows, net, ctx) {
     yAxis: { type: "category", data: B.map(x => name(x.b.id)), ...AXIS, axisLabel: { ...AXIS.axisLabel, color: "#d9d2f2", fontSize: 11 } },
     xAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
     series: [
-      { name: t.delivered, type: "bar", data: B.map(x => Math.round(x.avg8)), itemStyle: { color: "#3be7ff", borderRadius: 6 }, barGap: "20%", barMaxWidth: 14 },
-      { name: t.needed, type: "bar", data: B.map(x => Math.round(x.b.need)), itemStyle: { color: "#ff4fd8", borderRadius: 6 }, barMaxWidth: 14 }
+      { name: t.delivered, type: "bar", data: B.map(x => Math.round(x.avg8)), itemStyle: { color: "#6ccbff", borderRadius: 6 }, barGap: "20%", barMaxWidth: 14 },
+      { name: t.needed, type: "bar", data: B.map(x => Math.round(x.b.need)), itemStyle: { color: "#dce6ff", borderRadius: 6 }, barMaxWidth: 14 }
     ]
   });
 
@@ -181,13 +181,13 @@ export async function budgetReport(host, rows, net, ctx) {
   mk(host.querySelector("#an-quad")).setOption({
     tooltip: { ...TIP, formatter: p => `<b>${p.data.n}</b><br>${ar ? "الحضور" : "Admissions"} ${pct(p.data.value[0])}<br>${ar ? "الإيراد" : "Revenue"} ${pct(p.data.value[1])}` },
     grid: { left: 8, right: 20, top: 16, bottom: 30, containLabel: true },
-    xAxis: { type: "value", name: ar ? "تحقيق الحضور" : "Admissions hit", nameLocation: "middle", nameGap: 30, nameTextStyle: { color: "#8f88ab", fontSize: 10 }, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) }, min: v => Math.min(.5, v.min - .05), max: v => Math.max(1.2, v.max + .05) },
+    xAxis: { type: "value", name: ar ? "تحقيق الحضور" : "Admissions hit", nameLocation: "middle", nameGap: 30, nameTextStyle: { color: "#7c8599", fontSize: 10 }, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) }, min: v => Math.min(.5, v.min - .05), max: v => Math.max(1.2, v.max + .05) },
     yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) }, min: v => Math.min(.3, v.min - .05), max: v => Math.max(1.15, v.max + .05) },
     series: [{
       type: "scatter", data: B.map(x => ({ n: name(x.b.id), value: [x.b.admHit, x.b.hit], symbolSize: 14 + Math.sqrt(x.b.ytdRevActual) / 45, itemStyle: { color: color(x.b.id), shadowBlur: 14, shadowColor: color(x.b.id) } })),
       label: { show: true, formatter: p => p.data.n, position: "top", color: "#e9e4ff", fontSize: 11 },
       markLine: { silent: true, symbol: "none", lineStyle: { color: "rgba(255,255,255,.25)", type: "dashed" }, data: [{ xAxis: 1 }, { yAxis: 1 }], label: { show: false } },
-      markArea: { silent: true, itemStyle: { color: "rgba(76,240,168,.05)" }, data: [[{ xAxis: 1, yAxis: 1 }, { xAxis: "max", yAxis: "max" }]] }
+      markArea: { silent: true, itemStyle: { color: "rgba(62,214,158,.05)" }, data: [[{ xAxis: 1, yAxis: 1 }, { xAxis: "max", yAxis: "max" }]] }
     }]
   });
 
@@ -202,11 +202,11 @@ export async function budgetReport(host, rows, net, ctx) {
     tooltip: { ...TIP, trigger: "axis" }, legend: { ...LEG, data: [t.weekly, t.trendL, t.proj] },
     grid: { left: 8, right: 12, top: 34, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: labels, ...AXIS }, yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
-    graphic: [{ type: "text", right: 16, top: 30, style: { text: `R² ${r2.toFixed(2)} · ${reg.m >= 0 ? "+" : ""}${compact(reg.m)}/wk`, fill: "#8f88ab", font: "11px JetBrains Mono Web, monospace" } }],
+    graphic: [{ type: "text", right: 16, top: 30, style: { text: `R² ${r2.toFixed(2)} · ${reg.m >= 0 ? "+" : ""}${compact(reg.m)}/wk`, fill: "#7c8599", font: "11px Geist Mono, monospace" } }],
     series: [
-      { name: t.weekly, type: "bar", data: weeks.map(w => Math.round(w.a)), itemStyle: { color: "rgba(155,107,255,.55)", borderRadius: [4, 4, 0, 0] }, barMaxWidth: 12 },
-      { name: t.trendL, type: "line", data: labels.map((_, i) => i >= start && i < weeks.length ? Math.round(line(i)) : null), symbol: "none", lineStyle: { color: "#ffc857", width: 2 } },
-      { name: t.proj, type: "line", data: labels.map((_, i) => i >= weeks.length - 1 ? Math.max(0, Math.round(line(i))) : null), symbol: "circle", symbolSize: 5, lineStyle: { color: "#ff4fd8", type: "dashed", width: 2 }, itemStyle: { color: "#ff4fd8" } }
+      { name: t.weekly, type: "bar", data: weeks.map(w => Math.round(w.a)), itemStyle: { color: "rgba(91,123,255,.55)", borderRadius: [4, 4, 0, 0] }, barMaxWidth: 12 },
+      { name: t.trendL, type: "line", data: labels.map((_, i) => i >= start && i < weeks.length ? Math.round(line(i)) : null), symbol: "none", lineStyle: { color: "#ffb547", width: 2 } },
+      { name: t.proj, type: "line", data: labels.map((_, i) => i >= weeks.length - 1 ? Math.max(0, Math.round(line(i))) : null), symbol: "circle", symbolSize: 5, lineStyle: { color: "#dce6ff", type: "dashed", width: 2 }, itemStyle: { color: "#dce6ff" } }
     ]
   });
 }
@@ -341,8 +341,8 @@ export async function ledgerReport(host, days, ctx) {
     grid: { left: 8, right: 8, top: 34, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: MN, ...AXIS }, yAxis: [{ type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } }, { type: "value", ...AXIS, splitLine: { show: false }, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) } }],
     series: [
-      ...yrs.map((y, k) => ({ name: String(y), type: "bar", barMaxWidth: 14, itemStyle: { color: k ? "#ff4fd8" : "rgba(155,107,255,.55)", borderRadius: [4, 4, 0, 0] }, data: MN.map((_, m) => full(y, m) ? Math.round(mon[key(y, m)].rev) : (mon[key(y, m)] ? { value: Math.round(mon[key(y, m)].rev), itemStyle: { opacity: .35 } } : null)) })),
-      { name: t.growth, type: "line", yAxisIndex: 1, data: MN.map((_, m) => lfl.includes(m) ? +(mon[key(Y, m)].rev / mon[key(PY, m)].rev - 1).toFixed(3) : null), connectNulls: false, symbol: "circle", symbolSize: 7, lineStyle: { color: "#4cf0a8", width: 2 }, itemStyle: { color: "#4cf0a8" } }
+      ...yrs.map((y, k) => ({ name: String(y), type: "bar", barMaxWidth: 14, itemStyle: { color: k ? "#dce6ff" : "rgba(91,123,255,.55)", borderRadius: [4, 4, 0, 0] }, data: MN.map((_, m) => full(y, m) ? Math.round(mon[key(y, m)].rev) : (mon[key(y, m)] ? { value: Math.round(mon[key(y, m)].rev), itemStyle: { opacity: .35 } } : null)) })),
+      { name: t.growth, type: "line", yAxisIndex: 1, data: MN.map((_, m) => lfl.includes(m) ? +(mon[key(Y, m)].rev / mon[key(PY, m)].rev - 1).toFixed(3) : null), connectNulls: false, symbol: "circle", symbolSize: 7, lineStyle: { color: "#3ed69e", width: 2 }, itemStyle: { color: "#3ed69e" } }
     ]
   });
 
@@ -357,9 +357,9 @@ export async function ledgerReport(host, days, ctx) {
     xAxis: { type: "category", data: MN, boundaryGap: false, ...AXIS }, yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
     series: [
       { name: "lo", type: "line", data: lo, stack: "band", symbol: "none", lineStyle: { opacity: 0 }, tooltip: { show: false } },
-      { name: t.band, type: "line", data: hi, stack: "band", symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color: "rgba(255,79,216,.16)" }, tooltip: { show: false } },
-      { name: t.actual, type: "line", data: act, symbol: "circle", symbolSize: 6, lineStyle: { color: "#3be7ff", width: 2.5 }, itemStyle: { color: "#3be7ff" }, areaStyle: { color: "rgba(59,231,255,.08)" } },
-      { name: t.proj, type: "line", data: mid, symbol: "circle", symbolSize: 6, lineStyle: { color: "#ff4fd8", width: 2.5, type: "dashed" }, itemStyle: { color: "#ff4fd8" } }
+      { name: t.band, type: "line", data: hi, stack: "band", symbol: "none", lineStyle: { opacity: 0 }, areaStyle: { color: "rgba(220,230,255,.16)" }, tooltip: { show: false } },
+      { name: t.actual, type: "line", data: act, symbol: "circle", symbolSize: 6, lineStyle: { color: "#6ccbff", width: 2.5 }, itemStyle: { color: "#6ccbff" }, areaStyle: { color: "rgba(108,203,255,.08)" } },
+      { name: t.proj, type: "line", data: mid, symbol: "circle", symbolSize: 6, lineStyle: { color: "#dce6ff", width: 2.5, type: "dashed" }, itemStyle: { color: "#dce6ff" } }
     ]
   });
 
@@ -372,10 +372,10 @@ export async function ledgerReport(host, days, ctx) {
     xAxis: { type: "category", data: sl.map(d => d.date.slice(5)), ...AXIS }, yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
     dataZoom: [{ type: "inside" }],
     series: [
-      { name: t.rev, type: "line", data: sl.map(d => Math.round(d.total)), symbol: "none", lineStyle: { color: "rgba(190,170,255,.6)", width: 1.2 } },
-      { name: t.median, type: "line", data: medS.map(Math.round), symbol: "none", lineStyle: { color: "#ffc857", width: 2 } },
-      { name: t.spike, type: "scatter", symbolSize: 11, itemStyle: { color: "#4cf0a8", shadowBlur: 10, shadowColor: "#4cf0a8" }, data: yrAnom.filter(a => a.z > 0).map(a => [a.i - yi, Math.round(a.d.total)]) },
-      { name: t.dip, type: "scatter", symbolSize: 11, itemStyle: { color: "#ff5c7a", shadowBlur: 10, shadowColor: "#ff5c7a" }, data: yrAnom.filter(a => a.z < 0).map(a => [a.i - yi, Math.round(a.d.total)]) }
+      { name: t.rev, type: "line", data: sl.map(d => Math.round(d.total)), symbol: "none", lineStyle: { color: "rgba(150,170,210,.6)", width: 1.2 } },
+      { name: t.median, type: "line", data: medS.map(Math.round), symbol: "none", lineStyle: { color: "#ffb547", width: 2 } },
+      { name: t.spike, type: "scatter", symbolSize: 11, itemStyle: { color: "#3ed69e", shadowBlur: 10, shadowColor: "#3ed69e" }, data: yrAnom.filter(a => a.z > 0).map(a => [a.i - yi, Math.round(a.d.total)]) },
+      { name: t.dip, type: "scatter", symbolSize: 11, itemStyle: { color: "#ff5468", shadowBlur: 10, shadowColor: "#ff5468" }, data: yrAnom.filter(a => a.z < 0).map(a => [a.i - yi, Math.round(a.d.total)]) }
     ]
   });
 
@@ -387,8 +387,8 @@ export async function ledgerReport(host, days, ctx) {
     grid: { left: 8, right: 12, top: 34, bottom: 8, containLabel: true }, legend: { ...LEG, data: [t.cum, t.even] },
     xAxis: { type: "value", max: 1, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) } }, yAxis: { type: "value", max: 1, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: v => pct(v, 0) } },
     series: [
-      { name: t.cum, type: "line", data: cum.map((v, i) => [(i + 1) / N, +v.toFixed(4)]), symbol: "none", lineStyle: { color: "#ff4fd8", width: 2.5 }, areaStyle: { color: "rgba(255,79,216,.12)" },
-        markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ffc857" }, label: { show: true, position: "right", color: "#ffc857", fontSize: 11, formatter: `${pct(top10, 0)}` }, data: [{ coord: [top10n / N, +top10.toFixed(4)] }] } },
+      { name: t.cum, type: "line", data: cum.map((v, i) => [(i + 1) / N, +v.toFixed(4)]), symbol: "none", lineStyle: { color: "#dce6ff", width: 2.5 }, areaStyle: { color: "rgba(220,230,255,.12)" },
+        markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ffb547" }, label: { show: true, position: "right", color: "#ffb547", fontSize: 11, formatter: `${pct(top10, 0)}` }, data: [{ coord: [top10n / N, +top10.toFixed(4)] }] } },
       { name: t.even, type: "line", data: [[0, 0], [1, 1]], symbol: "none", lineStyle: { color: "rgba(255,255,255,.25)", type: "dashed" } }
     ]
   });

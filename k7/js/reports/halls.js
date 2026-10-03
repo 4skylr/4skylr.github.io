@@ -1,7 +1,7 @@
 // Auditoriums — the four halls seat by seat, with how often each seat was booked.
 //   Seat data: "User Transaction Log - Payment Type wise" (parsed by halls-parse.js with mozilla/pdf.js)
 //   Pinch and zoom: @panzoom/panzoom (timmywil/panzoom) · Charts: ECharts (apache/echarts)
-import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=82";
+import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=83";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "halls";
@@ -19,7 +19,7 @@ function heat(t) {
   }
   return "rgb(255,211,110)";
 }
-const TYPE_FILL = { co: "#b98cff", cp: "#ffc857", wc: "#3be7ff" };
+const TYPE_FILL = { co: "#8fa6ff", cp: "#ffb547", wc: "#6ccbff" };
 const ui = { hall: "all", mode: "heat", seat: null };
 try { Object.assign(ui, JSON.parse(localStorage.getItem("noir-halls-ui") || "{}"), { seat: null }); } catch {}
 const keep = () => { try { localStorage.setItem("noir-halls-ui", JSON.stringify({ hall: ui.hall, mode: ui.mode })); } catch {} };
@@ -46,11 +46,11 @@ function mapSvg(S, { big = false, mode = ui.mode } = {}) {
   const seatG = s => {
     const x = LBL + s.col * U + 4, yy = rowY[s.row], t = Math.sqrt(s.count / max), cold = !s.count;
     const fill = mode === "heat" ? (cold ? "transparent" : heat(t)) : TYPE_FILL[s.type];
-    const ink = mode === "heat" ? (t > 0.55 ? "#1a0f24" : "#f2efff") : "#1a0f24";
+    const ink = mode === "heat" ? (t > 0.55 ? "#0c111b" : "#edf1f8") : "#0c111b";
     const top = top3.has(s.id);
     return `<g class="hl-seat${top ? " top" : ""}${cold ? " cold" : ""}${ui.seat === s.id ? " sel" : ""}" data-seat="${s.id}" tabindex="${big ? 0 : -1}" role="button" aria-label="${s.id} ${tName(s.type)} ${s.count}">
       <rect class="bk" x="${x}" y="${yy}" width="32" height="25" rx="8" fill="${fill}" ${cold && mode === "heat" ? 'stroke="#5b4f7c" stroke-dasharray="3 3"' : ""}/>
-      <rect class="cu" x="${x + 3}" y="${yy + 21}" width="26" height="9" rx="4" fill="${fill}" ${s.type === "cp" && mode === "heat" ? 'stroke="#ffc857" stroke-width="1.6"' : ""} opacity="${cold && mode === "heat" ? 0 : 0.78}"/>
+      <rect class="cu" x="${x + 3}" y="${yy + 21}" width="26" height="9" rx="4" fill="${fill}" ${s.type === "cp" && mode === "heat" ? 'stroke="#ffb547" stroke-width="1.6"' : ""} opacity="${cold && mode === "heat" ? 0 : 0.78}"/>
       ${s.type === "wc" ? `<text class="wc" x="${x + 16}" y="${yy + 17}" text-anchor="middle">♿</text>` : big ? `<text x="${x + 16}" y="${yy + 16.5}" text-anchor="middle" fill="${ink}">${mode === "heat" ? s.count : s.n}</text>` : ""}
       ${top ? `<g class="crown"><rect x="${x + 2}" y="${yy - 15}" width="28" height="13" rx="6.5"/><text x="${x + 16}" y="${yy - 5.6}" text-anchor="middle">#${S.ranked.findIndex(r => r.id === s.id) + 1}</text></g>` : ""}
     </g>`;
@@ -59,8 +59,8 @@ function mapSvg(S, { big = false, mode = ui.mode } = {}) {
     return `<text class="rl" x="${LBL - 10}" y="${rowY[i] + 20}" text-anchor="end">${r.r}</text><text class="rl" x="${w - LBL + 10}" y="${rowY[i] + 20}">${r.r}</text>${big ? `<text class="rn" x="${LBL - 10}" y="${rowY[i] + 31}" text-anchor="end">1-${n}</text>` : ""}`; }).join("");
   const id = `sg${hall.id}${big ? "b" : ""}`;
   return `<svg class="hl-svg" viewBox="0 0 ${w} ${h}" style="max-width:${Math.round(w * (big ? 1.25 : 1.05))}px" role="img" aria-label="Screen ${hall.id}">
-    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#9b6bff" stop-opacity=".1"/><stop offset=".5" stop-color="#ff4fd8"/><stop offset="1" stop-color="#3be7ff" stop-opacity=".1"/></linearGradient>
-      <radialGradient id="${id}g" cx=".5" cy="0" r=".6"><stop offset="0" stop-color="#ff4fd8" stop-opacity=".28"/><stop offset="1" stop-color="#ff4fd8" stop-opacity="0"/></radialGradient></defs>
+    <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#5b7bff" stop-opacity=".1"/><stop offset=".5" stop-color="#dce6ff"/><stop offset="1" stop-color="#6ccbff" stop-opacity=".1"/></linearGradient>
+      <radialGradient id="${id}g" cx=".5" cy="0" r=".6"><stop offset="0" stop-color="#dce6ff" stop-opacity=".28"/><stop offset="1" stop-color="#dce6ff" stop-opacity="0"/></radialGradient></defs>
     <rect x="0" y="0" width="${w}" height="${TOP + 40}" fill="url(#${id}g)"/>
     <path d="M${LBL} 40 Q ${w / 2} 6 ${w - LBL} 40" fill="none" stroke="url(#${id})" stroke-width="5" stroke-linecap="round"/>
     <text class="scr" x="${w / 2}" y="58" text-anchor="middle">SCREEN ${hall.id}</text>
@@ -228,30 +228,30 @@ async function wireHall(host, S) {
   const order = [...Array(24).keys()].map(i => (i + 10) % 24).filter(h => S.H.hours[h] || (h >= 12 || h <= 2));
   chart(ec, host.querySelector("#hl-ch-hours"), {
     grid: { left: 40, right: 12, top: 16, bottom: 28 },
-    xAxis: { type: "category", data: order.map(h => `${String(h).padStart(2, "0")}:00`), axisLabel: { color: "#bdb6d8", fontSize: 10 } },
-    yAxis: { type: "value", axisLabel: { color: "#7f789c", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(190,170,255,.08)" } } },
+    xAxis: { type: "category", data: order.map(h => `${String(h).padStart(2, "0")}:00`), axisLabel: { color: "#a3adbf", fontSize: 10 } },
+    yAxis: { type: "value", axisLabel: { color: "#687286", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
     tooltip: { trigger: "axis", valueFormatter: v => fmt(v) + " " + T("tickets", "تذكرة") },
-    series: [{ type: "bar", data: order.map(h => S.H.hours[h]), barWidth: "60%", itemStyle: { borderRadius: [6, 6, 0, 0], color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#ff4fd8" }, { offset: 1, color: "#6a3fd6" }] } } }]
+    series: [{ type: "bar", data: order.map(h => S.H.hours[h]), barWidth: "60%", itemStyle: { borderRadius: [6, 6, 0, 0], color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#dce6ff" }, { offset: 1, color: "#4662d6" }] } } }]
   });
 }
 
 function charts(host, all) {
   echarts().then(ec => {
     if (!ec) return;
-    const ax = { axisLabel: { color: "#bdb6d8", fontSize: 11 }, axisLine: { lineStyle: { color: "rgba(190,170,255,.2)" } } };
+    const ax = { axisLabel: { color: "#a3adbf", fontSize: 11 }, axisLine: { lineStyle: { color: "rgba(150,170,210,.2)" } } };
     chart(ec, host.querySelector("#hl-ch-hall"), {
       grid: { left: 44, right: 12, top: 16, bottom: 28 }, tooltip: { trigger: "axis" },
       xAxis: { type: "category", data: all.map(s => `S${s.hall.id}`), ...ax },
-      yAxis: { type: "value", ...ax, splitLine: { lineStyle: { color: "rgba(190,170,255,.08)" } } },
-      series: [{ type: "bar", data: all.map(s => Math.round(s.perSeat)), barWidth: "46%", label: { show: true, position: "top", color: "#f2efff", fontFamily: "monospace" },
-        itemStyle: { borderRadius: [8, 8, 0, 0], color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#ffc857" }, { offset: 0.5, color: "#ff4fd8" }, { offset: 1, color: "#6a3fd6" }] } } }]
+      yAxis: { type: "value", ...ax, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
+      series: [{ type: "bar", data: all.map(s => Math.round(s.perSeat)), barWidth: "46%", label: { show: true, position: "top", color: "#edf1f8", fontFamily: "monospace" },
+        itemStyle: { borderRadius: [8, 8, 0, 0], color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#ffb547" }, { offset: 0.5, color: "#dce6ff" }, { offset: 1, color: "#4662d6" }] } } }]
     });
     const types = ["co", "cp", "wc"];
     chart(ec, host.querySelector("#hl-ch-type"), {
       grid: { left: 44, right: 12, top: 34, bottom: 28 }, tooltip: { trigger: "axis" },
-      legend: { top: 0, textStyle: { color: "#bdb6d8" }, itemWidth: 10, itemHeight: 10 },
+      legend: { top: 0, textStyle: { color: "#a3adbf" }, itemWidth: 10, itemHeight: 10 },
       xAxis: { type: "category", data: all.map(s => `S${s.hall.id}`), ...ax },
-      yAxis: { type: "value", ...ax, splitLine: { lineStyle: { color: "rgba(190,170,255,.08)" } } },
+      yAxis: { type: "value", ...ax, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
       series: types.map(t => ({ name: tName(t), type: "bar", barGap: "12%", itemStyle: { color: TYPE_FILL[t], borderRadius: [5, 5, 0, 0] },
         data: all.map(s => s.types[t] ? Math.round(s.byType[t] / s.types[t]) : 0) }))
     });
@@ -270,7 +270,7 @@ function echarts() {
 
 // ── upload (Settings) ────────────────────────────────────────
 export async function uploadSeatReport(file, H, onProgress) {
-  const { parseTxLog } = await import("./halls-parse.js?v=82");
+  const { parseTxLog } = await import("./halls-parse.js?v=83");
   const d = await parseTxLog(file, onProgress);
   await H.putDoc(COL, "seats", d);
   await H.log?.("report", `Seat report · ${d.tickets} tickets · ${d.from} → ${d.to}`);

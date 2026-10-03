@@ -3,7 +3,7 @@
 // Flashes are kept slow (no fast full-screen strobing) and reduced-motion gets a calm version.
 
 const CSS = `
-#skylr{position:fixed;inset:0;z-index:2000;background:#000;color:#ff2a3d;overflow:hidden;font-family:"JetBrains Mono",ui-monospace,monospace;cursor:pointer;
+#skylr{position:fixed;inset:0;z-index:2000;background:#000;color:#ff2a3d;overflow:hidden;font-family:Geist Mono,ui-monospace,monospace;cursor:pointer;
   animation:sk-shake .38s infinite steps(2)}
 #skylr.calm{animation:none}
 #skylr canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.85}
@@ -13,7 +13,7 @@ const CSS = `
 #skylr .sk-term .ok{color:#39ff88;text-shadow:0 0 8px #39ff88}
 #skylr .sk-term .cur{display:inline-block;width:.6em;background:#ff2a3d;animation:sk-blink .7s steps(1) infinite}
 #skylr .sk-warn{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-weight:800;letter-spacing:.08em;z-index:4;
-  font-size:clamp(26px,8vw,64px);color:#fff;text-shadow:3px 0 #ff003c,-3px 0 #00e5ff;opacity:0}
+  font-size:clamp(26px,8vw,64px);color:#fff;text-shadow:3px 0 #ff003c,-3px 0 #6ccbff;opacity:0}
 #skylr .sk-warn.on{animation:sk-warn 1.6s ease-out forwards}
 #skylr .sk-face{position:absolute;inset:0;display:grid;place-items:center;z-index:5;opacity:0;transition:opacity .5s}
 #skylr .sk-face.on{opacity:1}
@@ -39,7 +39,7 @@ const CSS = `
 @keyframes sk-sliceA{0%{clip-path:inset(10% 0 80% 0);transform:translate(-8px)}20%{clip-path:inset(55% 0 30% 0);transform:translate(6px)}40%{clip-path:inset(0 0 100% 0)}60%{clip-path:inset(72% 0 12% 0);transform:translate(-10px)}80%{clip-path:inset(30% 0 60% 0);transform:translate(4px)}}
 @keyframes sk-sliceB{0%{clip-path:inset(40% 0 45% 0);transform:translate(9px)}30%{clip-path:inset(0 0 100% 0)}55%{clip-path:inset(15% 0 70% 0);transform:translate(-7px)}75%{clip-path:inset(82% 0 4% 0);transform:translate(8px)}}
 @keyframes sk-eye{0%,100%{transform:scale(.8);opacity:.7}50%{transform:scale(1.5);opacity:1}}
-@keyframes sk-glitch{0%,86%,100%{text-shadow:3px 0 #ff003c,-3px 0 #00e5ff;transform:none}88%{text-shadow:-6px 0 #ff003c,6px 0 #00e5ff;transform:skewX(-8deg) translateX(4px)}92%{text-shadow:8px 2px #ff003c,-8px -2px #00e5ff;transform:skewX(6deg)}96%{transform:translateX(-3px)}}
+@keyframes sk-glitch{0%,86%,100%{text-shadow:3px 0 #ff003c,-3px 0 #6ccbff;transform:none}88%{text-shadow:-6px 0 #ff003c,6px 0 #6ccbff;transform:skewX(-8deg) translateX(4px)}92%{text-shadow:8px 2px #ff003c,-8px -2px #6ccbff;transform:skewX(6deg)}96%{transform:translateX(-3px)}}
 #skylr.calm *{animation:none!important}
 `;
 
