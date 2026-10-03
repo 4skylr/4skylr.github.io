@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="67 Stock">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233be7ff'/%3E%3Cstop offset='.5' stop-color='%239b6bff'/%3E%3Cstop offset='1' stop-color='%23ff4fd8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='%2305040a'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='18' fill='url%28%23g%29'%3E67%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=75">
+<link rel="stylesheet" href="css/style.css?v=76">
 <link rel="stylesheet" href="css/fonts.css?v=75">
 <link rel="stylesheet" href="css/indicators.css?v=75">
 <link rel="stylesheet" href="css/scan-card.css?v=75">
@@ -99,8 +99,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-75")) {
-    localStorage.setItem("noir-bust-75", "1");
+  if (!localStorage.getItem("noir-bust-76")) {
+    localStorage.setItem("noir-bust-76", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
@@ -111,7 +111,17 @@ try {
 <div class="marquee" aria-label="Live stock ticker"><div class="marquee-track" id="ticker"></div></div>
 
 <header class="head">
-  <a class="mark" href="#dashboard" aria-label="67 Stock home"><span class="six7" aria-hidden="true"><b>6</b><i>🤲</i><b>7</b></span><span class="six7-tag">STOCK</span></a>
+  <a class="mark" href="#dashboard" aria-label="67 Stock home"><span class="six7" aria-hidden="true"><b>6</b><i class="six7-pfp"><svg viewBox="0 0 64 64" aria-hidden="true"><defs>
+<linearGradient id="pfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3be7ff"/><stop offset=".5" stop-color="#9b6bff"/><stop offset="1" stop-color="#ff4fd8"/></linearGradient>
+<clipPath id="pfc"><path d="M32 3 57 17.5v29L32 61 7 46.5v-29Z"/></clipPath></defs>
+<path d="M32 3 57 17.5v29L32 61 7 46.5v-29Z" fill="#140a24"/>
+<g clip-path="url(#pfc)"><circle cx="32" cy="58" r="22" fill="#2a1450"/><path d="M14 64c2-14 9-21 18-21s16 7 18 21Z" fill="#3a1d6e"/>
+<circle cx="32" cy="29" r="11" fill="#c9a27e"/><path d="M20 28c0-9 5-14 12-14s12 5 12 14c-2-4-6-6-12-6s-10 2-12 6Z" fill="#1a0f2e"/>
+<rect x="24.5" y="27" width="6" height="3.6" rx="1.5" fill="#3be7ff"/><rect x="33.5" y="27" width="6" height="3.6" rx="1.5" fill="#ff4fd8"/><path d="M30.5 28.6h3" stroke="#fff" stroke-width="1"/>
+<path d="M28 35q4 2.5 8 0" stroke="#5a2e1a" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+<g class="pf-l"><path d="M9 52 12 44" stroke="#c9a27e" stroke-width="4" stroke-linecap="round"/><ellipse cx="12" cy="42" rx="5" ry="2.4" fill="#c9a27e"/></g>
+<g class="pf-r"><path d="M55 52 52 44" stroke="#c9a27e" stroke-width="4" stroke-linecap="round"/><ellipse cx="52" cy="42" rx="5" ry="2.4" fill="#c9a27e"/></g></g>
+<path d="M32 3 57 17.5v29L32 61 7 46.5v-29Z" fill="none" stroke="url(#pfg)" stroke-width="3"/></svg></i><b>7</b></span><span class="six7-tag">STOCK</span></a>
   <div class="head-meta">
     <span class="venue"><em>Noir Cinema</em> · Othaim Mall, Onaizah</span>
     <button type="button" class="btn sm ghost" id="lang-btn">عربي</button>
