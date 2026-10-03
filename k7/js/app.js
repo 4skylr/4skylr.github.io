@@ -53,6 +53,9 @@ function patchKids(parent, html) {
   };
   set(); addEventListener("resize", () => requestAnimationFrame(set), { passive: true });
 })();
+// The barcode door (the old address printed on product labels) runs this same app in card-only mode:
+// it can open a product card and nothing else.
+const CARD_DOOR = !!window.CARD_DOOR;
 const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
@@ -252,12 +255,14 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
+  if (CARD_DOOR) return;
   if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=81").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
 }
 function render() {
+  if (CARD_DOOR) return renderDoor();
   if (!isScanUrl()) lastCard = null;
   document.body.classList.remove("card-only");
   const qid = new URLSearchParams(location.search).get("p");
@@ -697,6 +702,17 @@ function viewLabels() {
   $("#do-pdf").onclick = () => exportLabelsPdf(data.products).then(() => toast("Label PDF downloaded")).catch(e => toast(e.message, true));
 }
 let lastCard = null, cardQueue = Promise.resolve();
+function renderDoor() {
+  const id = new URLSearchParams(location.search).get("p") || (location.hash.startsWith("#p/") ? location.hash.slice(3) : "");
+  document.body.classList.add("card-only");
+  const p = id && data.products?.find(x => x.id === id);
+  if (p) { if (location.hash !== "#p/" + p.id) history.replaceState(null, "", location.pathname + location.search + "#p/" + p.id); return viewScanProduct(p); }
+  if (data.products?.length || !id) {
+    lastCard = null;
+    $("#view").innerHTML = `<article class="phone-card door-empty"><h1>${id ? "المنتج غير موجود" : "امسح باركود منتج"}</h1><p>${id ? "Product not found" : "Scan a product label"}</p></article>`;
+    window.NoirCurtain?.open();
+  }
+}
 function viewScanProduct(p) {
   const sig = JSON.stringify(p) + "|" + (localStorage.getItem("noir-expiry-edits-v1") || "");
   if (lastCard && lastCard.id === p.id && lastCard.sig === sig) return;
@@ -929,15 +945,21 @@ store.onChange(snap => {
 });
 window.addEventListener("hashchange", () => {
   const r = location.hash.slice(1);
+  if (CARD_DOOR) { if (r.startsWith("p/")) { render(); window.scrollTo(0, 0); } return; }
   if (r === "labels" || r.startsWith("p/")) { render(); window.scrollTo(0, 0); return; }
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
-if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=81").then(m => m.startArabic()).catch(() => {});
-toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
-store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })
-  .then(() => Promise.all([histMod(), store.allDocs("stockHistory")])).then(([, d]) => { stockHist = d; renderTicker(); }).catch(() => {});
+if (CARD_DOOR) {
+  render();
+  store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
+} else {
+  if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
+  if (siteLang() === "ar") import("./i18n-ar.js?v=81").then(m => m.startArabic()).catch(() => {});
+  toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })
+    .then(() => Promise.all([histMod(), store.allDocs("stockHistory")])).then(([, d]) => { stockHist = d; renderTicker(); }).catch(() => {});
+}
 
 async function loadChart() {
   const el = document.getElementById("sales-chart");

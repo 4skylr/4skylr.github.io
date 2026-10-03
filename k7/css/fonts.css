@@ -1,0 +1,43 @@
+/* Fonts from GitHub, loaded as published webfonts.
+   Inter — github.com/rsms/inter
+   JetBrains Mono — github.com/JetBrains/JetBrainsMono */
+@font-face {
+  font-family: "Inter Var";
+  src: url("https://cdn.jsdelivr.net/gh/rsms/inter@v4.1/docs/font-files/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono Web";
+  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono Web";
+  src: url("https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/webfonts/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+:root {
+  --f-display: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
+  --f-text: "Inter Var", "Bricolage Grotesque", system-ui, sans-serif;
+  --f-data: "JetBrains Mono Web", "Martian Mono", ui-monospace, monospace;
+}
+
+.label-sheet { display: grid; grid-template-columns: repeat(2, 8cm); gap: 0; justify-content: center; }
+.cut { width: 8cm; height: 8cm; overflow: hidden; box-sizing: border-box; border: 0.5mm dashed #7c2280; display: grid; grid-template-rows: 2.5cm 3.6cm 1.2cm; justify-items: center; align-items: center; padding: 3mm; background: #fff; color: #111; break-inside: avoid; page-break-inside: avoid; }
+.cut .logo { width: 2.3cm; height: 2.3cm; object-fit: contain; background: #fff; }
+.cut .qr { width: 3.4cm; height: 3.4cm; object-fit: contain; background: #fff; }
+.cut .bar, .cut small { display: none !important; }
+.cut b { font-size: 11pt; line-height: 1.1; text-align: center; max-width: 7.2cm; margin: 0; }
+.scan-page .scan-qr, .card-top .scan-qr { width: 112px; height: 112px; background: #fff; border-radius: 8px; margin-top: 8px; }
+@media print {
+  .marquee, .head, .dock-nav, .title-row, .aura, .grain, .toasts, .note { display: none !important; }
+  body { background: #fff !important; }
+  .stage { padding: 0 !important; max-width: none; }
+  .label-sheet { gap: 0; }
+}
+
+body.card-only .marquee, body.card-only .head, body.card-only .dock-nav, body.card-only .title-row, body.card-only .aura { display: none !important; }
+body.card-only .stage { padding-top: 18px; }

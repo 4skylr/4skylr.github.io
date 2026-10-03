@@ -1,12 +1,12 @@
-# Rebuilds noir-stock/unaizah/ledger.json whenever a DCS workbook is added or changed.
+# Rebuilds k7/unaizah/ledger.json whenever a DCS workbook is added or changed.
 name: Unaizah ledger
 
 on:
   push:
     branches: [main]
     paths:
-      - "noir-stock/unaizah/files/**"
-      - "noir-stock/unaizah/build.py"
+      - "k7/unaizah/files/**"
+      - "k7/unaizah/build.py"
   workflow_dispatch:
 
 permissions:
@@ -21,11 +21,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pandas openpyxl odfpy xlrd
-      - run: python noir-stock/unaizah/build.py
+      - run: python k7/unaizah/build.py
       - name: Commit ledger
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add noir-stock/unaizah/ledger.json
+          git add k7/unaizah/ledger.json
           git diff --cached --quiet || git commit -m "Rebuild Unaizah ledger from DCS files"
           git push

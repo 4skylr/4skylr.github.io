@@ -1,0 +1,7 @@
+.ops { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; align-items: center; margin: 8px 0 16px; }
+.gauge { width: 84px; height: 84px; }
+.ops-copy h3 { margin: 0 0 4px; font-size: 16px; }
+.risk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.risk b { display: block; font-family: var(--f-data); font-size: 13px; }
+.risk span { font-size: 10px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+@media (max-width: 560px) { .risk { grid-template-columns: 1fr 1fr; } }
