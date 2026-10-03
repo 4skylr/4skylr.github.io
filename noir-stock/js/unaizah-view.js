@@ -313,7 +313,7 @@ export async function renderUnaizah(root) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=77").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=78").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
 
   let view = { rows: [], prev: [] };
@@ -588,7 +588,7 @@ export async function renderUnaizah(root) {
     host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
       <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
         ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
-    import("./fin-analyst.js?v=77").then(m => {
+    import("./fin-analyst.js?v=78").then(m => {
       const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
       if (!cz.length || !host.isConnected) return;
       host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);

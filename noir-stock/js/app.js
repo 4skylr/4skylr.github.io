@@ -1,22 +1,22 @@
-import * as store from "./store.js?v=77";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=77";
-import { SEED_DATE } from "./seed-data.js?v=77";
-import { renderYield } from "./analytics.js?v=77";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=77";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=77";
-import { usageOf } from "./consumption.js?v=77";
-import { AR as NAMES_AR } from "./names-ar.js?v=77";
+import * as store from "./store.js?v=78";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=78";
+import { SEED_DATE } from "./seed-data.js?v=78";
+import { renderYield } from "./analytics.js?v=78";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=78";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=78";
+import { usageOf } from "./consumption.js?v=78";
+import { AR as NAMES_AR } from "./names-ar.js?v=78";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./export-count.js?v=77");
-const financeView = lazy("./finance-view.js?v=77");
-const unaizahView = lazy("./unaizah-view.js?v=77");
-const syncAdmin = lazy("./sync-admin.js?v=77");
-const toolsMod = lazy("./tools.js?v=77");
-const intelMod = lazy("./stock-intel.js?v=77");
-const menuMod = lazy("./menu-lab.js?v=77");
-const labMod = lazy("./stock-lab.js?v=77");
-const p360Mod = lazy("./product-360.js?v=77");
+const exportCount = lazy("./export-count.js?v=78");
+const financeView = lazy("./finance-view.js?v=78");
+const unaizahView = lazy("./unaizah-view.js?v=78");
+const syncAdmin = lazy("./sync-admin.js?v=78");
+const toolsMod = lazy("./tools.js?v=78");
+const intelMod = lazy("./stock-intel.js?v=78");
+const menuMod = lazy("./menu-lab.js?v=78");
+const labMod = lazy("./stock-lab.js?v=78");
+const p360Mod = lazy("./product-360.js?v=78");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -109,6 +109,7 @@ const ICON = {
   finance: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="M4 9l6-4 6 3 6-4"/>',
   unaizah: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  halls: '<path d="M3 7.5q9-5 18 0"/><rect x="4" y="11" width="4.5" height="4" rx="1.2"/><rect x="9.75" y="11" width="4.5" height="4" rx="1.2"/><rect x="15.5" y="11" width="4.5" height="4" rx="1.2"/><path d="M5 18.5h14"/>',
   nightly: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/><path d="M17 3v3M15.5 4.5h3"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
@@ -132,6 +133,7 @@ const ROUTES = [
   { id: "history", label: "Ledger", kicker: "History", title: 'Count <span class="voice">ledger</span>' },
   { id: "finance", label: "Budget", kicker: "Finance", title: 'Branch <span class="voice">network</span>' },
   { id: "unaizah", label: "Unaizah", kicker: "Unaizah", title: 'Unaizah <span class="voice">treasury</span>' },
+  { id: "halls", label: "Halls", kicker: "Auditoriums", title: 'The <span class="voice">auditoriums</span>' },
   { id: "nightly", label: "Nightly", kicker: "Reports", title: 'Nightly <span class="voice">reports</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
 ];
@@ -139,7 +141,7 @@ const TITLE_AR = {
   dashboard: ["الخزينة", 'المخزون <span class="voice">بنظرة</span>'], products: ["المخزون", 'قائمة <span class="voice">الستوك</span>'],
   count: ["الجرد", 'جرد <span class="voice">الموقع</span>'], yield: ["التحليل", 'ما يمكن <span class="voice">بيعه</span>'],
   history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'],
-  unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
+  unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], halls: ["القاعات", 'القاعات <span class="voice">والمقاعد</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
 };
 const CAT_COLORS = ["#7c2280", "#7a2a90", "#f4ede4", "#a4a4a4", "#c46bd4", "#5a1860", "#e7d7c8", "#8d6b92", "#ffffff", "#b9a3be", "#4a1458"];
 
@@ -195,7 +197,7 @@ const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace
 
 // ── Chrome ───────────────────────────────────────────────────
 const LANG_KEY = "noir-lang";
-const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", unaizah: "عنيزة", nightly: "الليلية", settings: "الإعدادات" };
+const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", settings: "الإعدادات" };
 function siteLang() { return sessionStorage.getItem(LANG_KEY) || "en"; }
 function renderNav() {
   $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings").map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span></button>`).join("");
@@ -208,7 +210,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file, save the difference, alert in the ticker
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock-history.js?v=77");
+const histMod = lazy("./stock-history.js?v=78");
 async function stockReport(found, source) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -245,7 +247,7 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
-  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=77").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=78").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -277,7 +279,7 @@ function render() {
   $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
   $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, unaizah: viewUnaizah, nightly: viewNightly, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, settings: viewSettings })[r.id]();
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -714,7 +716,15 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view")); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const nightlyMod = lazy("./nightly.js?v=77");
+const hallsMod = lazy("./halls.js?v=78");
+function viewHalls() {
+  if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
+  $("#title-actions").innerHTML = "";
+  $("#view").innerHTML = `<div id="halls-host"></div>`;
+  hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
+    .catch(e => toast(e.message, true));
+}
+const nightlyMod = lazy("./nightly.js?v=78");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -812,6 +822,14 @@ function viewSettings() {
       <p class="note">Import adds or updates products by ID. It never deletes anything.</p>
     </section>
     <div id="sync-admin"></div>
+    <section class="slab hl-admin">
+      <div class="slab-h"><h2>تقرير المقاعد</h2><span class="tag">القاعات · Halls</span></div>
+      <p class="note">اسم التقرير بالنظام:</p>
+      <p class="hl-rep" dir="ltr"><b>User Transaction Log - Payment Type wise</b><span>Type: ALL</span></p>
+      <p class="note" style="margin-top:8px">الفترة من 1 يناير لليوم، صدّره PDF وارفعه هنا. يحسب كم مرة انحجز كل مقعد بكل قاعة ويحدّث صفحة القاعات.</p>
+      <div class="btns"><label class="btn hot" for="up-halls">رفع تقرير المقاعد</label><input id="up-halls" type="file" accept="application/pdf,.pdf" hidden></div>
+      <div class="hl-prog" id="hl-prog" hidden><u></u><span></span></div>
+    </section>
     <section class="slab">
       <div class="slab-h"><h2>Genesis data</h2><span class="voice">where it started</span></div>
       <p style="margin:0;color:var(--ink-2);font-size:14px">Current Stock Position Report · Noir Cinema, Othaim Mall, Onaizah · <span class="data" style="font-size:12px">${when(SEED_DATE)}</span>. Three locations: Mini Store, Refuel, Main Stores. Unit cost is net amount ÷ system stock, before VAT.</p>
@@ -831,15 +849,26 @@ function viewSettings() {
     e.target.value = "";
   };
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, stockReport, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
+  $("#up-halls")?.addEventListener("change", async e => {
+    const f = e.target.files[0]; if (!f) return;
+    const bar = $("#hl-prog"); bar.hidden = false;
+    const step = (i, n) => { bar.querySelector("u").style.width = (i / n * 100).toFixed(1) + "%"; bar.querySelector("span").textContent = `${i} / ${n}`; };
+    try {
+      const m = await hallsMod();
+      const d = await m.uploadSeatReport(f, { putDoc: store.putDoc, log: store.log }, step);
+      toast(`تم · ${d.tickets.toLocaleString("en-US")} تذكرة · ${d.from} → ${d.to}${d.grand && d.grand !== d.tickets ? ` (التقرير ${d.grand})` : ""}`);
+    } catch (err) { toast(err.message || "ما قدرت أقرأ التقرير", true); }
+    e.target.value = "";
+  });
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=77");
+    const { parseStockPdf } = await import("./sync-admin.js?v=78");
     const found = await parseStockPdf(f, data.products);
     await stockReport(found, f.name);
   });
   $("#up-sales")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const pdfjs = await (await import("./sync-admin.js?v=77")).loadPdf();
+    const pdfjs = await (await import("./sync-admin.js?v=78")).loadPdf();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -873,7 +902,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=77").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=78").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })
