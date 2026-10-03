@@ -12,7 +12,7 @@ const D = {
   "Local node · this browser": "محلي · هذا المتصفح", "Firebase · synced": "Firebase · متزامن", "Connecting…": "جارٍ الاتصال…",
   "Data is stored in this browser only. Add your Firebase config to sync.": "البيانات محفوظة في هذا المتصفح فقط.",
   "Data is stored in Firestore and syncs live": "البيانات محفوظة في Firebase وتتزامن مباشرة",
-  "Live stock ticker": "شريط المخزون المباشر", "Noir Stock home": "الرئيسية", "Main": "القائمة", "Close": "إغلاق",
+  "Live stock ticker": "شريط المخزون المباشر", "67 Stock home": "الرئيسية", "Main": "القائمة", "Close": "إغلاق",
   // locations & categories
   "Mini Store": "الميني ستور", "Concession": "الكونسيشن", "Main Stores": "المستودع الرئيسي", "Store": "المستودع",
   "Mini": "ميني", "Stores": "المستودع", "Refuel": "الكونسيشن",

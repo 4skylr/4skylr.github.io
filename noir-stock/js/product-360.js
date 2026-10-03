@@ -1,11 +1,11 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
 // price and margin, sales / usage, cover and reorder, recipes, and a stock transfer between locations.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=74";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "./sales-data.js?v=74";
-import { usageOf } from "./consumption.js?v=74";
-import { MENU, VAT } from "./menu-data.js?v=74";
-import { RECIPES } from "./recipes-data.js?v=74";
+import { placement, isBulk } from "./fefo-place.js?v=75";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "./sales-data.js?v=75";
+import { usageOf } from "./consumption.js?v=75";
+import { MENU, VAT } from "./menu-data.js?v=75";
+import { RECIPES } from "./recipes-data.js?v=75";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {

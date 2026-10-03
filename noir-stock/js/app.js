@@ -1,21 +1,21 @@
-import * as store from "./store.js?v=74";
-import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=74";
-import { SEED_DATE } from "./seed-data.js?v=74";
-import { renderYield, productPanel } from "./analytics.js?v=74";
-import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=74";
-import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=74";
-import { usageOf } from "./consumption.js?v=74";
-import { AR as NAMES_AR } from "./names-ar.js?v=74";
+import * as store from "./store.js?v=75";
+import { LOCATIONS, CATEGORIES, UNITS } from "./store.js?v=75";
+import { SEED_DATE } from "./seed-data.js?v=75";
+import { renderYield, productPanel } from "./analytics.js?v=75";
+import { openProductCard, printBarcodes, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock-card.js?v=75";
+import { soldOf, soldSource, moveOf, SALES_FROM, SALES_TO } from "./sales-data.js?v=75";
+import { usageOf } from "./consumption.js?v=75";
+import { AR as NAMES_AR } from "./names-ar.js?v=75";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; return () => (p ??= import(path)); };
-const exportCount = lazy("./export-count.js?v=74");
-const financeView = lazy("./finance-view.js?v=74");
-const unaizahView = lazy("./unaizah-view.js?v=74");
-const syncAdmin = lazy("./sync-admin.js?v=74");
-const toolsMod = lazy("./tools.js?v=74");
-const intelMod = lazy("./stock-intel.js?v=74");
-const menuMod = lazy("./menu-lab.js?v=74");
-const p360Mod = lazy("./product-360.js?v=74");
+const exportCount = lazy("./export-count.js?v=75");
+const financeView = lazy("./finance-view.js?v=75");
+const unaizahView = lazy("./unaizah-view.js?v=75");
+const syncAdmin = lazy("./sync-admin.js?v=75");
+const toolsMod = lazy("./tools.js?v=75");
+const intelMod = lazy("./stock-intel.js?v=75");
+const menuMod = lazy("./menu-lab.js?v=75");
+const p360Mod = lazy("./product-360.js?v=75");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -219,7 +219,7 @@ document.addEventListener("click", e => {
   const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
 });
 function go(route) {
-  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=74").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./skylr.js?v=75").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -859,7 +859,7 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...helpers(), when, src, qty, saveProduct: store.saveProduct, loadExcel: () => import("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js") }));
   $("#up-stock-master")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const { parseStockPdf } = await import("./sync-admin.js?v=74");
+    const { parseStockPdf } = await import("./sync-admin.js?v=75");
     const found = await parseStockPdf(f, data.products);
     const byId = {};
     found.forEach(row => { byId[row.id] = byId[row.id] || { ...data.products.find(p => p.id === row.id) }; byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty }; });
@@ -869,7 +869,7 @@ function viewSettings() {
   });
   $("#up-sales")?.addEventListener("change", async e => {
     const f = e.target.files[0]; if (!f) return;
-    const pdfjs = await (await import("./sync-admin.js?v=74")).loadPdf();
+    const pdfjs = await (await import("./sync-admin.js?v=75")).loadPdf();
     const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -903,7 +903,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-if (siteLang() === "ar") import("./i18n-ar.js?v=74").then(m => m.startArabic()).catch(() => {});
+if (siteLang() === "ar") import("./i18n-ar.js?v=75").then(m => m.startArabic()).catch(() => {});
 toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

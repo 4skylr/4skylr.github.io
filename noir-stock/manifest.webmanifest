@@ -1,6 +1,6 @@
 {
-  "name": "Noir Stock",
-  "short_name": "Noir Stock",
+  "name": "67 Stock",
+  "short_name": "67",
   "description": "Concessions inventory for Noir Cinema, Othaim Mall, Onaizah",
   "start_url": "./#dashboard",
   "scope": "./",
@@ -9,13 +9,35 @@
   "background_color": "#05040a",
   "theme_color": "#7c2280",
   "icons": [
-    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Start a count", "url": "./#count" },
-    { "name": "Stock", "url": "./#products" },
-    { "name": "Unaizah treasury", "url": "./#unaizah" }
+    {
+      "name": "Start a count",
+      "url": "./#count"
+    },
+    {
+      "name": "Stock",
+      "url": "./#products"
+    },
+    {
+      "name": "Unaizah treasury",
+      "url": "./#unaizah"
+    }
   ]
 }
