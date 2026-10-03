@@ -4,6 +4,7 @@
 //   indicators  github.com/anandanand84/technicalindicators  (SMA · Bollinger · RSI · MACD)
 //   counters    github.com/inorganik/countUp.js
 // Vendored copies of the npm releases live in vendor/ so the board works offline.
+import { timePinOk } from "../core/time-pin.js?v=82";
 const CDN = {
   echarts: "vendor/echarts.min.js",
   ta: "vendor/technicalindicators.min.js",
@@ -578,7 +579,7 @@ export async function renderUnaizah(root, H = {}) {
         <form class="uz-lock" id="uz-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${A.pin}" aria-label="${A.pin}"><button class="uz-btn" type="submit">${A.open}</button></form>`;
       host.querySelector("#uz-lock").onsubmit = e => {
         e.preventDefault();
-        if (e.target.pin.value.trim() !== "899") { e.target.pin.value = ""; e.target.pin.placeholder = A.bad; return; }
+        if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; e.target.pin.placeholder = A.bad; return; }
         sessionStorage.setItem("noir-admin", "1"); paintAudit();
       };
       return;

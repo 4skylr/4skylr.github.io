@@ -3,6 +3,7 @@
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=82";
+import { timePinOk } from "./core/time-pin.js?v=82";
 import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=82";
 import { SEED_DATE } from "./data/seed-data.js?v=82";
 import { renderYield } from "./stock/analytics.js?v=82";
@@ -901,7 +902,7 @@ function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   if (sessionStorage.getItem("noir-admin") !== "1") {
     $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>${T("Master sign-in", "دخول الماستر")}</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" aria-label="PIN"><button class="btn hot" type="submit">${T("Open", "دخول")}</button></form>`;
-    $("#master-gate").onsubmit = e => { e.preventDefault(); if (e.target.pin.value.trim() !== "899") { toast(T("Wrong PIN", "الرقم غلط"), true); return; } sessionStorage.setItem("noir-admin", "1"); viewSettings(); };
+    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } sessionStorage.setItem("noir-admin", "1"); viewSettings(); };
     return;
   }
   $("#view").innerHTML = `

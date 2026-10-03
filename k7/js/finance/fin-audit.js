@@ -1,6 +1,7 @@
 // Cash office audit: the system's RDR Exception Register against the DCS sheets.
 // For every F&B shift: what the POS sold, what the cashier dropped, what the team leader verified,
 // and what the DCS sheet recorded. Gaps are explained by cause, not just totalled.
+import { timePinOk } from "../core/time-pin.js?v=82";
 import { nameKey } from "./fin-dcs.js?v=82";
 
 const MONEY = ["cash", "card", "prepaid", "voucher", "others"];
@@ -200,7 +201,7 @@ export function renderRdrAudit(host, { rdr, days, ar, echarts }) {
 function paintPrivate(el, A, t, ar, admin, rerender) {
   if (!admin) {
     el.innerHTML = `<div class="ra-lock"><p>🔒 ${t.lock}</p><form id="ra-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${t.pin}" aria-label="${t.pin}"><button class="uz-btn" type="submit">${t.open}</button></form></div>`;
-    el.querySelector("#ra-lock").onsubmit = e => { e.preventDefault(); if (e.target.pin.value.trim() !== "899") { e.target.pin.value = ""; e.target.pin.placeholder = t.bad; return; } sessionStorage.setItem("noir-admin", "1"); rerender(); };
+    el.querySelector("#ra-lock").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; e.target.pin.placeholder = t.bad; return; } sessionStorage.setItem("noir-admin", "1"); rerender(); };
     return;
   }
   const tn = k => TN[k][ar ? 1 : 0];
