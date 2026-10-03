@@ -33,11 +33,11 @@
 .cut b { font-size: 11pt; line-height: 1.1; text-align: center; max-width: 7.2cm; margin: 0; }
 .scan-page .scan-qr, .card-top .scan-qr { width: 112px; height: 112px; background: #fff; border-radius: 8px; margin-top: 8px; }
 @media print {
-  .marquee, .head, .dock-nav, .title-row, .aura, .grain, .toasts, .note { display: none !important; }
+  .head, .dock-nav, .title-row, .aura, .grain, .toasts, .note { display: none !important; }
   body { background: #fff !important; }
   .stage { padding: 0 !important; max-width: none; }
   .label-sheet { gap: 0; }
 }
 
-body.card-only .marquee, body.card-only .head, body.card-only .dock-nav, body.card-only .title-row, body.card-only .aura { display: none !important; }
+body.card-only .head, body.card-only .dock-nav, body.card-only .title-row, body.card-only .aura { display: none !important; }
 body.card-only .stage { padding-top: 18px; }

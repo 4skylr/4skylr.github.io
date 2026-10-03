@@ -3,7 +3,7 @@
    - Pages and JSON: network first, cache as fallback.
    - Versioned CDN files (Firebase SDK, fonts): cache first.
    - Firestore / auth traffic is never touched, so live sync is not slowed or broken. */
-const CACHE = "noir-stock-v81";
+const CACHE = "noir-stock-v82";
 const CORE = ["./", "./index.html", "./css/style.css", "./css/fonts.css", "./css/scan-pass.css", "./vendor/dayjs.min.js"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdn\.jsdelivr\.net\/(gh|npm)\/)/;
 
