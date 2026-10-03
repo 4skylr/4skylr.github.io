@@ -1,5 +1,5 @@
-import { RAW_MATERIALS } from "./recipes-data.js?v=78";
-import { usesOf, evaluate } from "./analytics.js?v=78";
+import { RAW_MATERIALS } from "./recipes-data.js?v=79";
+import { usesOf, evaluate } from "./analytics.js?v=79";
 export function servingsFor(p) {
   const key = Object.keys(RAW_MATERIALS).find(k => k.toLowerCase() === String(p.sku || "").toLowerCase());
   if (!key) return [];

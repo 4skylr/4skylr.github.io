@@ -204,17 +204,23 @@ function gapRanges(missing) {
 }
 
 // ── render ──────────────────────────────────────────────────────────
-export async function renderUnaizah(root) {
+export async function renderUnaizah(root, H = {}) {
   const id = ++renderId;
   dispose();
   const ar = lang() === "ar", t = T[ar ? "ar" : "en"];
   root.innerHTML = `<div class="uz-loading"><i></i><span>${ar ? "مزامنة البلوكات…" : "Syncing blocks…"}</span></div>`;
-  let data;
+  let data, rdr = null;
+  const docs = name => H.allDocs ? H.allDocs(name).catch(() => []) : Promise.resolve([]);
   try {
-    [data] = await Promise.all([
+    let dcsUps, rdrBase, rdrUps;
+    [data, dcsUps, rdrBase, rdrUps] = await Promise.all([
       fetch(`unaizah/ledger.json?v=${Date.now() / 36e5 | 0}`).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      docs("dcs"), fetch("finance/rdr.json").then(r => r.ok ? r.json() : null).catch(() => null), docs("rdr"),
       load(CDN.echarts), load(CDN.ta), load(CDN.countup)
     ]);
+    // DCS months uploaded from Settings sit on top of the built ledger
+    if (dcsUps.length) data = (await import("./fin-dcs.js?v=79")).mergeLedger(data, dcsUps);
+    rdr = [rdrBase, ...rdrUps].filter(Boolean).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""))[0] || null;
   } catch (e) {
     root.innerHTML = `<div class="uz-error">${ar ? "تعذر تحميل بيانات عنيزة." : "Could not load the Unaizah ledger."} <small>${esc(e.message)}</small></div>`;
     return;
@@ -247,6 +253,7 @@ export async function renderUnaizah(root) {
 
     <div class="uz-kpis" id="uz-kpis"></div>
     <div id="uz-analyst" class="an-host"></div>
+    <section class="uz-card ra" id="uz-rdr"></section>
 
     <section class="uz-card">
       <div class="uz-h"><div><h3>${t.tokens}</h3><p>${t.tokensSub}</p></div></div>
@@ -313,8 +320,10 @@ export async function renderUnaizah(root) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=78").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=79").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
+  import("./fin-audit.js?v=79").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
+    .catch(e => console.warn("Cash office audit unavailable", e));
 
   let view = { rows: [], prev: [] };
   const countTotal = new window.countUp.CountUp($("#uz-total"), 0, { duration: 1.4, separator: ",", decimalPlaces: 0 });
@@ -588,7 +597,7 @@ export async function renderUnaizah(root) {
     host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
       <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
         ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
-    import("./fin-analyst.js?v=78").then(m => {
+    import("./fin-analyst.js?v=79").then(m => {
       const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
       if (!cz.length || !host.isConnected) return;
       host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);

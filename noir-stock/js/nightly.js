@@ -2,7 +2,7 @@
 // a full financial analysis of every day on file, and the morning Team Brief card.
 //   pdf.js (mozilla/pdf.js) reads the PDF · fflate (101arrowz/fflate) writes the workbook
 //   ECharts (apache/echarts) charts · html-to-image (bubkoo/html-to-image) renders the brief
-import { parsePerformancePdf } from "./nightly-parse.js?v=78";
+import { parsePerformancePdf } from "./nightly-parse.js?v=79";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "nightly";
@@ -111,19 +111,19 @@ function paint(H) {
       try { const rec = await parsePerformancePdf(f); await H.putDoc(COL, rec.date, rec); state.docs = [...state.docs.filter(d => d.date !== rec.date), { id: rec.date, ...rec }]; state.sel = rec.date; ok++; }
       catch (err) { console.error(err); H.toast(`${L.bad}: ${f.name}`, true); }
     }
-    if (ok) { H.toast(L.saved(ok)); H.log?.("report", `Nightly report saved · ${state.sel}`); }
+    if (ok) { H.toast(L.saved(ok)); H.log?.("report", `Nightly report saved · ${state.sel}`); H.markUpload?.("nightly", files.map(f => f.name).join(", ")).catch(() => {}); }
     e.target.value = ""; paint(H);
   };
   host.querySelector("#nr-xlsx").onclick = async () => {
     try {
-      const { buildWorkbook } = await import("./nightly-xlsx.js?v=78");
+      const { buildWorkbook } = await import("./nightly-xlsx.js?v=79");
       const blob = await buildWorkbook(D);
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = `NC Performance Unaizah ${isoOf(new Date())}.xlsx`; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000); H.toast(L.built);
     } catch (err) { console.error(err); H.toast(err.message, true); }
   };
-  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=78").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
+  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=79").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
   drawCharts(D, L, ar);
 }
 
