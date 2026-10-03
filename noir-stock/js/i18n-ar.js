@@ -38,7 +38,7 @@ const D = {
   // stock
   "Scan": "مسح", "Print barcodes": "طباعة الباركود", "Excel": "Excel", "CSV": "CSV", "All locations": "كل المواقع",
   "By category": "حسب الفئة", "Highest value": "الأعلى قيمة", "Highest quantity": "الأعلى كمية", "A → Z": "أ ← ي", "Recently edited": "آخر تعديل",
-  "Cards": "بطاقات", "Ledger": "جدول", "Analysis": "تحليل", "Everything": "الكل", "Low": "منخفض", "Level": "المستوى", "Out": "نفد",
+  "Cards": "بطاقات", "Ledger": "جدول", "Analysis": "تحليل", "Lab": "لاب", "Everything": "الكل", "Low": "منخفض", "Level": "المستوى", "Out": "نفد",
   "not on report": "غير موجود بالتقرير", "set a full level": "حدد المستوى الكامل",
   "Search name, report name or code": "ابحث بالاسم أو اسم التقرير أو الكود", "Search products": "بحث المنتجات",
   "Location": "الموقع", "Sort": "الترتيب", "View": "العرض", "Categories": "الفئات", "Category": "الفئة",
@@ -156,7 +156,7 @@ function tr(s) {
 }
 
 // Never touch the scan card, the barcode label sheet, finance pages (already Arabic), code or charts.
-const SKIP = "script,style,svg,canvas,code,textarea,.pass,#labels,.lbl,.qr,.scan-qr,#curtain,.marquee,.uz,.fx,.hash-chip,.data.hash,[data-noar],.p360,.ml";
+const SKIP = "script,style,svg,canvas,code,textarea,.pass,#labels,.lbl,.qr,.scan-qr,#curtain,.marquee,.uz,.fx,.hash-chip,.data.hash,[data-noar],.p360,.ml,.nr,.sl,.b-stage,.brief-sheet";
 const ATTRS = ["placeholder", "aria-label", "title"];
 
 function walk(root) {

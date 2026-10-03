@@ -1,7 +1,7 @@
 // Admin sync. PDF text: mozilla/pdf.js · Excel write-back: exceljs/exceljs · time: iamkun/dayjs
-import { EXPIRY_SHEET } from "./expiry-data.js?v=75";
-import { REPORT_NAMES } from "./report-names.js?v=75";
-import { livePin, rotatePin, downloadSheet } from "./stock-card.js?v=75";
+import { EXPIRY_SHEET } from "./expiry-data.js?v=77";
+import { REPORT_NAMES } from "./report-names.js?v=77";
+import { livePin, rotatePin, downloadSheet } from "./stock-card.js?v=77";
 
 const SYNC_AT = "noir-sync-at";
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
@@ -26,8 +26,12 @@ function locOf(line) {
   return null;
 }
 function matchProduct(products, line) {
-  const n = norm(line);
-  const hit = REPORT_NAMES.find(r => (r.code && n.includes(norm(r.code))) || (r.report && n.includes(norm(r.report))));
+  const n = norm(line), cells = line.split(/ {3,}/).map(norm), padded = ` ${n} `;
+  // exact cell match first (code or report name), then the longest whole-word match,
+  // so "BIB Coke Zero" never lands on "BIB COKE" and "SLUSH - Straw With Spoon" never on "Straw"
+  const hit = REPORT_NAMES.find(r => (r.code && cells.includes(norm(r.code))) || (r.report && cells.includes(norm(r.report))))
+    || REPORT_NAMES.filter(r => (r.code && padded.includes(` ${norm(r.code)} `)) || (r.report && padded.includes(` ${norm(r.report)} `)))
+      .sort((a, b) => norm(b.report).length - norm(a.report).length)[0];
   if (hit) return products.find(p => p.id === hit.id) || hit;
   return products.find(p => (p.code && n.includes(norm(p.code))) || (p.sku && n.includes(norm(p.sku))));
 }
@@ -40,7 +44,15 @@ export async function parseStockPdf(file, products) {
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const text = await page.getTextContent();
-    text.items.map(it => it.str).join(" ").split(/\s{2,}|\n/).forEach(bit => lines.push(bit));
+    // rebuild each printed row from the item positions (top to bottom, left to right)
+    const rows = new Map();
+    text.items.filter(it => it.str.trim()).forEach(it => {
+      const y = Math.round(it.transform[5]);
+      const key = [...rows.keys()].find(k => Math.abs(k - y) <= 2) ?? y;
+      if (!rows.has(key)) rows.set(key, []);
+      rows.get(key).push({ x: it.transform[4], s: it.str.trim() });
+    });
+    [...rows.entries()].sort((a, b) => b[0] - a[0]).forEach(([, r]) => lines.push(r.sort((a, b) => a.x - b.x).map(c => c.s).join("   ")));
   }
   let loc = "mini";
   const found = [];
@@ -135,13 +147,8 @@ function draw(root, H) {
     await keepFile("stock", f);
     const products = H.data().products;
     const found = await parseStockPdf(f, products);
-    const byId = {};
-    found.forEach(row => {
-      byId[row.id] = byId[row.id] || { ...products.find(p => p.id === row.id) };
-      byId[row.id].stock = { ...byId[row.id].stock, [row.loc]: row.qty };
-    });
-    for (const doc of Object.values(byId)) await H.saveProduct(doc, { silent: true });
-    localStorage.setItem(SYNC_AT, new Date().toISOString());
+    const entry = await H.stockReport(found, f.name); // saves stock, history and ticker alerts
+    const byId = Object.fromEntries((entry.lines || []).map(l => [l.id, 1]));
     const gaps = reviewGaps(H.data().products);
     root.querySelector("#review").innerHTML = `<h3>مراجعة الفروقات · ${gaps.length}</h3>` + gaps.slice(0, 12).map(g => `<article class="use"><img class="pic" src="${H.esc(H.src(g.p.image || ""))}" alt=""><span><b>${H.esc(g.p.name)}</b><i>${H.esc(g.p.code || g.p.sku)}</i></span><em>ستوك ${H.qty(g.stock)} · تواريخ ${H.qty(g.batchQty)}</em></article>`).join("") || `<p class="note">لا فروقات بين الكمية ومجموع المجموعات.</p>`;
     H.toast(`تحدث ${Object.keys(byId).length} منتج من تقرير الستوك`);

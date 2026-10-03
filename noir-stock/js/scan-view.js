@@ -5,11 +5,11 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "./names-ar.js?v=75";
-import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=75";
-import { soldOf, soldSource, linkedTo, moveOf } from "./sales-data.js?v=75";
-import { placement, isBulk } from "./fefo-place.js?v=75";
-import { usageOf } from "./consumption.js?v=75";
+import { AR, LOC_AR } from "./names-ar.js?v=77";
+import { RECIPES, RAW_MATERIALS } from "./recipes-data.js?v=77";
+import { soldOf, soldSource, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "./sales-data.js?v=77";
+import { placement, isBulk } from "./fefo-place.js?v=77";
+import { usageOf } from "./consumption.js?v=77";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -252,7 +252,13 @@ export async function renderScanCard(root, p, ctx) {
               <div class="cx-ends"><small>${H.qty(use.lo)} ${H.esc(unit)}</small><small>${H.qty(use.hi)} ${H.esc(unit)}</small></div>
               <p dir="${ar ? "rtl" : "ltr"}">${ar ? "المبيعات بالحجم فقط، فالنكهات محسوبة بالتساوي" : "Sales are by size only, so flavours are split evenly"}</p></div>`}
           </section>`; })()
-        : `<p class="pc-sold">${mv && mv.shared ? L.moved : L.sold} <b class="odo-xs" data-odo="${soldOf(p.id) || 0}" dir="ltr">0</b>${mv && mv.shared ? ` ${H.esc(mv.unit[lang === "ar" ? 1 : 0])}` : ""}</p>`}
+        : (() => { const n = soldOf(p.id) || 0, rank = !mv && n ? Object.entries(SALES_YTD).sort((x, y) => y[1] - x[1]).findIndex(([k]) => k === p.id) + 1 : 0;
+            return `<div class="sold-chip ${rank && rank <= 6 ? "hot" : ""}">
+              <span class="sc-ico">${rank && rank <= 6 ? "🔥" : "◆"}</span>
+              <div class="sc-main"><small>${mv && mv.shared ? L.moved : L.sold}</small><b class="odo-sm" data-odo="${n}" dir="ltr">0</b>${mv && mv.shared ? `<em>${H.esc(mv.unit[lang === "ar" ? 1 : 0])}</em>` : ""}</div>
+              ${n ? `<div class="sc-side"><span dir="ltr">≈ ${H.qty(n / SALES_DAYS)}</span><small>${lang === "ar" ? "باليوم" : "per day"}</small></div>` : ""}
+              ${rank && rank <= 6 ? `<i class="sc-rank">TOP #${rank}</i>` : ""}
+            </div>`; })()}
         ${src ? `<p class="pc-link">${L.via} ${src.map(id => products.find(x => x.id === id)).filter(Boolean).map(x => H.esc(nameOf(x))).join(" + ")}</p>` : ""}
         ${moves.length ? `<p class="pc-link">${L.alsoMoves}: ${moves.map(x => `${H.esc(nameOf(x))} <b dir="ltr">${H.qty(soldOf(x.id))}</b>`).join(" · ")}</p>` : ""}
       </div>

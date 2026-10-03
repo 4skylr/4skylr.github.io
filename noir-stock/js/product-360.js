@@ -1,24 +1,26 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
-// price and margin, sales / usage, cover and reorder, recipes, and a stock transfer between locations.
+// price and margin, sales / usage, cover and reorder, recipes, sales-space advice and the stock history from reports.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=75";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "./sales-data.js?v=75";
-import { usageOf } from "./consumption.js?v=75";
-import { MENU, VAT } from "./menu-data.js?v=75";
-import { RECIPES } from "./recipes-data.js?v=75";
+import { placement, isBulk } from "./fefo-place.js?v=77";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "./sales-data.js?v=77";
+import { usageOf } from "./consumption.js?v=77";
+import { MENU, VAT } from "./menu-data.js?v=77";
+import { RECIPES } from "./recipes-data.js?v=77";
+import { salesSpace } from "./sales-space.js?v=77";
+import { historyOf } from "./stock-history.js?v=77";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
   en: { total: "Total on hand", value: "Stock value", cost: "Unit cost", price: "Menu price", margin: "Profit / unit", where: "Where it is", groups: "Expiry groups", none: "No dated groups (quantity only).",
     days: "days", expired: "expired", move: "Move to", sales: "Sales & usage", sold: "Sold this year", moved: "Moved with", used: "Used this year", est: "estimate",
-    perDay: "Per day", cover: "Days of cover", out: "Runs out", rop: "Reorder at", recipes: "Goes into", menuItems: "menu items", transfer: "Transfer stock",
-    from: "From", to: "To", qty: "Quantity", doMove: "Move stock", moved2: "Stock moved", bad: "Check the quantity", card: "Product card & barcode", edit: "Edit",
+    perDay: "Per day", cover: "Days of cover", out: "Runs out", rop: "Reorder at", recipes: "Goes into", menuItems: "menu items", space: "Sales space", spot: "Best spot", now: "Do now", summary: "Reminder ·", history: "Stock history", noHist: "No report has changed this item yet. Upload a stock report to start its history.", soldTag: "sold", addedTag: "added",
+    card: "Product card & barcode", edit: "Edit",
     pick: "Pick order", top: "Top seller", noSales: "No sales data for this item.", lead: `Sales ${SALES_FROM} → ${SALES_TO}`,
     locs: { refuel: "Concession", mini: "Mini Store", stores: "Store" }, status: { now: "Order now", soon: "Order soon", ok: "Healthy", over: "Overstock" } },
   ar: { total: "الكمية الكلية", value: "قيمة المخزون", cost: "تكلفة الوحدة", price: "سعر المنيو", margin: "ربح الحبة", where: "وين موجود", groups: "مجموعات الصلاحية", none: "بدون تواريخ (كمية فقط).",
     days: "يوم", expired: "منتهية", move: "قدّمها إلى", sales: "المبيعات والاستهلاك", sold: "مباع من بداية السنة", moved: "تحرك مع", used: "استهلاك من بداية السنة", est: "تقدير",
-    perDay: "باليوم", cover: "يكفي", out: "ينفد", rop: "اطلب عند", recipes: "يدخل في", menuItems: "صنف بالمنيو", transfer: "نقل مخزون",
-    from: "من", to: "إلى", qty: "الكمية", doMove: "انقل", moved2: "تم النقل", bad: "تأكد من الكمية", card: "بطاقة المنتج والباركود", edit: "تعديل",
+    perDay: "باليوم", cover: "يكفي", out: "ينفد", rop: "اطلب عند", recipes: "يدخل في", menuItems: "صنف بالمنيو", space: "نقطة البيع", spot: "أفضل مكان", now: "المطلوب الحين", summary: "تذكير ·", history: "سجل الحركة", noHist: "ما فيه تقرير غيّر هذا الصنف للحين. ارفع تقرير الجرد عشان يبدأ السجل.", soldTag: "انباع", addedTag: "انضاف",
+    card: "بطاقة المنتج والباركود", edit: "تعديل",
     pick: "ترتيب الصرف", top: "الأكثر مبيعاً", noSales: "لا توجد بيانات مبيعات لهذا الصنف.", lead: `المبيعات ${SALES_FROM} ← ${SALES_TO}`,
     locs: { refuel: "الكونسيشن", mini: "الميني ستور", stores: "المستودع" }, status: { now: "اطلب الحين", soon: "اطلب قريب", ok: "سليم", over: "زائد" } }
 };
@@ -38,6 +40,8 @@ export function open360(p, H) {
   const pl = placement(p), gname = n => ar ? "المجموعة " + (ORD[n - 1] || n) : "Group " + n;
   const recipes = RECIPES.filter(r => !r.ta && r.lines.some(l => String(l.rm).toLowerCase() === String(p.sku || "").toLowerCase()));
   const rank = H.topRank ? H.topRank(p.id) : 0;
+  const sp = salesSpace(p, { total, daily, rank });
+  const hist = historyOf(H.stockHist ? H.stockHist() : [], p.id);
   const day = n => new Date(Date.now() + n * 86400000).toLocaleDateString(ar ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
   const m = H.openModal(`<div class="p360" dir="${ar ? "rtl" : "ltr"}">
@@ -79,36 +83,25 @@ export function open360(p, H) {
       ${recipes.length ? `<p class="p3-rec">${L.recipes} <b>${recipes.length}</b> ${L.menuItems}: ${recipes.slice(0, 4).map(r => esc(r.name)).join(" · ")}${recipes.length > 4 ? " …" : ""}</p>` : ""}
     </section>
 
-    <section class="p3-sec"><h3>${L.transfer}</h3>
-      <form class="p3-move" id="p3-move">
-        <label>${L.from}<select class="select" name="from">${H.LOCATIONS.map(l => `<option value="${l.id}" ${l.id === "stores" ? "selected" : ""}>${esc(L.locs[l.id])} · ${q(Number(p.stock?.[l.id]) || 0)}</option>`).join("")}</select></label>
-        <label>${L.to}<select class="select" name="to">${H.LOCATIONS.map(l => `<option value="${l.id}" ${l.id === "refuel" ? "selected" : ""}>${esc(L.locs[l.id])}</option>`).join("")}</select></label>
-        <label>${L.qty}<input class="input data" name="qty" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></label>
-        <button class="btn hot" type="submit">${L.doMove}</button>
-      </form>
+    <section class="p3-sec p3-space t-${sp.tone}"><h3>${L.space}</h3>
+      <div class="p3-sp">
+        <div class="p3-sp-where"><i>📍</i><div><small>${L.spot}</small><b>${esc(sp.space[ar ? 1 : 0])}</b></div></div>
+        <div class="p3-sp-act"><small>${L.now}</small><b>${esc(sp.act[ar ? 1 : 0])}</b>
+          ${sp.why.map(w => `<p>↳ ${esc(w[ar ? 1 : 0])}</p>`).join("")}${sp.tips.map(w => `<p class="tip">★ ${esc(w[ar ? 1 : 0])}</p>`).join("")}</div>
+      </div>
+      <p class="p3-sum"><b>${L.summary}</b> ${esc(sp.summary[ar ? 1 : 0])}</p>
+    </section>
+
+    <section class="p3-sec"><h3>${L.history} <i>${hist.length}</i></h3>
+      ${hist.length ? `<div class="p3-hist">${hist.slice(0, 8).map(h => `<div class="p3-h"><span class="data">${esc(h.at.slice(0, 10))}</span>
+        ${h.lines.map(l => `<em class="${l.delta < 0 ? "sold" : "added"}">${esc(L.locs[l.loc] || l.loc)} ${q(l.from)} → ${q(l.to)} <b>${l.delta < 0 ? L.soldTag : L.addedTag} ${l.delta < 0 ? "−" : "+"}${q(Math.abs(l.delta))}</b></em>`).join("")}</div>`).join("")}</div>`
+        : `<p class="p3-muted">${L.noHist}</p>`}
     </section>
 
     <div class="actions"><div class="end"><button class="btn" id="p3-card">${L.card}</button></div></div>
   </div>`, "wide p360-sheet");
 
   m.querySelector("#p3-card").onclick = () => { H.closeModal(); H.openCard(p); };
-  m.querySelector("#p3-move").onsubmit = async e => {
-    e.preventDefault();
-    const f = e.target, from = f.from.value, to = f.to.value, n = Number(f.qty.value);
-    const have = Number(p.stock?.[from]) || 0;
-    if (!(n > 0) || from === to || n > have + 1e-9) { H.toast(L.bad, true); return; }
-    // the Settings master session or the edit pin both unlock transfers
-    if (sessionStorage.getItem("noir-admin") !== "1" && !H.pinUnlocked() && !await H.requirePin()) { open360(p, H); return; }
-    const round = x => Math.round(x * 1000) / 1000;
-    const next = { ...p, stock: { ...p.stock, [from]: round(have - n), [to]: round((Number(p.stock?.[to]) || 0) + n) } };
-    try {
-      await H.saveProduct(next, { silent: true });
-      await H.log("move", `Moved ${n} ${H.UNITS[p.unit] || ""} ${p.name}: ${T.en.locs[from]} → ${T.en.locs[to]}`);
-      H.toast(L.moved2);
-      open360(H.data().products.find(x => x.id === p.id) || next, H);
-    } catch (err) { H.toast(err.message || "Error", true); }
-  };
-
   // ECharts gauge for days of cover
   const g = m.querySelector("#p3-gauge");
   if (g && cover != null) {

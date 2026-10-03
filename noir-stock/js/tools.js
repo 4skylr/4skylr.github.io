@@ -90,12 +90,12 @@ export function openFinder(H) {
 
 // Guided tour (kamranahmedse/driver.js), shown once and again from the ? button
 const TOUR = {
-  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, Unaizah and settings."],
+  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, Unaizah and the nightly reports. Settings is the gear at the top."],
     ["#qf-btn", "Quick find", "Search any product, code or page. Typos and Arabic names work. Shortcut: Ctrl K."],
     ["#dash-reorder", "Reorder list", "Everything that is out or running low, with the quantity and cost to order."],
     ["#lang-btn", "Language", "Switch the whole site between English and Arabic."],
     ["#net", "Sync", "Shows whether you are live on Firebase or working in this browser."]],
-  ar: [["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، عنيزة، الإعدادات."],
+  ar: [["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، عنيزة، والتقارير الليلية. الإعدادات من الترس فوق."],
     ["#qf-btn", "بحث سريع", "ابحث عن أي منتج أو كود أو صفحة، حتى لو فيه غلط إملائي أو بالعربي. الاختصار Ctrl K."],
     ["#dash-reorder", "قائمة الطلب", "كل شي نفد أو قارب، مع الكمية والتكلفة المقترحة للطلب."],
     ["#lang-btn", "اللغة", "حوّل الموقع كامل بين العربي والإنجليزي."],
@@ -164,6 +164,10 @@ export function mountTools(H) {
     help.type = "button"; help.id = "tour-btn"; help.className = "btn sm ghost icon"; help.textContent = "?";
     help.title = AR() ? "جولة تعريفية" : "Guided tour"; help.setAttribute("aria-label", help.title);
     help.onclick = () => startTour().catch(() => {}); meta.prepend(help);
+    const gear = document.createElement("button");
+    gear.type = "button"; gear.id = "settings-btn"; gear.className = "btn sm ghost icon"; gear.innerHTML = H.icon("settings");
+    gear.title = AR() ? "الإعدادات" : "Settings"; gear.setAttribute("aria-label", gear.title);
+    gear.onclick = () => H.go("settings"); meta.prepend(gear);
     const rf = document.createElement("button");
     rf.type = "button"; rf.id = "refresh-btn"; rf.className = "btn sm ghost icon"; rf.innerHTML = "<span>⟳</span>";
     rf.title = AR() ? "تحديث الصفحة" : "Refresh"; rf.setAttribute("aria-label", rf.title);

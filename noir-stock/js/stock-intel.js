@@ -1,12 +1,13 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=75";
-import { placement, isBulk } from "./fefo-place.js?v=75";
-import { usageOf } from "./consumption.js?v=75";
-import { AR as NAME_AR } from "./names-ar.js?v=75";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "./sales-data.js?v=77";
+import { placement, isBulk } from "./fefo-place.js?v=77";
+import { usageOf } from "./consumption.js?v=77";
+import { salesSpace } from "./sales-space.js?v=77";
+import { AR as NAME_AR } from "./names-ar.js?v=77";
 
-const LEAD = 7, SAFETY = 7, FRONT_DAYS = 7;
+const LEAD = 7, SAFETY = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
   en: {
@@ -14,7 +15,7 @@ const T = {
     k: { value: "Stock value", tracked: "Items with a usage rate", soon: "Run out within 14 days", risk: "Value expiring ≤ 30 days", mis: "Groups in the wrong place", over: "Overstock value (> 1 year cover)" },
     cover: "Days of cover", coverSub: "how long each item lasts at its usage rate · ingredients use sales × recipe", item: "Item", have: "On hand", perDay: "Per day", days: "Cover", front: "Front cover", out: "Runs out", rop: "Reorder at", status: "Status",
     st: { now: "Order now", soon: "Order soon", ok: "Healthy", over: "Overstock" },
-    moves: "Transfers to the front", movesSub: "move stock forward so the concession never runs dry · target 7 days at the front", from: "From", to: "To", qty: "Move", none: "Nothing to move right now.",
+    moves: "Sales space", movesSub: "what to refill or bring forward on the sales floor, and why · the Concession is stock ready to sell", from: "From", to: "To", qty: "Move", none: "Nothing to move right now.",
     fefo: "Expiry & placement", fefoSub: "groups that expire within 30 days or sit behind a later-expiring group", grp: "Group", loc: "Where", left: "Days left", atRisk: "SAR at risk", note: "Action",
     act: { expired: "Expired · write off", move: l => `Move to ${l} first`, soon: "Sell first" }, clean: "Every group is in the right place.",
     abc: "ABC value classes", abcSub: "A = top 80% of value, B = next 15%, C = last 5%", tree: "Where the money sits", treeSub: "category → item, sized by value",
@@ -26,7 +27,7 @@ const T = {
     k: { value: "قيمة المخزون", tracked: "أصناف لها معدل استهلاك", soon: "تنفد خلال 14 يوم", risk: "قيمة تنتهي خلال 30 يوم", mis: "مجموعات بمكان غلط", over: "قيمة مخزون زائد (أكثر من سنة)" },
     cover: "أيام التغطية", coverSub: "كم يكفي كل صنف حسب استهلاكه · المكونات = المبيعات × الوصفة", item: "الصنف", have: "المتوفر", perDay: "باليوم", days: "يكفي", front: "تغطية الواجهة", out: "ينفد", rop: "اطلب عند", status: "الحالة",
     st: { now: "اطلب الحين", soon: "اطلب قريب", ok: "سليم", over: "زائد" },
-    moves: "تحويلات للواجهة", movesSub: "قدّم المخزون عشان الكونسيشن ما يفضى · الهدف 7 أيام في الواجهة", from: "من", to: "إلى", qty: "انقل", none: "لا يوجد تحويل مطلوب الحين.",
+    moves: "نقطة البيع", movesSub: "وش تعبّي أو تقدّم في نقطة البيع وليش · الكونسيشن هو المخزون الجاهز للبيع", from: "من", to: "إلى", qty: "انقل", none: "لا يوجد تحويل مطلوب الحين.",
     fefo: "الصلاحية والترتيب", fefoSub: "مجموعات تنتهي خلال 30 يوم أو موجودة خلف مجموعة تنتهي بعدها", grp: "المجموعة", loc: "الموقع", left: "باقي", atRisk: "ريال معرض", note: "الإجراء",
     act: { expired: "منتهية · اشطب", move: l => `قدّمها إلى ${l}`, soon: "تُباع أولاً" }, clean: "كل المجموعات في مكانها الصحيح.",
     abc: "تصنيف ABC للقيمة", abcSub: "A = أعلى 80% من القيمة، B = الـ 15% التالية، C = آخر 5%", tree: "أين تتركز الأموال", treeSub: "الفئة ← الصنف، الحجم حسب القيمة",
@@ -55,19 +56,9 @@ export function analyse(H) {
     const status = daily <= 0 ? null : have <= daily * LEAD ? "now" : have <= rop ? "soon" : cover > 365 ? "over" : "ok";
     return { p, have, sold, daily, cover, fcover, rop, status, rate, value: have * rate, src: moveOf(p.id) && !moveOf(p.id).shared ? soldSource(p.id) : null, est };
   });
-  // transfers forward: pcs → fill the Concession from Mini Store first, then Store; bulk → fill the front from Store
-  const moves = [];
-  rows.filter(r => r.daily > 0).forEach(r => {
-    const s = id => Number(r.p.stock?.[id]) || 0, need = Math.ceil(r.daily * FRONT_DAYS);
-    if (isBulk(r.p)) {
-      const front = s("refuel") + s("mini"), gap = need - front;
-      if (gap > 0 && s("stores") > 0) moves.push({ r, from: "stores", to: "mini", qty: Math.min(gap, s("stores")) });
-    } else {
-      let gap = need - s("refuel");
-      if (gap > 0 && s("mini") > 0) { const q = Math.min(gap, s("mini")); moves.push({ r, from: "mini", to: "refuel", qty: q }); gap -= q; }
-      if (gap > 0 && s("stores") > 0) moves.push({ r, from: "stores", to: "refuel", qty: Math.min(gap, s("stores")) });
-    }
-  });
+  // sales-space advice for every item that needs action now (see sales-space.js)
+  const moves = rows.filter(r => r.have > 0 || r.daily > 0).map(r => ({ r, sp: salesSpace(r.p, { total: r.have, daily: r.daily }) }))
+    .filter(m => m.sp.tone === "warn" || m.sp.tone === "bad").sort((a, b) => (a.sp.fDays ?? 99) - (b.sp.fDays ?? 99));
   // expiry & placement
   const fefo = P.flatMap(p => placement(p).groups.filter(g => g.flag || g.left <= 30).map(g => ({ p, g, risk: g.qty * (Number(p.rate) || 0) })))
     .sort((a, b) => (b.g.flag?.kind === "expired") - (a.g.flag?.kind === "expired") || (b.g.flag ? 1 : 0) - (a.g.flag ? 1 : 0) || a.g.left - b.g.left);
@@ -122,8 +113,8 @@ export function renderIntel(host, H) {
       </section>
       <section class="slab si-card">
         <div class="slab-h"><h2>${L.moves}</h2><span class="tag">${A.moves.length}</span></div><p class="si-sub">${L.movesSub}</p>
-        ${A.moves.length ? `<ol class="si-moves">${A.moves.map(m => `<li data-edit="${esc(m.r.p.id)}">${H.pic(m.r.p, "pic")}<div><b>${esc(nm(m.r.p))}</b>
-          <span class="si-route"><em class="l-${m.from}">${L.locs[m.from]}</em><i>→</i><em class="l-${m.to}">${L.locs[m.to]}</em></span></div><strong class="data">${q(m.qty)} <small>${unit(m.r.p)}</small></strong></li>`).join("")}</ol>` : `<p class="empty">${L.none}</p>`}
+        ${A.moves.length ? `<ol class="si-moves">${A.moves.map(m => `<li data-edit="${esc(m.r.p.id)}" class="t-${m.sp.tone}">${H.pic(m.r.p, "pic")}<div><b>${esc(nm(m.r.p))}</b>
+          <span class="si-act">${esc(m.sp.act[AR() ? 1 : 0])}</span>${m.sp.why[0] ? `<small class="si-why">${esc(m.sp.why[0][AR() ? 1 : 0])}</small>` : ""}<small class="si-spot">📍 ${esc(m.sp.space[AR() ? 1 : 0])}</small></div></li>`).join("")}</ol>` : `<p class="empty">${L.none}</p>`}
       </section>
     </div>
 

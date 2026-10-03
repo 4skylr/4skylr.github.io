@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=75";
-import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=75";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=77";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=77";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -331,3 +331,23 @@ export async function resetLocal() {
   lsWrite();
   await log("seed", "Reloaded the original report data");
 }
+
+// ── Extra collections (nightly reports, stock history) ────────
+// Saved in this browser and, when Firebase is live, in Firestore too; reads merge both.
+const LS_COL = name => "noir-col:" + name;
+function lsCol(name) { try { return JSON.parse(localStorage.getItem(LS_COL(name)) || "{}"); } catch { return {}; } }
+function lsColWrite(name, all) { try { localStorage.setItem(LS_COL(name), JSON.stringify(all)); } catch (e) { console.warn("Browser storage is full", e); } }
+export async function putDoc(name, id, data) {
+  const all = lsCol(name); all[id] = data; lsColWrite(name, all);
+  if (await remote()) { try { await fb.fs.setDoc(fb.fs.doc(fb.db, name, id), data); } catch (e) { console.warn("Saved locally only:", name, e.message); } }
+  return data;
+}
+export async function allDocs(name) {
+  const all = lsCol(name);
+  if (await remote()) {
+    try { (await fb.fs.getDocs(fb.fs.collection(fb.db, name))).docs.forEach(d => { all[d.id] = d.data(); }); lsColWrite(name, all); }
+    catch (e) { console.warn("Using local copy of", name, e.message); }
+  }
+  return Object.entries(all).map(([id, d]) => ({ id, ...d }));
+}
+export function localDocs(name) { return Object.entries(lsCol(name)).map(([id, d]) => ({ id, ...d })); }
