@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=80";
-import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=80";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=81";
+import { SEED_PRODUCTS, SEED_VERSION } from "./seed-data.js?v=81";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -351,3 +351,23 @@ export async function allDocs(name) {
   return Object.entries(all).map(([id, d]) => ({ id, ...d }));
 }
 export function localDocs(name) { return Object.entries(lsCol(name)).map(([id, d]) => ({ id, ...d })); }
+
+// ── Remote-only helpers (large payloads that must not go into browser storage) ──
+export async function putRemote(name, id, data) {
+  if (!(await remote())) return false;
+  try { await fb.fs.setDoc(fb.fs.doc(fb.db, name, id), data); return true; } catch (e) { console.warn("Remote save failed:", name, e.message); return false; }
+}
+export async function getRemote(name, id) {
+  if (!(await remote())) return null;
+  try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, name, id)); return s.exists() ? s.data() : null; } catch { return null; }
+}
+export async function deleteRemote(name, id) {
+  if (!(await remote())) return false;
+  try { await fb.fs.deleteDoc(fb.fs.doc(fb.db, name, id)); return true; } catch { return false; }
+}
+export async function uploadFile(path, blob, contentType) {
+  if (!(await remote())) return null;
+  try { const r = fb.st.ref(fb.storage, path); await fb.st.uploadBytes(r, blob, { contentType }); return { path, url: await fb.st.getDownloadURL(r) }; }
+  catch (e) { console.warn("File upload failed:", path, e.message); return null; }
+}
+export async function deleteLocalDoc(name, id) { const all = lsCol(name); delete all[id]; lsColWrite(name, all); }

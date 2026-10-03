@@ -1,7 +1,7 @@
 // Cash office audit: the system's RDR Exception Register against the DCS sheets.
 // For every F&B shift: what the POS sold, what the cashier dropped, what the team leader verified,
 // and what the DCS sheet recorded. Gaps are explained by cause, not just totalled.
-import { nameKey } from "./fin-dcs.js?v=80";
+import { nameKey } from "./fin-dcs.js?v=81";
 
 const MONEY = ["cash", "card", "prepaid", "voucher", "others"];
 const TN = { cash: ["Cash", "كاش"], card: ["Card", "شبكة"], prepaid: ["Pre-paid / online", "مسبق الدفع / أونلاين"], voucher: ["Voucher", "قسائم"], others: ["Others", "أخرى"], comp: ["Comp", "ضيافة"] };
