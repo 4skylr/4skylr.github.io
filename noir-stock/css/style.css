@@ -1045,7 +1045,7 @@ body.card-only .dev-chip { display: none; }
 #nr-analysis { display: grid; gap: 16px; }
 
 /* ── Halls / auditoriums ───────────────────── */
-@media (max-width: 420px) { .dock-nav { gap: 2px; } .dock-nav button { padding: 11px 10px; } }
+@media (max-width: 420px) { .dock-nav { gap: 1px; padding: 5px; } .dock-nav button { padding: 11px 7.5px; } }
 .hl { display: grid; gap: 16px; min-width: 0; }
 .hl > *, .hl-two > *, .hl-grid > * { min-width: 0; }
 .hl .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; flex: none; }
@@ -1212,3 +1212,21 @@ body.card-only .dev-chip { display: none; }
 }
 .rq-wrap, .rqs, .rq-list, .rq-row > * { min-width: 0; }
 .rq-hint, .rq-name { overflow-wrap: anywhere; }
+
+/* ── Links ─────────────────────────────────── */
+.lk { display: grid; gap: 16px; }
+.lk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.lk-card { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; padding: 18px; border-radius: 22px; background: var(--glass); border: 1px solid var(--line); min-width: 0; }
+.lk-card.main { border-color: rgba(255, 79, 216, .4); background: radial-gradient(90% 120% at 0% 0%, rgba(155, 107, 255, .25), transparent 60%), var(--glass); box-shadow: 0 24px 60px -30px rgba(255, 79, 216, .6); }
+.lk-ic { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; font: 800 24px var(--f-display); background: var(--holo); color: #0a0612; }
+.lk-tx { display: grid; gap: 4px; min-width: 0; align-content: start; }
+.lk-tx b { font-size: 16px; }
+.lk-tx span { font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; text-align: start; }
+.lk-tx p { margin: 4px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.lk-tx em { font-style: normal; font-size: 11.5px; color: var(--amber); }
+.lk-act { grid-column: 1 / -1; display: flex; gap: 8px; }
+.lk-act .btn { text-decoration: none; }
+.lk-form { display: grid; gap: 10px; max-width: 520px; }
+.lk-form h3 { margin: 0; font-size: 14px; }
+.lk-lock { margin: 0; }
+@media (max-width: 420px) { .lk-grid { grid-template-columns: 1fr; } }

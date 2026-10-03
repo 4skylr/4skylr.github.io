@@ -401,6 +401,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=79").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#9b6bff" }))
+  import("./fin-analyst.js?v=80").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#9b6bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

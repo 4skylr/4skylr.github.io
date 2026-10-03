@@ -61,7 +61,7 @@ export async function renderReports(host, H) {
   let sec = "";
   host.innerHTML = `<section class="slab rqs">
     <div class="slab-h"><h2>التقارير المطلوبة</h2><span class="tag">Required reports</span></div>
-    <p class="note" style="margin-top:0">كل قسم بالموقع والتقرير اللي ينسحب له من النظام، وآخر مرة انرفع.</p>
+    <p class="note" style="margin-top:0">كل قسم بالموقع والتقرير اللي ينسحب له من النظام، وآخر مرة انرفع. <a href="http://20.31.134.112/unaizah/" target="_blank" rel="noopener noreferrer">افتح النظام ↗</a></p>
     <div class="rq-list">${REPORTS.map(r => {
       const s = seen[r.key], days = s ? (Date.now() - Date.parse(s.at)) / 864e5 : Infinity;
       const tone = !s ? "none" : days <= 1.5 ? "fresh" : days <= 8 ? "warm" : "stale";

@@ -1,7 +1,7 @@
 // Admin sync. PDF text: mozilla/pdf.js · Excel write-back: exceljs/exceljs · time: iamkun/dayjs
-import { EXPIRY_SHEET } from "./expiry-data.js?v=79";
-import { REPORT_NAMES } from "./report-names.js?v=79";
-import { livePin, rotatePin, downloadSheet } from "./stock-card.js?v=79";
+import { EXPIRY_SHEET } from "./expiry-data.js?v=80";
+import { REPORT_NAMES } from "./report-names.js?v=80";
+import { livePin, rotatePin, downloadSheet } from "./stock-card.js?v=80";
 
 const SYNC_AT = "noir-sync-at";
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
