@@ -176,3 +176,5 @@ em, i { font-style: normal; }
 .uz-avatar { color: #04070c; background: linear-gradient(135deg, hsl(calc(190 + var(--h) * .17) 85% 72%), hsl(calc(205 + var(--h) * .17) 80% 52%)); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); }
 /* selected states are xenon light, the same everywhere */
 .uz-periods button.on, .uz-seg button.on, .uz-pager-btns button.on, .fx-chips button.root.on { background: var(--xenon); color: #04070c; box-shadow: 0 0 20px -6px rgba(220, 230, 255, .55); }
+/* twelve destinations: tighter dock buttons so the strip fits a 1280 screen */
+@media (min-width: 761px) { .dock-nav button { padding: 10px 12px; gap: 7px; font-size: 13px; } }
