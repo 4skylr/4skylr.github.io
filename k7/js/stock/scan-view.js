@@ -5,11 +5,11 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=84";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=84";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=84";
-import { placement } from "./fefo-place.js?v=84";
-import { usageOf } from "./consumption.js?v=84";
+import { AR, LOC_AR } from "../core/names-ar.js?v=85";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=85";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=85";
+import { placement } from "./fefo-place.js?v=85";
+import { usageOf } from "./consumption.js?v=85";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -340,8 +340,10 @@ export async function renderScanCard(root, p, ctx) {
 function settle(root) {
   root.querySelectorAll(".cd-arc").forEach(a => { a.style.strokeDashoffset = Number(a.dataset.full) * (1 - (Number(getComputedStyle(a.closest(".cd")).getPropertyValue("--frac")) || 0)); });
   root.querySelectorAll(".pl-arc").forEach(a => { a.style.strokeDashoffset = a.dataset.to; });
-  root.querySelectorAll("[data-odo]").forEach(el => { const to = Number(el.dataset.odo) || 0; el.textContent = Math.abs(to % 1) > 1e-9 ? to.toFixed(2) : String(to); });
+  root.querySelectorAll("[data-odo]").forEach(el => { el.textContent = odoText(Number(el.dataset.odo) || 0); });
 }
+// the same grouping the rolling counters use: 5,030 · 18.72
+const odoText = to => Math.abs(to % 1) > 1e-9 ? to.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : to.toLocaleString("en-US");
 const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 async function animateIn(root, worst) {
@@ -354,7 +356,7 @@ async function animateIn(root, worst) {
     root.querySelectorAll("[data-odo]").forEach((el, i) => {
       const to = Number(el.dataset.odo) || 0;
       const dec = Math.abs(to % 1) > 1e-9;
-      if (!Odo) { el.textContent = dec ? to.toFixed(2) : String(to); return; }
+      if (!Odo) { el.textContent = odoText(to); return; }
       const od = new Odo({ el, value: 0, format: dec ? "(,ddd).dd" : "(,ddd)", theme: "minimal", duration: 1400 });
       setTimeout(() => od.update(to), calm() ? 0 : 260 + i * 90);
     });
