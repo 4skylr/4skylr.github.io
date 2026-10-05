@@ -178,3 +178,6 @@ em, i { font-style: normal; }
 .uz-periods button.on, .uz-seg button.on, .uz-pager-btns button.on, .fx-chips button.root.on { background: var(--xenon); color: #04070c; box-shadow: 0 0 20px -6px rgba(220, 230, 255, .55); }
 /* twelve destinations: tighter dock buttons so the strip fits a 1280 screen */
 @media (min-width: 761px) { .dock-nav button { padding: 10px 12px; gap: 7px; font-size: 13px; } }
+/* thirteen destinations on a phone: icons only, tighter */
+@media (max-width: 420px) { .dock-nav { gap: 0; padding: 4px; } .dock-nav button { padding: 10px 4.5px; } .dock-nav button svg { width: 17px; height: 17px; } }
+@media (max-width: 350px) { .dock-nav button { padding: 9px 3px; } .dock-nav button svg { width: 16px; height: 16px; } }

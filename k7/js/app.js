@@ -2,29 +2,29 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=85";
-import { timePinOk } from "./core/time-pin.js?v=85";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=85";
-import { SEED_DATE } from "./data/seed-data.js?v=85";
-import { renderYield } from "./stock/analytics.js?v=85";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=85";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=85";
-import { usageOf } from "./stock/consumption.js?v=85";
-import { AR as NAMES_AR } from "./core/names-ar.js?v=85";
-import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=85";
-import { mountClock } from "./core/clock.js?v=85";
+import * as store from "./core/store.js?v=86";
+import { timePinOk } from "./core/time-pin.js?v=86";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=86";
+import { SEED_DATE } from "./data/seed-data.js?v=86";
+import { renderYield } from "./stock/analytics.js?v=86";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=86";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=86";
+import { usageOf } from "./stock/consumption.js?v=86";
+import { AR as NAMES_AR } from "./core/names-ar.js?v=86";
+import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=86";
+import { mountClock } from "./core/clock.js?v=86";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./stock/export-count.js?v=85");
-const financeView = lazy("./finance/finance-view.js?v=85");
-const unaizahView = lazy("./finance/unaizah-view.js?v=85");
-const syncAdmin = lazy("./reports/sync-admin.js?v=85");
-const toolsMod = lazy("./core/tools.js?v=85");
-const intelMod = lazy("./stock/stock-intel.js?v=85");
-const menuMod = lazy("./stock/menu-lab.js?v=85");
-const labMod = lazy("./stock/stock-lab.js?v=85");
-const showMod = lazy("./stock/showcase.js?v=85");
-const p360Mod = lazy("./stock/product-360.js?v=85");
+const exportCount = lazy("./stock/export-count.js?v=86");
+const financeView = lazy("./finance/finance-view.js?v=86");
+const unaizahView = lazy("./finance/unaizah-view.js?v=86");
+const syncAdmin = lazy("./reports/sync-admin.js?v=86");
+const toolsMod = lazy("./core/tools.js?v=86");
+const intelMod = lazy("./stock/stock-intel.js?v=86");
+const menuMod = lazy("./stock/menu-lab.js?v=86");
+const labMod = lazy("./stock/stock-lab.js?v=86");
+const showMod = lazy("./stock/showcase.js?v=86");
+const p360Mod = lazy("./stock/product-360.js?v=86");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -119,6 +119,7 @@ const ICON = {
   alerts: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
   settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   finance: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="M4 9l6-4 6 3 6-4"/>',
+  safety: '<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6z"/><path d="M12 8.5c1.6 1.6 2.6 3 2.6 4.4a2.6 2.6 0 0 1-5.2 0c0-.8.3-1.5.8-2.1.2.7.6 1.1 1.1 1.2-.2-1.3.1-2.4.7-3.5z"/>',
   stage: '<ellipse cx="12" cy="19" rx="8" ry="2.5"/><path d="M9 16V7.5a3 3 0 0 1 6 0V16"/><path d="M9 9.5h6"/>',
   profit: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2.1 0 2.9 6 1.4 6 4.3 0 1.2-1.3 2.1-3 2.1-1.4 0-2.6-.6-3.1-1.6M12 6.5v11"/>',
   unaizah: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
@@ -152,6 +153,7 @@ const ROUTES = [
   { id: "unaizah", label: "Unaizah", kicker: "Unaizah", title: 'Unaizah <span class="voice">treasury</span>' },
   { id: "halls", label: "Halls", kicker: "Auditoriums", title: 'The <span class="voice">auditoriums</span>' },
   { id: "nightly", label: "Nightly", kicker: "Reports", title: 'Nightly <span class="voice">reports</span>' },
+  { id: "safety", label: "Safety", kicker: "Safety", title: 'Safety <span class="voice">&amp; maintenance</span>' },
   { id: "petty", label: "Petty cash", kicker: "Expenses", title: 'Petty <span class="voice">cash</span>' },
   { id: "links", label: "Links", kicker: "Systems", title: 'Quick <span class="voice">links</span>' },
   { id: "alerts", label: "Alerts", kicker: "Stock", title: 'Stock <span class="voice">alerts</span>' },
@@ -160,7 +162,7 @@ const ROUTES = [
 const TITLE_AR = {
   dashboard: ["الخزينة", 'المخزون <span class="voice">بنظرة</span>'], products: ["المخزون", 'قائمة <span class="voice">الستوك</span>'],
   count: ["الجرد", 'جرد <span class="voice">الموقع</span>'], yield: ["التحليل", 'ما يمكن <span class="voice">بيعه</span>'],
-  history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'], profit: ["المالية", 'ربحية <span class="voice">المنتجات</span>'],
+  history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'], profit: ["المالية", 'ربحية <span class="voice">المنتجات</span>'], safety: ["السلامة", 'السلامة <span class="voice">والصيانة</span>'],
   unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], halls: ["القاعات", 'القاعات <span class="voice">والمقاعد</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], alerts: ["المخزون", 'تنبيهات <span class="voice">المخزون</span>'], petty: ["المصروفات", 'بيتي <span class="voice">كاش</span>'], links: ["الأنظمة", 'روابط <span class="voice">سريعة</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
 };
 const CAT_COLORS = ["#5b7bff", "#4c6bff", "#edf1f8", "#8c95a8", "#7f95ff", "#33427a", "#c9d4e6", "#7c8599", "#ffffff", "#a3adbf", "#26305a"];
@@ -217,7 +219,7 @@ const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace
 
 // ── Chrome ───────────────────────────────────────────────────
 const LANG_KEY = "noir-lang";
-const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", petty: "بيتي كاش", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
+const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", petty: "بيتي كاش", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
 function siteLang() { return sessionStorage.getItem(LANG_KEY) || "en"; }
 function renderNav() {
   $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings" && r.id !== "alerts").map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span></button>`).join("");
@@ -230,7 +232,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock/stock-history.js?v=85");
+const histMod = lazy("./stock/stock-history.js?v=86");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -259,7 +261,7 @@ document.addEventListener("click", e => {
 });
 function go(route) {
   if (CARD_DOOR) return;
-  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=85").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=86").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -292,7 +294,7 @@ function render() {
   $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
   $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, petty: viewPetty, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, petty: viewPetty, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -754,13 +756,20 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const profitMod = lazy("./finance/profit.js?v=85");
+const profitMod = lazy("./finance/profit.js?v=86");
 function viewProfit() {
   $("#title-actions").innerHTML = "";
   if (!$("#view").querySelector(".pf")) $("#view").innerHTML = `<div id="profit-host"><p class="empty">…</p></div>`;
   profitMod().then(m => { if (ui.route === "profit") m.renderProfit($("#profit-host") || $("#view"), helpers()); }).catch(e => toast(e.message, true));
 }
-const pettyMod = lazy("../petty/petty.js?v=85");
+const safetyMod = lazy("./safety/safety.js?v=86");
+function viewSafety() {
+  if ($("#sf-dlg")?.open) return; // a sync must not wipe a check being logged
+  $("#title-actions").innerHTML = "";
+  if (!$("#view").querySelector(".sf")) $("#view").innerHTML = `<div id="safety-host"><p class="empty">…</p></div>`;
+  safetyMod().then(m => { if (ui.route === "safety") m.renderSafety($("#safety-host") || $("#view"), { putDoc: store.putDoc, allDocs: store.allDocs, localDocs: store.localDocs, toast }); }).catch(e => toast(e.message, true));
+}
+const pettyMod = lazy("../petty/petty.js?v=86");
 function viewPetty() {
   if ($("#petty-host .pc, #petty-host .pc-lock")) return; // a store sync must not reset an open review
   $("#title-actions").innerHTML = "";
@@ -773,14 +782,14 @@ function viewAlerts() {
   $("#view").innerHTML = `<div id="alerts-host"></div>`;
   renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
 }
-const linksMod = lazy("./core/links.js?v=85");
+const linksMod = lazy("./core/links.js?v=86");
 function viewLinks() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="links-host"></div>`;
   linksMod().then(m => { if (ui.route === "links") m.renderLinks($("#links-host"), { allDocs: store.allDocs, localDocs: store.localDocs, putDoc: store.putDoc, toast }); })
     .catch(e => toast(e.message, true));
 }
-const hallsMod = lazy("./reports/halls.js?v=85");
+const hallsMod = lazy("./reports/halls.js?v=86");
 function viewHalls() {
   if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
   $("#title-actions").innerHTML = "";
@@ -788,7 +797,7 @@ function viewHalls() {
   hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
     .catch(e => toast(e.message, true));
 }
-const nightlyMod = lazy("./reports/nightly.js?v=85");
+const nightlyMod = lazy("./reports/nightly.js?v=86");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -858,7 +867,7 @@ function exportSession(s) {
 }
 
 // ── Settings ─────────────────────────────────────────────────
-const reportsMod = lazy("./reports/reports-admin.js?v=85");
+const reportsMod = lazy("./reports/reports-admin.js?v=86");
 // every upload of a system report is logged, so Settings can show when each one last came in
 async function markUpload(key, file) { await store.putDoc("uploads", key, { at: new Date().toISOString(), file: String(file || "") }); }
 const fmtN = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -871,10 +880,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=85"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=85"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=86"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=86"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=85")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=86")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -890,7 +899,7 @@ function reportHandlers() {
       toast(T(`Done · ${fmtN(d.tickets)} tickets · ${d.from} → ${d.to}`, `تم · ${fmtN(d.tickets)} تذكرة · ${d.from} → ${d.to}`) + (d.grand && d.grand !== d.tickets ? ` (${T("report", "التقرير")} ${d.grand})` : ""));
     },
     dcs: async (files, step) => {
-      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=85")]);
+      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=86")]);
       const XLSX = await loadXLSX();
       const ledger = await fetch("unaizah/ledger.json").then(r => r.json()).catch(() => ({ days: [] }));
       const known = [...new Set(ledger.days.flatMap(d => (d.cashiers || []).map(c => c.user)))];
@@ -907,7 +916,7 @@ function reportHandlers() {
       toast(`DCS · ${n} ${T("days", "يوم")} · ${from} → ${to}`);
     },
     rdr: async ([f]) => {
-      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=85")]);
+      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=86")]);
       const d = await parseRdrFile(f, await loadXLSX());
       await store.putDoc("rdr", "latest", d);
       await store.log("report", `RDR Exception Register · ${d.shifts.length} shifts · ${d.from} → ${d.to}`);
@@ -991,7 +1000,7 @@ if (CARD_DOOR) {
 } else {
   mountClock($("#clock"), siteLang());
   if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-  if (siteLang() === "ar") import("./core/i18n-ar.js?v=85").then(m => m.startArabic()).catch(() => {});
+  if (siteLang() === "ar") import("./core/i18n-ar.js?v=86").then(m => m.startArabic()).catch(() => {});
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })

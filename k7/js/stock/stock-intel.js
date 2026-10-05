@@ -1,11 +1,11 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=85";
-import { placement, isBulk } from "./fefo-place.js?v=85";
-import { usageOf } from "./consumption.js?v=85";
-import { salesSpace } from "./sales-space.js?v=85";
-import { AR as NAME_AR } from "../core/names-ar.js?v=85";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=86";
+import { placement, isBulk } from "./fefo-place.js?v=86";
+import { usageOf } from "./consumption.js?v=86";
+import { salesSpace } from "./sales-space.js?v=86";
+import { AR as NAME_AR } from "../core/names-ar.js?v=86";
 
 const LEAD = 7, SAFETY = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";

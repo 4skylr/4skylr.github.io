@@ -3,8 +3,8 @@
 // second click. Motion: GSAP + Draggable + InertiaPlugin (greensock/GSAP, vendored, loaded on first use).
 // Images: the transparent cut-outs in assets/cutouts (made from assets/products by a script); if a cut-out is missing
 // the original photo is shown on a white plate. The original images and their code are not touched.
-import { soldOf } from "../data/sales-data.js?v=85";
-import { alertFor } from "./stock-alerts.js?v=85";
+import { soldOf } from "../data/sales-data.js?v=86";
+import { alertFor } from "./stock-alerts.js?v=86";
 
 const LIBS = ["vendor/gsap/gsap.min.js", "vendor/gsap/Draggable.min.js", "vendor/gsap/InertiaPlugin.min.js"];
 let libP = null;
