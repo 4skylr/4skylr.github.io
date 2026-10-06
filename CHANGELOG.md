@@ -1,5 +1,10 @@
 # Changelog
 
+## v96 · 2026-10-06 · Scanner fix
+
+- **The in-app Scan button opens the product again.** After a code was read, the camera sheet stayed on top of the product, so nothing seemed to happen; it now closes. Reading is more reliable: the phone's own barcode detector where there is one, else zxing-cpp (Sec-ant/zxing-wasm), else the older ZXing reader, for both the QR and the Code 128 on each label. Tested with a camera feed of a label QR and barcode. · **إصلاح المسح من داخل الموقع.**
+- The printed barcodes and QR codes, and the link they open, are unchanged; all 71 decode to their product and open on the barcode page.
+
 ## v95 · 2026-10-06 · Product cards
 
 - **Stock → Cards uses Smit-Prajapati's product card (Uiverse.io)**, without any "buy": the image with the unit price, the heart (a like under your name), category and name; **colours** are the stores the product is in now (tap a dot for the quantity there); **sizes** are the product's other sizes (tubs, cups, lids, glasses, pack sizes…; tap one to flip the card to it); **stars** rank sales since 1 January against the other products, with the number sold. The yellow button opens the product, the small one its barcode card. White and Night versions. · **بطاقات المنتجات الجديدة.**

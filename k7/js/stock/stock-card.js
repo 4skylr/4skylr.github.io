@@ -3,11 +3,11 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=95";
-import { BARCODES } from "../data/barcodes.js?v=95";
-import { mountGauges } from "./indicators.js?v=95";
-import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=95";
-import { renderScanCard } from "./scan-view.js?v=95";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=96";
+import { BARCODES } from "../data/barcodes.js?v=96";
+import { mountGauges } from "./indicators.js?v=96";
+import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=96";
+import { renderScanCard } from "./scan-view.js?v=96";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -238,24 +238,54 @@ async function writeOff(p, batch) {
 }
 export async function printBarcodes() { location.hash = "labels"; }
 
+// Camera scanner for the printed labels (QR with the product link, Code 128 "NC-<id>"). The labels themselves are unchanged.
+// Reads with the phone's own BarcodeDetector when it has one, else zxing-cpp (Sec-ant/zxing-wasm, already vendored for
+// petty cash), else the older ZXing JS reader. Frames are read a few times a second; the first hit closes the camera.
 let scanner = null;
+const ZXW = "../../petty/vendor/zxing-reader.mjs";
+let zxwP = null;
+const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZXingModule({ overrides: { locateFile: (f, prefix) => f.endsWith(".wasm") ? new URL("../../petty/vendor/zxing_reader.wasm", import.meta.url).href : prefix + f } }); return m; });
 export async function openScanner(helpers, onId) {
   H = helpers;
-  await loadScript(LIB.zxingLib);
-  await loadScript(LIB.zxing);
-  H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">ZXing reads the saved barcode. It opens that card only.</p><video id="zx" style="width:100%;border-radius:16px;background:#000" playsinline></video><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
-  const Reader = window.ZXingBrowser?.BrowserMultiFormatReader;
-  if (!Reader) throw new Error("ZXing missing");
-  const reader = new Reader();
-  let done = false;
-  const controls = await reader.decodeFromVideoDevice(undefined, "zx", (result) => {
-    if (done || !result) return;
-    done = true;
-    controls.stop();
-    onId(idFromCode(result.getText()));
-  });
-  scanner = controls;
-  document.querySelector("#modal-root [data-close]")?.addEventListener("click", () => controls.stop());
+  const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar";
+  H.openModal(`<h2>${ar ? "امسح" : "Scan"} <span class="voice">${ar ? "الملصق" : "a label"}</span></h2><p class="lede">${ar ? "وجّه الكاميرا على الباركود أو الـ QR. تنفتح بطاقة المنتج مباشرة." : "Point the camera at the barcode or QR. The product opens straight away."}</p>
+    <div style="position:relative"><video id="zx" style="width:100%;border-radius:16px;background:#000;display:block" playsinline muted autoplay></video>
+    <p id="zx-msg" class="note" style="text-align:center"></p></div><div class="form-actions"><button class="btn ghost" data-close type="button">${ar ? "إغلاق" : "Close"}</button></div>`);
+  const video = document.getElementById("zx"), msg = document.getElementById("zx-msg");
+  let stream = null, done = false, timer = 0;
+  const stop = () => { done = true; clearTimeout(timer); stream?.getTracks().forEach(t => t.stop()); };
+  scanner = { stop };
+  document.querySelector("#modal-root [data-close]")?.addEventListener("click", stop);
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  } catch (e) { msg.textContent = ar ? "ما قدرنا نفتح الكاميرا. اسمح للموقع باستخدامها من إعدادات المتصفح." : "The camera could not start. Allow camera access for this site in the browser settings."; throw e; }
+  if (!document.body.contains(video)) { stop(); return; }
+  video.srcObject = stream; await video.play().catch(() => {});
+  // pick a reader
+  let read = null;
+  if ("BarcodeDetector" in window) {
+    try { const fm = await window.BarcodeDetector.getSupportedFormats(); if (fm.includes("qr_code")) { const det = new window.BarcodeDetector({ formats: ["qr_code", "code_128"].filter(f => fm.includes(f)) }); read = async c => (await det.detect(c))[0]?.rawValue || null; } } catch {}
+  }
+  if (!read) { try { const zx = await zxw(); read = async c => { const g = c.getContext("2d", { willReadFrequently: true }); const r = await zx.readBarcodes(g.getImageData(0, 0, c.width, c.height), { formats: ["QRCode", "Code128"], tryHarder: true, maxNumberOfSymbols: 1 }); return r.find(x => x.isValid)?.text || null; }; } catch {} }
+  if (!read) {
+    await loadScript(LIB.zxingLib); await loadScript(LIB.zxing);
+    const R = new window.ZXingBrowser.BrowserMultiFormatReader();
+    read = async c => { try { return R.decodeFromCanvas(c).getText(); } catch { return null; } };
+  }
+  const canvas = document.createElement("canvas");
+  const tick = async () => {
+    if (done) return;
+    if (!document.body.contains(video)) { stop(); return; }
+    if (video.readyState >= 2 && video.videoWidth) {
+      const w = Math.min(1280, video.videoWidth), h = Math.round(video.videoHeight * w / video.videoWidth);
+      if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
+      canvas.getContext("2d", { willReadFrequently: true }).drawImage(video, 0, 0, w, h);
+      const text = await read(canvas).catch(() => null);
+      if (text && !done) { stop(); onId(idFromCode(text)); return; }
+    }
+    timer = setTimeout(tick, 180);
+  };
+  tick();
 }
 export async function exportLabelsPdf(products) {
   await loadScript(LIB.pdf);

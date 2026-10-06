@@ -3,7 +3,7 @@
 //   items sold by the piece (cans, bags, cups):  Concession → Mini Store → Store
 //   group items sold by weight/volume (kg, L):   Concession = Mini Store (one front tier) → Store
 // A group is flagged when it expires at least a week sooner than a group that sits further forward.
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=95";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=96";
 
 const GAP = 7; // days; smaller gaps are the same delivery
 export const isBulk = p => p && (p.unit === "kg" || p.unit === "ltr");
