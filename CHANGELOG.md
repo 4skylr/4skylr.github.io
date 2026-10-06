@@ -1,5 +1,17 @@
 # Changelog
 
+## v90 · 2026-10-06 · Recipe theater, a faster site, the lock removed
+
+- **Recipe theater** replaces every old recipe display (barcode card sheet, showcase back, product 360, Yield menu rows and popcorn board, Profit breakdown). Recipes now appear as tokens; one tap opens a full-screen reactor: the menu item at the core, its ingredients in orbit (drag to spin, with inertia), what the stock makes and which ingredient runs out first, cost per serve and its split ("cost DNA"), menu margin, calories, and a batch planner that shows what each ingredient needs against what is on hand. Swipe or use the arrows to move through the list. · **مسرح الوصفة**: بديل كل طرق عرض الوصفة القديمة.
+- **Privacy lock removed**: money, prices and recipes show as they did before v89. The admin sign-in for Settings and the audits is unchanged (clock PIN). · **إلغاء قفل الأسعار والمنتجات.**
+- **Speed** · **أسرع**:
+  - The header clock no longer re-lays out the page 24 times a second (its frame counter is now a compositor animation). Idle CPU on the Overview: 396 ms → 17 ms per 5 s.
+  - The showcase lets GSAP's ticker sleep when nothing moves (455 ms → 27 ms idle).
+  - The barcode card dropped progressbar.js, which ran an animation loop forever, and its spinning borders now rotate on the compositor (idle 580 ms → 5–117 ms).
+  - Finance/Unaizah status lights animate opacity instead of box-shadow (908 ms → 17 ms idle).
+  - Start-up modules are preloaded in parallel, Yield and the recipe theater load only when opened, and the opening shutters play once per visit. First paint on a throttled phone: 1.2 s → 0.9 s.
+- **Checks**: all 71 barcodes and QR codes decoded and matched to their products; every product opens on the barcode door. Dead code removed (unused product panel, old recipe cards and their CSS). CI checks the preload list.
+
 ## v89 · 2026-10-06 · Privacy lock, vault dial, Lucide icons
 
 - **Money and recipes are locked** with the clock PIN (HHMM): stock values, unit costs, menu prices, margins, revenue, recipes and their cost show as •••• until the PIN is in. Quantities, expiry dates, locations and barcodes stay open to everyone. The lock closes after 30 minutes without a tap, or from the lock button in the header. · **الأموال والوصفات مقفلة بالرقم السري** (الساعة والدقايق). الكميات والتواريخ والمواقع والباركود مفتوحة للجميع.

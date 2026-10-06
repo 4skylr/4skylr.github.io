@@ -2,35 +2,14 @@
 // Cost of a serving = Σ recipe qty ÷ recipe-units-per-stock-unit × cost of one stock unit. The stock-unit cost comes from
 // the price list (case price ÷ what the case holds); materials the list does not sell fall back to the system's rate.
 // Profit = menu price net of 15% VAT − serving cost. Group items (one price, several flavours) are costed per option.
-import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=89";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=89";
-import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=89";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=89";
-import { recipeKcal } from "../data/nutrition.js?v=89";
+import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=90";
+import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=90";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=90";
+import { wire } from "../stock/recipe-theater.js?v=90";
+import { unitCost, recipeCost, RM, LIST } from "./costing.js?v=90";
+export { unitCost, recipeCost };
 
 const low = s => String(s || "").toLowerCase();
-const RM = new Map(Object.entries(RAW_MATERIALS).map(([k, v]) => [low(k), { key: k, ...v }]));
-const RECIPE = new Map(RECIPES.filter(r => !r.ta).map(r => [low(r.name), r]));
-// first priced line per raw material wins (the list repeats a material for each flavour of Rani, Barbican, …)
-const LIST = new Map();
-PRICE_LIST.forEach(l => { if (l.rm && l.per != null && !LIST.has(low(l.rm))) LIST.set(low(l.rm), l); });
-
-export function unitCost(rm) {
-  const m = RM.get(low(rm)), l = LIST.get(low(rm));
-  if (l) return { cost: l.per, src: "list", line: l, sys: m?.rate ?? null, unit: m?.stock || l.unit };
-  return { cost: m ? Number(m.rate) || 0 : 0, src: m ? "system" : "none", sys: m?.rate ?? null, unit: m?.stock || "" };
-}
-export function recipeCost(name) {
-  const r = RECIPE.get(low(name)); if (!r) return null;
-  const lines = r.lines.map(l => {
-    const m = RM.get(low(l.rm)), u = unitCost(l.rm), conv = m?.conv || 1;
-    const cost = l.qty / conv * u.cost, was = l.qty / conv * (u.sys ?? u.cost);
-    return { rm: m?.key || l.rm, qty: l.qty, unit: m?.recipe || "", cost, was, src: u.src, per: u.cost, stock: u.unit };
-  });
-  const total = lines.reduce((a, l) => a + l.cost, 0), was = lines.reduce((a, l) => a + l.was, 0);
-  return { name: r.name, cat: r.cat, lines, total, was, kcal: recipeKcal(r, RAW_MATERIALS) };
-}
-
 // what one option of a group item is: its flavour, and the ingredients that make it different
 const FLAVOUR_AR = { salted: "مملح", cheese: "جبن", caramel: "كراميل", "pizza savory": "بيتزا", coke: "كوكاكولا", "coke zero": "كوكاكولا زيرو", fanta: "فانتا",
   sprite: "سبرايت", strawberry: "فراولة", "blue raspberry": "توت أزرق", pomegranate: "رمان", chicken: "دجاج", beef: "لحم", malt: "شعير", raspberry: "توت",
@@ -79,11 +58,13 @@ export function renderProfit(host, H) {
   const nm = i => esc(ar ? i.ar : i.en);
   const tone = m => m >= .7 ? "good" : m >= .5 ? "ok" : m >= .3 ? "warn" : "bad";
   const bar = m => `<span class="pf-bar t-${tone(m)}"><i style="width:${Math.max(2, Math.min(100, m * 100)).toFixed(1)}%"></i></span>`;
-  const src = s => s === "list" ? `<abbr class="pf-src list" title="${T("Supplier price list", "قائمة أسعار المورد")}">${T("list", "القائمة")}</abbr>` : `<abbr class="pf-src sys" title="${T("Not on the price list: system cost", "مو موجود بالقائمة: تكلفة النظام")}">${T("system", "النظام")}</abbr>`;
-  const qtyU = (q, u) => `${+q.toFixed(2)} ${esc(u)}`;
   const best = [...A.items].sort((a, b) => b.profit - a.profit)[0], thin = [...A.items].sort((a, b) => a.margin - b.margin)[0];
 
-  const breakdown = o => `<table class="pf-lines"><tbody>${o.lines.map(l => `<tr><th>${esc(l.rm)}</th><td class="data">${qtyU(l.qty, l.unit)}</td><td class="data">${l.per.toFixed(l.per < 1 ? 3 : 2)} / ${esc(l.stock)}</td><td>${src(l.src)}</td><td class="data">${l.cost.toFixed(3)}</td></tr>`).join("")}</tbody></table>`;
+  // the line-by-line recipe lives in the recipe theater; here: where the cost goes, and the door to it
+  const DNA = ["#6ccbff", "#ffb547", "#3ed69e", "#5b7bff", "#ff8a5c", "#dce6ff", "#b18cff", "#ff6fb0", "#7de3d0", "#ffd36b", "#8fb4ff", "#c6f36b"];
+  const breakdown = o => `<div class="pf-dna">${o.lines.map((l, k) => ({ l, c: DNA[k % DNA.length] })).filter(x => x.l.cost > 0).sort((a, b) => b.l.cost - a.l.cost)
+      .map(x => `<i style="--w:${Math.max(.8, x.l.cost / (o.total || 1) * 100).toFixed(2)}%;--c:${x.c}" title="${esc(x.l.rm)} · ${x.l.cost.toFixed(2)} (${Math.round(x.l.cost / (o.total || 1) * 100)}%)"></i>`).join("")}</div>
+    <button type="button" class="btn sm ghost pf-rt" data-rt="${esc(o.name)}">${T("Open the recipe", "افتح الوصفة")} · ${o.lines.length} ${T("ingredients", "مكوّن")}</button>`;
   const itemRow = i => {
     const multi = i.options.length > 1, open = state.open.has(i.id);
     const costTxt = multi && i.max - i.min > 0.005 ? `${i.min.toFixed(2)}–${i.max.toFixed(2)}` : i.cost.toFixed(2);
@@ -146,6 +127,7 @@ export function renderProfit(host, H) {
     <section class="slab pf-body">${{ items: tabItems, combos: tabCombos, list: tabList, changes: tabChanges }[state.tab]()}</section>
   </div>`;
   const again = () => renderProfit(host, H);
+  wire(host, H, { lang: ar ? "ar" : "en" });
   host.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { state.tab = b.dataset.tab; again(); });
   host.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { state.group = b.dataset.g; again(); });
   host.querySelector("#pf-sort")?.addEventListener("change", e => { state.sort = e.target.value; again(); });

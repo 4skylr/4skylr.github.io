@@ -195,40 +195,10 @@ em, i { font-style: normal; }
 .lk-card { grid-template-rows: 1fr auto; }
 .lk-act { align-self: end; align-items: center; }
 
-/* ── Privacy lock (v89): masked money, lock button, PIN sheet, vault page ───────────── */
-.masked{font-family:"Geist Mono",ui-monospace,monospace;letter-spacing:.18em;color:var(--muted);user-select:none}
-.lock-btn{position:relative}
-.lock-btn svg{width:18px;height:18px}
-.lock-btn.is-open{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
-.lock-btn.is-open::after{content:"";position:absolute;inset-block-start:4px;inset-inline-end:4px;width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good)}
+/* Lucide icons */
 .lu{width:1.15em;height:1.15em;flex:none}
-
-.pin-sheet{border:1px solid var(--line-hi);border-radius:var(--r);background:linear-gradient(180deg,var(--glass-hi),var(--plate));color:var(--ink);padding:0;width:min(340px,calc(100vw - 32px));box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(108,203,255,.06)}
-.pin-sheet::backdrop{background:rgba(2,4,8,.66);backdrop-filter:blur(6px)}
-.pin-form{display:grid;gap:10px;padding:22px 20px 18px;text-align:center;justify-items:center}
-.pin-form h3{margin:0;font-size:1.05rem}
-.pin-form p{margin:0;color:var(--ink-2);font-size:.86rem;line-height:1.5}
-.pin-ic{width:40px;height:40px;fill:none;stroke:var(--ice);stroke-width:1.6;stroke-linecap:round;filter:drop-shadow(0 0 10px rgba(108,203,255,.45))}
-.pin-in,.vlock-form .input{width:100%;max-width:200px;text-align:center;font-family:"Geist Mono",ui-monospace,monospace;font-size:1.5rem;letter-spacing:.5em;padding-inline-start:.5em}
-.pin-err,.vlock-err{color:var(--bad)!important;font-weight:600}
-.pin-act{display:flex;gap:8px;justify-content:center;width:100%}
-.pin-act .btn{flex:1}
-
-.vlock{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:center;min-height:min(70vh,560px);border:1px solid var(--line);border-radius:calc(var(--r) + 4px);padding:24px;background:radial-gradient(120% 90% at 30% 40%,rgba(91,123,255,.14),transparent 60%),var(--plate);overflow:hidden}
-.vlock-stage{position:relative;aspect-ratio:1;width:100%;max-width:440px;justify-self:center}
-.vlock-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.vlock-stage:not(.is-3d)::before{content:"";position:absolute;inset:12%;border-radius:50%;border:10px solid #2c3446;background:radial-gradient(circle,#2a3142,#11151f 70%);box-shadow:0 0 0 2px var(--line-hi),0 20px 60px rgba(0,0,0,.5)}
-.vlock-copy{display:grid;gap:12px}
-.vlock-k{margin:0;font:600 .72rem/1 "Geist Mono",ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--ice)}
-.vlock-copy h2{margin:0;font-size:clamp(1.4rem,3vw,2rem);line-height:1.15}
-.vlock-copy p{margin:0;color:var(--ink-2);line-height:1.6}
-.vlock-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.vlock-css{position:absolute;inset:auto 0 8%;display:flex;gap:10px;justify-content:center}
-.vlock-css i{width:12px;height:12px;border-radius:50%;background:#1b2232;box-shadow:inset 0 0 0 1px var(--line-hi);transition:background .2s,box-shadow .2s}
-.vlock-css i.on{background:var(--ice);box-shadow:0 0 12px var(--ice)}
-.vlock-css.bad i{background:var(--bad);box-shadow:0 0 12px var(--bad)}
-@media (max-width:720px){.vlock{grid-template-columns:1fr;padding:16px;gap:8px;min-height:0}.vlock-stage{max-width:300px}.vlock-copy{text-align:center;justify-items:center}.vlock-form{justify-content:center}}
-.locked-note{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:.82rem}
-.locked-note svg{width:14px;height:14px}
-.unlock-chip{margin:8px 0 14px;gap:6px;color:var(--ice)}
-.unlock-chip svg{width:14px;height:14px}
+/* clock frames: a 24-line reel stepped on the compositor (no layout per frame) */
+.clk-t .ff{display:inline-block;height:1.2em;line-height:1.2em;overflow:hidden;vertical-align:bottom;contain:strict;width:3.2ch}
+.clk-t .ff i{display:block;font-style:normal;animation:ff-reel 1s steps(24) infinite;will-change:transform}
+@keyframes ff-reel{to{transform:translateY(-100%)}}
+@media (prefers-reduced-motion:reduce){.clk-t .ff{display:none}}

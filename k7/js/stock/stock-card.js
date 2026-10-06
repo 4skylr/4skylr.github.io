@@ -3,12 +3,11 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=89";
-import { productPanel } from "./analytics.js?v=89";
-import { BARCODES } from "../data/barcodes.js?v=89";
-import { mountGauges } from "./indicators.js?v=89";
-import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=89";
-import { renderScanCard } from "./scan-view.js?v=89";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=90";
+import { BARCODES } from "../data/barcodes.js?v=90";
+import { mountGauges } from "./indicators.js?v=90";
+import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=90";
+import { renderScanCard } from "./scan-view.js?v=90";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -135,7 +134,6 @@ export function openProductCard(p, helpers) {
       }).join("") || `<p class="note">No batch on file.</p>`}</div>`).join("") : `<p class="note">This item is not on the September expiry sheet.</p>`}
       ${pinUnlocked() ? `<div class="form-actions" style="margin-top:12px"><button class="btn sm" id="edit-exp" type="button">Edit batches</button></div>` : `<p class="note">Batch edits need the pin. Unlock lasts ${PIN_HOURS} hours.</p><button class="btn sm" id="unlock" type="button">Unlock edits</button>`}
     </section>
-    ${productPanel(p, H)}
     <div class="form-actions"><button class="btn ghost" data-close type="button">Close</button><button class="btn" id="print-one" type="button">Print this barcode</button></div>`;
   H.openModal(html, "wide");
   const mark = savedMark(p.id); const img = document.getElementById("card-qr"); if (img) img.src = mark.qr;

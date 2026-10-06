@@ -4,27 +4,16 @@
 // expiry groups. "Open product" opens the full card; the heart records a like under the viewer's name. Motion: GSAP + Draggable + InertiaPlugin (greensock/GSAP, vendored, loaded on first use).
 // Images: the transparent cut-outs in assets/cutouts (made from assets/products by a script); if a cut-out is missing
 // the original photo is shown on a white plate. The original images and their code are not touched.
-import { soldOf } from "../data/sales-data.js?v=89";
-import { alertFor } from "./stock-alerts.js?v=89";
-import { placement } from "./fefo-place.js?v=89";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=89";
-import { KCAL, recipeKcal } from "../data/nutrition.js?v=89";
-import { mountLikes } from "../core/likes.js?v=89";
-import { isOpen } from "../core/lock.js?v=89";
+import { soldOf } from "../data/sales-data.js?v=90";
+import { alertFor } from "./stock-alerts.js?v=90";
+import { placement } from "./fefo-place.js?v=90";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=90";
+import { KCAL, recipeKcal } from "../data/nutrition.js?v=90";
+import { mountLikes } from "../core/likes.js?v=90";
+import { deck, wire } from "./recipe-theater.js?v=90";
 
 const low = s => String(s || "").toLowerCase();
 // "Xtra Large Tub Caramel Popcorn - 130 Oz" → "Caramel · 130 oz"; flavours in Arabic on the Arabic site
-const FL_AR = { salted: "مملح", cheese: "جبن", caramel: "كراميل", "pizza savory": "بيتزا", coke: "كوكاكولا", "coke zero": "كوكاكولا زيرو", fanta: "فانتا", sprite: "سبرايت",
-  strawberry: "فراولة", "blue raspberry": "توت أزرق", pomegranate: "رمان", chicken: "دجاج", beef: "لحم", nachos: "ناتشوز", combo: "كومبو", lemonade: "ليمون", mojito: "موهيتو" };
-function prettyRecipe(name, ar) {
-  const size = (name.match(/(\d+)\s*oz/i) || [])[1];
-  let f = name.replace(/\b(Xtra Large|Large|Medium|Regular|Family|Small|Tub|Popcorn|Lrg|Reg|Med)\b/gi, " ").replace(/^SLUSH\s*-\s*/i, "").replace(/^HOT DOG\s*/i, "Hot dog ").replace(/-?\s*\d+\s*oz\b/gi, "").replace(/[-·]\s*$/, "").replace(/\s{2,}/g, " ").trim();
-  const hd = /^hot dog\s+(\w+)/i.exec(f);
-  if (hd) return ar ? `هوت دوق · ${FL_AR[low(hd[1])] || hd[1]}` : `Hot dog · ${hd[1][0].toUpperCase()}${low(hd[1]).slice(1)}`;
-  if (f === f.toUpperCase()) f = low(f).replace(/\b\w/g, c => c.toUpperCase());
-  if (ar && FL_AR[low(f)]) f = FL_AR[low(f)]; // whole names only: half-translated names read worse than English
-  return size ? `${f} · ${size} oz` : f;
-}
 const plural = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n <= 10 ? `${n} ${few}` : `${n} ${many}`;
 // recipes this product goes into (by its system name), heaviest use first; take-away duplicates left out
 function usesOf(p) {
@@ -65,6 +54,7 @@ const S = { id: null, pos: 0, list: [], gsap: null, drag: null, host: null, H: n
 export async function renderShowcase(host, H, list) {
   const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar", T = (en, a) => ar ? a : en, esc = H.esc;
   S.host = host; S.H = H; S.list = list;
+  wire(host, () => S.H, { lang: (sessionStorage.getItem("noir-lang") || "en") === "ar" ? "ar" : "en" });
   if (!list.length) { host.innerHTML = `<p class="empty">${T("Nothing matches the search or the category.", "ما فيه شي يطابق البحث أو الفئة.")}</p>`; return; }
   let at = Math.max(0, list.findIndex(p => p.id === S.id)); S.pos = at; S.id = list[at].id;
   const cats = [...new Set(list.map(p => p.category))];
@@ -131,8 +121,7 @@ export async function renderShowcase(host, H, list) {
       <h2 class="sc-name">${ar && nameAr ? nameAr : nameEn}</h2>
       ${own != null ? `<p class="sc-kcal"><b class="data">≈ ${own}</b> ${T("kcal per piece, from its label", "سعرة للحبة حسب الملصق")}</p>` : ""}
       <h3 class="sc-h">${uses.length ? T(`Goes into ${uses.length} menu recipe${uses.length > 1 ? "s" : ""}`, `يدخل في ${plural(uses.length, "وصفة وحدة", "وصفتين", "وصفات", "وصفة")}`) : T("Not used in a menu recipe", "ما يدخل بوصفة منيو")}</h3>
-      ${uses.length && !isOpen() ? `<button type="button" class="btn sm ghost unlock-chip" data-unlock>🔒 ${T("Recipes open with the PIN", "الوصفات تنفتح بالرقم السري")}</button>` : ""}
-      ${uses.length && isOpen() ? `<ul class="sc-rec">${uses.slice(0, 6).map(u => `<li title="${esc(u.r.name)}"><span>${esc(prettyRecipe(u.r.name, ar))}</span><b class="data">${+u.qty.toFixed(2)} ${unitOf(u.unit)}</b><em class="data">${u.kcal != null ? `≈ ${u.kcal} ${T("kcal", "سعرة")}` : ""}</em></li>`).join("")}</ul>${uses.length > 6 ? `<p class="sc-more">+${uses.length - 6} ${T("more", "غيرها")}</p>` : ""}` : ""}
+      ${uses.length ? deck(uses.map(u => u.r.name), H, { lang: ar ? "ar" : "en", compact: true, notes: Object.fromEntries(uses.map(u => [u.r.name, `${+u.qty.toFixed(2)} ${unitOf(u.unit)} ${T("each", "للحصة")}`])) }) : ""}
       <h3 class="sc-h">${G.length ? T(`${G.length} expiry group${G.length > 1 ? "s" : ""}`, plural(G.length, "مجموعة صلاحية وحدة", "مجموعتين صلاحية", "مجموعات صلاحية", "مجموعة صلاحية")) : T("No dated groups", "ما فيه مجموعات بتاريخ")}</h3>
       ${G.length ? `<ul class="sc-grp">${G.slice(0, 4).map(g => `<li class="${g.left < 0 ? "bad" : g.left <= 30 ? "warn" : ""}"><span>${esc(ar ? LOC_AR[g.loc] || g.location : LOC_EN[g.loc] || g.location)}</span><b class="data">${H.qty(g.qty)}</b><em>${when(g)}</em></li>`).join("")}</ul>` : ""}
       <p class="sc-note">${T("Calories are estimates from the recipe.", "السعرات تقديرية محسوبة من الوصفة.")}</p>
@@ -213,7 +202,11 @@ export async function renderShowcase(host, H, list) {
   S.layout = layout;
   layout(); settle(at, true);
   sec.classList.toggle("still", still());
-  try { S.gsap = await loadLibs(); } catch { return; } // without the library: buttons, keys and clicks still work, just without motion
+  try { S.gsap = await loadLibs(); } catch { return; }
+  // Draggable keeps GSAP's ticker listening, so it never sleeps and the page repaints 60 times a second while idle.
+  // Put it to sleep whenever nothing is moving; any new tween or drag wakes it again.
+  if (!S.nap) S.nap = setInterval(() => { const g = window.gsap; if (!g || S.dragging || document.hidden) return;
+    if (!g.globalTimeline.getChildren(true, true, false).some(t => t.isActive())) g.ticker.sleep(); }, 1500); // without the library: buttons, keys and clicks still work, just without motion
   if (!host.isConnected || S.host !== host) return;
   const g = S.gsap;
   if (!still()) g.from(its.filter((b, i) => Math.abs(i - at) < 6), { y: 80, opacity: 0, duration: .9, stagger: .05, ease: "power3.out", clearProps: "opacity" });

@@ -2,8 +2,8 @@
 // A check's next date = last logged date + its interval. Never-logged checks are shown as "not logged yet", not as
 // overdue, so the board only raises what it actually knows. Logs live in the "safetyLog" collection (Firestore when
 // connected, this browser otherwise). Device list: data/safety-assets.js · drawings: safety/art.js.
-import { ASSETS, SYSTEMS } from "../data/safety-assets.js?v=89";
-import { ART } from "./art.js?v=89";
+import { ASSETS, SYSTEMS } from "../data/safety-assets.js?v=90";
+import { ART } from "./art.js?v=90";
 
 const COL = "safetyLog", DAY = 864e5, NAME_KEY = "noir-safety-by";
 const state = { sys: "all", remote: null, loading: false };

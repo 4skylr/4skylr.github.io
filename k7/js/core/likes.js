@@ -1,7 +1,7 @@
 // Product likes: whoever opens a product (a barcode scan, the showcase) can like it under their name.
 // One like per name per product, kept in the "likes" collection (Firestore when connected, this browser otherwise).
 // The name is asked once and remembered on this device.
-import * as store from "./store.js?v=89";
+import * as store from "./store.js?v=90";
 
 const COL = "likes", NAME_KEY = "noir-like-name";
 let all = null, loading = null;

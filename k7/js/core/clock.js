@@ -20,11 +20,11 @@ export function mountClock(el, lang = "en") {
   if (!el) return;
   const L = lang === "ar" ? "ar" : "en", R = 17, C = 2 * Math.PI * R;
   el.innerHTML = `<div class="clk-ring" aria-hidden="true"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="${R}" class="t"/><circle cx="22" cy="22" r="${R}" class="v" stroke-dasharray="0 ${C}" transform="rotate(-90 22 22)"/></svg><i></i></div>
-    <div class="clk-main"><b class="clk-t data" dir="ltr"><span class="hm">--:--</span><span class="sec">:--</span><span class="ff" aria-hidden="true">:00</span></b><span class="clk-d" dir="${L === "ar" ? "rtl" : "ltr"}"><span class="dn"></span><span class="dt"></span></span></div>
+    <div class="clk-main"><b class="clk-t data" dir="ltr"><span class="hm">--:--</span><span class="sec">:--</span><span class="ff" aria-hidden="true"><i>${Array.from({ length: 24 }, (_, f) => ":" + pad(f)).join("<br>")}</i></span></b><span class="clk-d" dir="${L === "ar" ? "rtl" : "ltr"}"><span class="dn"></span><span class="dt"></span></span></div>
     <div class="clk-wk"><span class="clk-w data"></span><span class="clk-days" dir="${L === "ar" ? "rtl" : "ltr"}" lang="${L}">${DAYS[L].map((d, i) => `<i data-d="${i}" title="${DAYS_LONG[L][i]}">${d}</i>`).join("")}</span><span class="clk-yr"><u></u></span></div>`;
-  const $ = s => el.querySelector(s), ring = $(".v"), ff = $(".ff");
+  const $ = s => el.querySelector(s), ring = $(".v"), ff = $(".ff") || {};
   const still = matchMedia("(prefers-reduced-motion: reduce)");
-  if (still.matches) ff.remove();
+  if (still.matches) ff.remove?.();
   let last = "";
   const tick = () => {
     const d = new Date(), hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -42,11 +42,11 @@ export function mountClock(el, lang = "en") {
     $(".clk-yr u").style.width = `${(w.week / total * 100).toFixed(1)}%`;
     el.setAttribute("aria-label", `${hm} · ${$(".clk-d").textContent} · ${$(".clk-w").title}`);
   };
-  // frames: one text node, written only when the frame number changes
-  let raf = 0, lastF = -1;
-  const frame = () => { const f = Math.floor(new Date().getMilliseconds() * 24 / 1000); if (f !== lastF) { lastF = f; ff.textContent = ":" + pad(f); } raf = requestAnimationFrame(frame); };
-  const run = () => { if (ff.isConnected && !document.hidden) raf = requestAnimationFrame(frame); };
-  tick(); run();
+  // frames: a reel of :00–:23 moved by a CSS steps() animation on the compositor, so the page never re-lays out for it;
+  // each second the reel is re-synced to the real clock
+  const reel = ff.querySelector?.("i");
+  const sync = () => { if (reel) reel.style.animationDelay = `-${new Date().getMilliseconds()}ms`; };
+  tick(); sync();
   let timer = setInterval(tick, 1000);
-  document.addEventListener("visibilitychange", () => { clearInterval(timer); cancelAnimationFrame(raf); if (!document.hidden) { last = ""; tick(); timer = setInterval(tick, 1000); run(); } });
+  document.addEventListener("visibilitychange", () => { clearInterval(timer); if (!document.hidden) { last = ""; tick(); sync(); timer = setInterval(tick, 1000); } });
 }

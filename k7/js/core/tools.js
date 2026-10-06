@@ -1,5 +1,4 @@
 // Everyday tools: quick find (Ctrl/⌘ K or the search button), reorder list, and install-to-home-screen.
-import { askPin } from "./lock.js?v=89";
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
   en: { find: "Find a product, page or code", none: "Nothing matches.", pages: "Pages", items: "Products", acts: "Actions", hint: "↑ ↓ to move · Enter to open · Esc to close",
@@ -48,7 +47,7 @@ export function openReorder(H) {
     <div class="actions"><div class="end"><button class="btn" id="rq-copy">${L.copy}</button><button class="btn hot" id="rq-csv">${L.csv}</button></div></div>`);
   const flat = [["Code", "Report name", "Product", "Reason", "On hand", "Unit", "Full level", "Order", "Unit cost", "Est. cost SAR"],
     ...rows.map(r => [r.p.code || "", r.p.sku || "", r.p.name, r.why, r.have, H.UNITS[r.p.unit] || r.p.unit, r.par || "", r.order, r.p.rate || 0, r.cost.toFixed(2)])];
-  m.querySelector("#rq-csv").onclick = () => askPin().then(ok => ok && H.download(`reorder-${new Date().toISOString().slice(0, 10)}.csv`, H.csv(flat), "text/csv;charset=utf-8"));
+  m.querySelector("#rq-csv").onclick = () => H.download(`reorder-${new Date().toISOString().slice(0, 10)}.csv`, H.csv(flat), "text/csv;charset=utf-8");
   m.querySelector("#rq-copy").onclick = async () => {
     const txt = rows.filter(r => r.order).map(r => `${r.p.name} — ${H.qty(r.order)} ${H.UNITS[r.p.unit] || ""}`).join("\n");
     try { await navigator.clipboard.writeText(txt); H.toast(L.copied); } catch { H.toast("Clipboard blocked", true); }

@@ -22,16 +22,15 @@ It is built from the app (`k7/door/build.mjs`); do not edit it by hand.
 | `k7/petty` | petty cash: invoice reader and the monthly workbook (self-contained) |
 | `k7/vendor` | third-party libraries, vendored so the app works offline |
 
-## Privacy and security
+## Security
 
-Money (values, costs, prices, revenue) and recipes are hidden behind the clock PIN (`k7/js/core/lock.js`); counts,
-expiry dates, locations and barcodes are open. **This is a screen lock, not encryption:** the site is static and this
-repository is public, so the data files under `k7/js/data` (and their git history) can be read by anyone who looks
-for them. Real protection means moving the money and recipe data into Firestore behind Firebase Authentication with
-security rules that only let signed-in managers read it, and then removing those files from the repository.
+Settings and the audit tools open with the clock PIN. The site is static and this repository is public, so everything
+under `k7/js/data` can be read by anyone; keep sensitive files (invoices, card data, personal details) out of it.
 
+## Checks
 
-Every push that touches the site runs [CI](.github/workflows/ci.yml): ESLint, then a Playwright smoke test that opens every
+Every push that touches the site runs [CI](.github/workflows/ci.yml): ESLint, a check that the start-up modulepreload list
+is current (`node .github/scripts/preload.mjs`), then a Playwright smoke test that opens every
 page in English and Arabic at phone and desktop width and checks the barcode door. Locally:
 
 ```sh
@@ -45,7 +44,6 @@ Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an i
 ## Open-source libraries
 
 [GSAP](https://github.com/greensock/GSAP) ·
-[Three.js](https://github.com/mrdoob/three.js) ·
 [Lucide](https://github.com/lucide-icons/lucide) ·
 [Apache ECharts](https://github.com/apache/echarts) ·
 [pdf.js](https://github.com/mozilla/pdf.js) ·

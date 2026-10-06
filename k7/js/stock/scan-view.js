@@ -5,13 +5,12 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=89";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=89";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=89";
-import { placement } from "./fefo-place.js?v=89";
-import { usageOf } from "./consumption.js?v=89";
-import { mountLikes } from "../core/likes.js?v=89";
-import { isOpen, askPin } from "../core/lock.js?v=89";
+import { AR, LOC_AR } from "../core/names-ar.js?v=90";
+import { RECIPES } from "../data/recipes-data.js?v=90";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=90";
+import { placement } from "./fefo-place.js?v=90";
+import { usageOf } from "./consumption.js?v=90";
+import { mountLikes } from "../core/likes.js?v=90";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -22,30 +21,12 @@ const GROUP_HUES = ["#5b7bff", "#dce6ff", "#6ccbff", "#ffb547", "#3ed69e", "#ff8
 const hueOf = n => GROUP_HUES[((Number(n) || 1) - 1) % GROUP_HUES.length];
 const HORIZON = 365; // days that count as a "full" ring
 
-const RCAT_AR = { popcorn: "فشار", combo: "كومبو", fountain: "مشروب نافورة", slush: "سلاش", nachos: "ناتشوز", hotdog: "هوت دوق",
-  mocktail: "موكتيل", floss: "غزل البنات", candy: "حلويات", packaged: "معلّب", refill: "تعبئة" };
 const LATE = { combo: 2, refill: 1 }; // single items first, combos last
 function recipesFor(p) {
   const key = (p.sku || p.name || "").toLowerCase();
   // non-takeaway first, then the ones that use the most of this item
-  return RECIPES.filter(r => r.lines.some(l => l.rm.toLowerCase() === key))
-    .sort((a, b) => (a.ta ? 1 : 0) - (b.ta ? 1 : 0) || (LATE[a.cat] || 0) - (LATE[b.cat] || 0) || a.name.localeCompare(b.name)).slice(0, 6);
-}
-// how many of a recipe the current stock makes, and which ingredient runs out first
-function evalRecipe(r, products, H) {
-  const lines = r.lines.map(l => {
-    const item = findProduct(products, l.rm);
-    const key = Object.keys(RAW_MATERIALS).find(k => k.toLowerCase() === String(l.rm).toLowerCase());
-    const conv = (key && RAW_MATERIALS[key].conv) || 1;
-    const have = item ? H.total(item) * conv : 0;
-    return { l, item, make: l.qty > 0 ? Math.floor(have / l.qty + 1e-9) : Infinity };
-  });
-  const limit = lines.reduce((a, b) => (b.make < a.make ? b : a), lines[0]);
-  return { lines, limit, make: limit ? limit.make : 0 };
-}
-function findProduct(products, rm) {
-  const k = String(rm || "").toLowerCase();
-  return (products || []).find(x => (x.sku || "").toLowerCase() === k || (x.name || "").toLowerCase() === k);
+  return RECIPES.filter(r => !r.ta && r.lines.some(l => l.rm.toLowerCase() === key))
+    .sort((a, b) => (LATE[a.cat] || 0) - (LATE[b.cat] || 0) || a.name.localeCompare(b.name)).slice(0, 14);
 }
 
 const libs = new Map();
@@ -188,22 +169,6 @@ export async function renderScanCard(root, p, ctx) {
   const unit = H.UNITS[p.unit] || "";
   const locRows = H.LOCATIONS.map((l, i) => ({ l, n: Number(p.stock?.[l.id]) || 0, hue: ["#5b7bff", "#dce6ff", "#6ccbff"][i % 3] }));
   const hits = recipesFor(p);
-  // the recipes (and their cost) only render once the PIN is in; the button asks for it
-  const recipeSheet = () => `
-      <h2>${L.recipeHead} <i>${hits.length}</i></h2>
-      ${hits.length ? hits.map((r, ri) => {
-        const ev = evalRecipe(r, products, H);
-        return `<article class="rx-card" style="--rx:${GROUP_HUES[ri % GROUP_HUES.length]}">
-          <header><span class="rx-cat">${H.esc((lang === "ar" ? RCAT_AR[r.cat] : null) || r.cat)}</span><h3>${H.esc(r.name)}</h3>
-            <div class="rx-make"><small>${L.canMake}</small><b dir="ltr">${ev.make === Infinity ? "∞" : H.qty(ev.make)}</b></div></header>
-          <div class="rx-ings">${ev.lines.map(x => {
-            const l = x.l, item = x.item;
-            const img = item && item.image ? H.src(item.image) : "";
-            return `<figure class="${x === ev.limit ? "lim" : ""} ${item && item.id === p.id ? "me" : ""}">${img ? `<img src="${H.esc(img)}" alt="">` : `<span>${H.esc(String(l.rm).slice(0, 2))}</span>`}<figcaption>${H.esc(item ? nameOf(item) : l.rm)}<i dir="ltr">${H.esc(String(l.qty))} ${H.esc(l.uom)}</i></figcaption></figure>`;
-          }).join("")}</div>
-          <footer>${ev.limit && ev.limit.item ? `<span>${L.limit}: <b>${H.esc(nameOf(ev.limit.item))}</b></span>` : "<span></span>"}${r.cost ? `<span>${L.cost} <b dir="ltr">${Number(r.cost).toFixed(2)}</b></span>` : ""}</footer>
-        </article>`;
-      }).join("") : `<p>${L.noRecipe}</p>`}`;
   const mood = p.category === "hot" ? "hot" : (p.category === "drinks" || p.category === "slush" ? "cold" : "");
   const worst = dated.length ? stateOf(dated[0].left) : "none";
   const locName = l => lang === "ar" ? (LOC_AR[l.id] || l.name) : (H.LOCATIONS.find(x => x.id === l.id)?.name || l.name);
@@ -296,19 +261,23 @@ export async function renderScanCard(root, p, ctx) {
       ${past[0] ? `<button class="btn warn" id="write-off" type="button">شطب ${groupName(past[0].n)}</button>` : ""}
     </section>
     <section class="pc-sheet rx" id="sheet-recipe" hidden>
-      ${isOpen() ? recipeSheet() : ""}
+      <h2>${L.recipeHead} <i>${hits.length}</i></h2>
+      ${hits.length ? `<div class="rt-slot" aria-busy="true"></div>` : `<p>${L.noRecipe}</p>`}
     </section>
   </article>`;
 
   mountGauges(root);
+  // the recipe deck (and the theater behind it) loads the first time the Recipe sheet opens
+  const fillRecipes = () => { const slot = root.querySelector("#sheet-recipe .rt-slot"); if (!slot || slot.dataset.done) return; slot.dataset.done = "1";
+    import("./recipe-theater.js?v=90").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
   else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
 
-  root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = async () => {
+  root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = () => {
     const sheet = root.querySelector("#sheet-" + btn.dataset.open);
     if (!sheet) return;
-    if (btn.dataset.open === "recipe" && sheet.hidden) { if (!(await askPin({ lang }))) return; sheet.innerHTML = recipeSheet(); }
+    if (btn.dataset.open === "recipe") fillRecipes();
     const open = sheet.hidden;
     root.querySelectorAll(".pc-sheet").forEach(s => { s.hidden = true; });
     root.querySelectorAll("[data-open]").forEach(b => b.setAttribute("aria-pressed", "false"));

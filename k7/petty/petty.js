@@ -27,15 +27,14 @@ function pinOk(v) {
   for (const d of [-1, 0, 1]) { const t = new Date(now + d * 60e3), h = t.getHours(), m = t.getMinutes(); ok.add(pad(h) + pad(m)); ok.add(pad(h % 12 || 12) + pad(m)); }
   return ok.has(String(v).trim());
 }
-// the site-wide lock (core/lock.js) opens petty cash too, so the PIN is asked once
-const unlocked = () => Number(sessionStorage.getItem(UNLOCK) || 0) > Date.now() || sessionStorage.getItem("noir-admin") === "1";
+const unlocked = () => Number(sessionStorage.getItem(UNLOCK) || 0) > Date.now();
 const touch = () => sessionStorage.setItem(UNLOCK, String(Date.now() + IDLE));
 
 const S = { entries: [], month: null, queue: [], H: null, host: null, float: 4783, archive: [] };
 
 export async function renderPetty(host, H) {
   S.host = host; S.H = H;
-  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=89", import.meta.url).href; document.head.append(l); }
+  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=90", import.meta.url).href; document.head.append(l); }
   if (!unlocked()) return lockScreen(host);
   touch();
   host.innerHTML = `<div class="pc"><p class="pc-empty">…</p></div>`;

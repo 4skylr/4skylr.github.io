@@ -29,11 +29,14 @@ body.card-only { background: #0b0f17; }
 }
 .pass-holo {
   position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; z-index: -1; pointer-events: none;
-  background: conic-gradient(from var(--spin), #5b7bff, #dce6ff, #ffb547, #6ccbff, #3ed69e, #5b7bff);
+  overflow: hidden;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
-  animation: pass-spin 6s linear infinite;
 }
-@keyframes pass-spin { to { --spin: 360deg; } }
+/* the holo edge turns by rotating a big conic square under the mask: a transform, so it runs on the compositor
+   (animating the gradient angle itself repainted the whole card 60 times a second) */
+.pass-holo::before { content: ""; position: absolute; left: 50%; top: 50%; width: 400vmax; height: 400vmax; margin: -200vmax 0 0 -200vmax;
+  background: conic-gradient(#5b7bff, #dce6ff, #ffb547, #6ccbff, #3ed69e, #5b7bff); animation: pass-spin 6s linear infinite; will-change: transform; }
+@keyframes pass-spin { to { transform: rotate(1turn); } }
 .pass-chip {
   display: inline-flex; align-items: center; gap: 8px; margin: 0 auto 12px; padding: 5px 12px; border-radius: 99px;
   font-family: var(--f-data); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
@@ -146,7 +149,7 @@ body.card-only { background: #0b0f17; }
 [dir="rtl"] .cd-fuse i { margin-inline-start: 0; }
 .cd-fuse b { position: absolute; inset-inline-end: -5px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: #fff;
   box-shadow: 0 0 6px 2px #fff, 0 0 16px 6px var(--g), 0 0 30px 10px color-mix(in srgb, var(--g) 50%, transparent); animation: spark .18s steps(2) infinite; }
-@keyframes spark { 50% { transform: scale(.7) rotate(45deg); box-shadow: 0 0 4px 1px #fff, 0 0 22px 8px var(--g), 0 0 40px 14px color-mix(in srgb, var(--g) 40%, transparent); } }
+@keyframes spark { 50% { transform: scale(.7) rotate(45deg); opacity: .75; } }
 
 .cd-meta { position: relative; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--soft); }
 .cd-meta b { color: #fff; font-family: var(--f-data); }
@@ -156,9 +159,9 @@ body.card-only { background: #0b0f17; }
 /* urgency layers */
 .cd.is-next { box-shadow: 0 0 0 1.5px var(--g), 0 24px 60px -24px var(--g); }
 .s-soon .cd-arc, .s-crit .cd-arc { animation: arc-beat var(--beat) ease-in-out infinite; }
-@keyframes arc-beat { 50% { stroke-width: 12; filter: drop-shadow(0 0 14px var(--g)); } }
+@keyframes arc-beat { 50% { opacity: .55; } }
 .s-crit { --g: #ff3d6a !important; animation: shake 2.4s infinite; }
-.s-crit .cd-days .reel { animation: glitch .9s infinite steps(2); }
+.s-crit .cd-days .reel { animation: glitch .9s 4 steps(2); } /* a few glitches on arrival, then still: text-shadow repaints */
 @keyframes glitch {
   0% { text-shadow: 2px 0 #6ccbff, -2px 0 #dce6ff, 0 0 18px #ff3d6a; transform: translate(0); }
   25% { text-shadow: -3px 1px #6ccbff, 3px -1px #dce6ff, 0 0 18px #ff3d6a; transform: translate(1px, -1px); }
@@ -166,8 +169,8 @@ body.card-only { background: #0b0f17; }
   100% { text-shadow: -2px 0 #6ccbff, 2px 0 #dce6ff, 0 0 18px #ff3d6a; transform: translate(0); }
 }
 @keyframes shake { 0%, 92%, 100% { transform: none; } 94% { transform: translateX(-3px) rotate(-.4deg); } 96% { transform: translateX(3px) rotate(.4deg); } 98% { transform: translateX(-2px); } }
-.s-crit::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 61, 106, .08) 0 2px, transparent 2px 4px); animation: scan 3s linear infinite; }
-@keyframes scan { to { background-position: 0 40px; } }
+.s-crit::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 61, 106, .08) 0 2px, transparent 2px 4px); animation: scan 3s linear infinite; inset: -40px 0 0; will-change: transform; }
+@keyframes scan { to { transform: translateY(40px); } }
 
 .s-exp { --g: #ff3d6a !important; filter: saturate(.85); }
 .s-exp .cd-arc { stroke: #ff3d6a; opacity: .35; }
@@ -241,26 +244,6 @@ body.card-only { background: #0b0f17; }
 /* ── Recipes: glass cards ─────────────────────────────────── */
 .pass .rx h2 { display: flex; align-items: center; gap: 8px; }
 .pass .rx h2 i { font-style: normal; font-family: var(--f-data); font-size: 11px; padding: 2px 8px; border-radius: 99px; background: rgba(255,255,255,.1); }
-.rx-card { position: relative; margin-top: 12px; padding: 14px; border-radius: 20px; overflow: hidden;
-  background: linear-gradient(150deg, color-mix(in srgb, var(--rx) 20%, #111722), #080b12 60%); border: 1px solid color-mix(in srgb, var(--rx) 45%, transparent); }
-.rx-card::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 70%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--rx) 35%, transparent), transparent 70%); pointer-events: none; }
-.rx-card header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; }
-.rx-cat { font-family: var(--f-data); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--rx); }
-.rx-card h3 { grid-column: 1; margin: 0; font-size: 15px; color: #fff; }
-.rx-make { grid-row: 1 / span 2; grid-column: 2; display: grid; justify-items: center; padding: 6px 12px; border-radius: 14px;
-  background: rgba(0,0,0,.3); border: 1px solid color-mix(in srgb, var(--rx) 50%, transparent); }
-.rx-make small { font-size: 10px; color: var(--soft); } .rx-make b { font-family: var(--f-data); font-size: 18px; color: #fff; }
-.rx-ings { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; margin-top: 12px; }
-.rx-ings figure { margin: 0; display: grid; justify-items: center; gap: 5px; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); text-align: center; }
-.rx-ings figure img, .rx-ings figure > span { width: 46px; height: 46px; border-radius: 12px; object-fit: contain; background: #fff; display: grid; place-items: center; color: #0b0f17; font-weight: 800; font-size: 13px; }
-.rx-ings figcaption { font-size: 10.5px; line-height: 1.25; color: var(--soft); display: grid; gap: 2px; }
-.rx-ings figcaption i { font-style: normal; font-family: var(--f-data); color: #fff; font-size: 10.5px; }
-.rx-ings figure.me { border-color: var(--rx); box-shadow: 0 0 16px -4px var(--rx); }
-.rx-ings figure.lim { border-color: #ffb547; }
-.rx-ings figure.lim figcaption i { color: #ffb547; }
-.rx-card footer { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; font-size: 11.5px; color: var(--dim); }
-.rx-card footer b { color: #fff; }
 .pass-foot .pc-use { flex-basis: 100%; display: grid; justify-items: center; gap: 6px; }
 .pass-foot .pc-use p b { color: #fff; font-family: var(--f-data); font-size: 15px; }
 .pc-use-parts { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
@@ -302,8 +285,7 @@ body.card-only { background: #0b0f17; }
 .cx-rail span { position: absolute; top: 50%; width: 16px; height: 16px; margin-left: -8px; transform: translateY(-50%); border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(91,123,255,.35), 0 0 16px #5b7bff; }
 .cx-ends { display: flex; justify-content: space-between; } .cx-ends small { font-family: var(--f-data); font-size: 10.5px; color: var(--dim); }
 .cx-range p { margin: 0 !important; font-size: 11px; color: var(--dim) !important; }
-@media (prefers-reduced-motion: no-preference) { .cx::before { animation: cx-spin 6s linear infinite; } }
-@keyframes cx-spin { to { --spin: 360deg; } }
+/* .cx border stays still: spinning its gradient angle repainted the card every frame */
 [dir="rtl"] .cx-chip, [dir="rtl"] .cx-tag { letter-spacing: 0; font-family: inherit; }
 
 /* ── Sales count (units only, no money) ── */

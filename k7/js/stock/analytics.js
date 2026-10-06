@@ -2,7 +2,9 @@
 // Libraries (loaded on demand from jsDelivr):
 //   Apache ECharts — github.com/apache/echarts  (charts)
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=89";
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=90";
+import { wire } from "./recipe-theater.js?v=90";
+const LANG = () => ((sessionStorage.getItem("noir-lang") || "en") === "ar" ? "ar" : "en");
 
 const ECHARTS_URL = "vendor/echarts.min.js";
 const FUSE_URL = "../../vendor/fuse.min.mjs"; // krisk/Fuse, vendored
@@ -28,7 +30,7 @@ const POPCORN_MATERIALS = ["POPCORN OIL", "CORN Mushroom", "CORN Butterfly", "CA
 
 let H = null;          // helpers from app.js
 let scope = "all";
-let menuCat = "all", menuQ = "", openRow = null, fuse = null, showAll = false;
+let menuCat = "all", menuQ = "", fuse = null, showAll = false;
 const charts = [];
 
 // ── Library loading ──────────────────────────────────────────
@@ -46,7 +48,6 @@ let fuseP = null;
 const loadFuse = () => (fuseP ??= (window.CARD_DOOR ? Promise.reject() : import(FUSE_URL)).then(m => m.default).catch(() => null));
 
 // ── Core maths ───────────────────────────────────────────────
-const rmKey = new Map(Object.keys(RAW_MATERIALS).map(k => [k.toLowerCase(), k]));
 
 // stock of a raw material in its RECIPE unit (g / ml / pcs) for the chosen scope
 function stockOf(rm) {
@@ -94,22 +95,6 @@ export function usesOf(rm) {
   }).sort((a, b) => a.per - b.per);
 }
 
-// ── Product modal panel ──────────────────────────────────────
-export function productPanel(p, helpers) {
-  H = helpers; scope = "all";
-  const rm = rmKey.get((p.sku || "").toLowerCase());
-  if (!rm) return "";
-  const U = usesOf(rm).filter(u => !u.recipe.ta);
-  const top = U.slice(0, 8);
-  return `<section class="yield-panel">
-    <div class="slab-h"><h2>About this item</h2><span class="voice">from the raw material list</span></div>
-    <p class="desc">${H.esc(describe(rm))}</p>
-    ${top.length ? `<div class="slab-h" style="margin-top:14px"><h2>What the current stock makes</h2><span class="tag">all locations</span></div>
-    <div class="uses">${top.map(u => `<div class="use"><span class="u-name">${H.esc(u.recipe.name)}</span><span class="u-per data">${fmtAmt(u.per, u.uom)} each</span><b class="data">${nice(u.covers)}</b></div>`).join("")}</div>
-    <p class="note">Each figure is how many that item alone could use up. Open <b>Yield</b> to see what the other ingredients allow.</p>` : ""}
-  </section>`;
-}
-
 // ── Page ─────────────────────────────────────────────────────
 export function renderYield(root, helpers) {
   H = helpers;
@@ -142,21 +127,21 @@ function popRecipe(size, flavor) {
 function renderPopBoard() {
   const el = document.getElementById("pop-board");
   el.innerHTML = `<div class="slab-h"><h2>Popcorn board</h2><span class="voice">tubs you can fill right now</span></div>
-    <div class="pop-grid">
+    <div class="pop-grid" data-rt-list>
       <span></span>${SIZES.map(s => `<span class="pop-size"><b>${s.oz}</b> oz<em>${s.name}</em></span>`).join("")}
       ${FLAVORS.map(f => `<span class="pop-flavor" style="--fc:${f.color}">${f.id}</span>${SIZES.map(s => {
         const r = popRecipe(s, f.id); if (!r) return `<div class="pop-cell na">—</div>`;
         const e = evaluate(r), max = Math.max(...e.lines.filter(l => l.uom !== "pcs" || /TUB/.test(l.rm)).map(l => l.servings), 1);
         const bars = e.lines.filter(l => !/NAPKIN/.test(l.rm)).map(l =>
           `<div class="pc-bar ${l === e.bottleneck ? "lim" : ""}"><span>${H.esc(short(l.rm))}</span><i style="width:${Math.min(100, l.servings / max * 100).toFixed(1)}%"></i><b>${nice(l.servings)}</b></div>`).join("");
-        return `<button class="pop-cell" data-recipe="${H.esc(r.name)}" style="--fc:${f.color}">
+        return `<button class="pop-cell" data-rt="${H.esc(r.name)}" style="--fc:${f.color}">
           <span class="pc-size">${s.oz} oz · ${s.name}</span>
           <span class="pc-num" data-count="${e.sellable}">${nice(e.sellable)}</span>
           <span class="pc-lim">limited by <b>${H.esc(short(e.bottleneck.rm))}</b></span>
           <div class="pc-bars">${bars}</div></button>`;
       }).join("")}`).join("")}
     </div>`;
-  el.querySelectorAll("[data-recipe]").forEach(b => b.onclick = () => { openRow = b.dataset.recipe; menuCat = "popcorn"; menuQ = ""; renderMenu(); document.getElementById("menu").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  wire(el, H, { lang: LANG() });
   countUp(el);
 }
 const short = rm => ({ "POPCORN OIL": "Oil", "CORN Mushroom": "Mushroom corn", "CORN Butterfly": "Butterfly corn", "CARAMEL": "Caramel", "SALT": "Salt", "CHEESE MASALA": "Cheese masala", "Pizza Savory Mix": "Pizza mix", "PAPER NAPKIN": "Napkins" }[rm] || rm.replace(/ TUB$/, " tub").replace(/^(\d+) Oz/, "$1 oz"));
@@ -201,34 +186,24 @@ function renderMenu() {
       <button class="cat" data-mcat="all" aria-pressed="${menuCat === "all"}">All<sup>${RECIPES.length}</sup></button>
       ${MENU_CATS.map(c => `<button class="cat" data-mcat="${c.id}" aria-pressed="${menuCat === c.id}">${c.name}<sup>${counts[c.id] || 0}</sup></button>`).join("")}
     </div>
-    <div class="mlist">${(showAll || menuQ.trim() || menuCat !== "all" ? E : E.slice(0, 24)).map(e => menuRow(e)).join("") || '<p class="empty">No menu item matches.</p>'}</div>
+    <div class="mlist" data-rt-list>${(showAll || menuQ.trim() || menuCat !== "all" ? E : E.slice(0, 24)).map(e => menuRow(e)).join("") || '<p class="empty">No menu item matches.</p>'}</div>
     ${!showAll && !menuQ.trim() && menuCat === "all" && E.length > 24 ? `<button class="btn ghost" id="m-more" style="margin-top:12px;width:100%">Show all ${E.length} menu items</button>` : ""}`;
   el.querySelector("#m-more")?.addEventListener("click", () => { showAll = true; renderMenu(); });
   const q = el.querySelector("#mq");
   q.oninput = () => { menuQ = q.value; const pos = q.selectionStart; renderMenu(); const n = document.getElementById("mq"); n.focus(); n.setSelectionRange(pos, pos); };
   el.querySelectorAll("[data-mcat]").forEach(b => b.onclick = () => { menuCat = b.dataset.mcat; renderMenu(); });
-  el.querySelectorAll("[data-row]").forEach(b => b.onclick = () => { openRow = openRow === b.dataset.row ? null : b.dataset.row; renderMenu(); });
+  wire(el, H, { lang: LANG() });
 }
 
 function menuRow(e) {
-  const r = e.recipe, open = openRow === r.name, st = e.sellable === 0 ? "zero" : e.sellable < 20 ? "low" : "ok";
-  const max = Math.max(...e.lines.map(l => (l.servings === Infinity ? 0 : l.servings)), 1);
-  return `<div class="mrow s-${st} ${open ? "open" : ""}">
-    <button class="mrow-head" data-row="${H.esc(r.name)}" aria-expanded="${open}">
+  const r = e.recipe, st = e.sellable === 0 ? "zero" : e.sellable < 20 ? "low" : "ok";
+  return `<div class="mrow s-${st}">
+    <button class="mrow-head" data-rt="${H.esc(r.name)}" aria-haspopup="dialog">
       <span class="m-name">${H.esc(r.name)}${r.ta ? '<i class="ta">TA</i>' : ""}</span>
       <span class="m-lim">${e.sellable === 0 ? "blocked by" : "limited by"} <b>${H.esc(rmLabel(e.bottleneck.rm || ""))}</b></span>
       <span class="m-cost data">${H.sar(r.cost)} SAR</span>
       <span class="m-num data">${nice(e.sellable)}</span>
     </button>
-    ${open ? `<div class="m-body">
-      <p class="note" style="margin:0 0 10px">Recipe revision ${r.date}${r.versions > 1 ? ` · ${r.versions} revisions on file` : ""} · cost per serving ${H.sar(r.cost)} SAR</p>
-      ${e.lines.map(l => `<div class="ing ${l === e.bottleneck ? "lim" : ""}">
-        <span class="i-name">${H.esc(rmLabel(l.rm))}${l.missing ? ' <em class="miss">not stocked</em>' : ""}</span>
-        <span class="i-per data">${fmtAmt(l.qty, l.uom)}</span>
-        <span class="i-bar"><i style="width:${(l.servings === Infinity ? 0 : Math.min(100, l.servings / max * 100)).toFixed(1)}%"></i></span>
-        <span class="i-have data">${fmtAmt(l.have, l.uom)}</span>
-        <b class="data">${nice(l.servings)}</b></div>`).join("")}
-    </div>` : ""}
   </div>`;
 }
 

@@ -1,9 +1,9 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
-import { isOpen, unlock } from "../core/lock.js?v=89";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=89";
-import { REPORT_NAMES } from "../core/report-names.js?v=89";
-import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=89";
+import { isOpen, unlock } from "../core/lock.js?v=90";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=90";
+import { REPORT_NAMES } from "../core/report-names.js?v=90";
+import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=90";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFWORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";

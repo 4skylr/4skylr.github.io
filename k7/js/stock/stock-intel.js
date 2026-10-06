@@ -1,12 +1,11 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { isOpen } from "../core/lock.js?v=89";
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=89";
-import { placement, isBulk } from "./fefo-place.js?v=89";
-import { usageOf } from "./consumption.js?v=89";
-import { salesSpace } from "./sales-space.js?v=89";
-import { AR as NAME_AR } from "../core/names-ar.js?v=89";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=90";
+import { placement, isBulk } from "./fefo-place.js?v=90";
+import { usageOf } from "./consumption.js?v=90";
+import { salesSpace } from "./sales-space.js?v=90";
+import { AR as NAME_AR } from "../core/names-ar.js?v=90";
 
 const LEAD = 7, SAFETY = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
@@ -119,14 +118,13 @@ export function renderIntel(host, H) {
       </section>
     </div>
 
-    ${isOpen() ? `<div class="si-grid">
+    <div class="si-grid">
       <section class="slab si-card"><div class="slab-h"><h2>${L.abc}</h2></div><p class="si-sub">${L.abcSub}</p>
         <div class="si-abc">${["A", "B", "C"].map(k => `<span class="abc-${k}"><b>${k}</b>${cls[k]} ${L.items}<em>${A.sum ? Math.round(clsV[k] / A.sum * 100) : 0}% ${L.share}</em></span>`).join("")}</div>
         <div class="si-chart" id="si-pareto"></div></section>
       <section class="slab si-card"><div class="slab-h"><h2>${L.tree}</h2></div><p class="si-sub">${L.treeSub}</p><div class="si-chart" id="si-tree"></div></section>
     </div>
-    <section class="slab si-card"><div class="slab-h"><h2>${L.mix}</h2></div><p class="si-sub">${L.mixSub}</p><div class="si-chart" id="si-mix"></div></section>`
-    : `<section class="slab si-card si-locked"><button type="button" class="btn ghost unlock-chip" data-unlock>🔒 ${AR() ? "تحليل القيمة (ABC والخريطة والتوزيع) مقفل · افتح بالرقم" : "Value analysis (ABC, map, mix) is locked · open with the PIN"}</button></section>`}
+    <section class="slab si-card"><div class="slab-h"><h2>${L.mix}</h2></div><p class="si-sub">${L.mixSub}</p><div class="si-chart" id="si-mix"></div></section>
   </div>`;
 
   // charts load only when scrolled near, so the phone opens the table first

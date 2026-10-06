@@ -39,7 +39,7 @@
 .uz-logo img { width: 100%; height: 100%; object-fit: cover; }
 .uz-net { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
 .uz-net i { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(62,214,158,.15), 0 0 12px var(--good); animation: uz-pulse 2s ease-in-out infinite; }
-@keyframes uz-pulse { 50% { box-shadow: 0 0 0 7px rgba(62,214,158,.05), 0 0 18px var(--good); } }
+@keyframes uz-pulse { 50% { opacity: .45; transform: scale(.82); } } /* opacity + transform only: runs on the compositor */
 .uz-addr { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .uz-periods { display: flex; flex-wrap: wrap; gap: 6px; }
 .uz-periods button, .uz-seg button, .uz-btn {

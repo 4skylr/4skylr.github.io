@@ -27,6 +27,7 @@ jobs:
         with:
           node-version: 22
       - run: npx --yes eslint@9 --max-warnings=-1 .
+      - run: node .github/scripts/preload.mjs --check
 
   smoke:
     name: Smoke test (every page, AR/EN, phone/desktop)

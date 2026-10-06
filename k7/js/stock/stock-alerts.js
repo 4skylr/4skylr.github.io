@@ -2,9 +2,9 @@
 // and what to do: move (Store → Mini Store → Concession), leave it, order, or sell a dated group first.
 //   Concession = ready to sell · Mini Store = next refill · Store = reserve.
 //   Group items sold by weight/volume (kg, L) treat Concession + Mini Store as one front.
-import { moveOf, dailyUse, SALES_DAYS } from "../data/sales-data.js?v=89";
-import { usageOf } from "./consumption.js?v=89";
-import { placement, isBulk } from "./fefo-place.js?v=89";
+import { moveOf, dailyUse, SALES_DAYS } from "../data/sales-data.js?v=90";
+import { usageOf } from "./consumption.js?v=90";
+import { placement, isBulk } from "./fefo-place.js?v=90";
 
 // days of sales each location should hold
 export const RULES = { frontMin: 3, frontFill: 5, miniMin: 7, miniFill: 14, lead: 7, safety: 7, orderDays: 30, overDays: 180 };
