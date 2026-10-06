@@ -4,11 +4,13 @@
 //     what the stock can make and which ingredient runs out first, cost per serving and its split, calories,
 //     and a planner: pick a number of serves and see what each ingredient needs against what is on hand.
 // Motion: GSAP + Draggable + InertiaPlugin (github.com/greensock/GSAP, vendored). Without them everything still works.
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=90";
-import { KCAL, recipeKcal } from "../data/nutrition.js?v=90";
-import { recipeCost } from "../finance/costing.js?v=90";
-import { MENU, COMBOS, VAT } from "../data/menu-data.js?v=90";
-import { AR as NAMES_AR } from "../core/names-ar.js?v=90";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=91";
+import { KCAL, recipeKcal } from "../data/nutrition.js?v=91";
+import { recipeCost } from "../finance/costing.js?v=91";
+import { MENU, COMBOS, VAT } from "../data/menu-data.js?v=91";
+import { AR as NAMES_AR } from "../core/names-ar.js?v=91";
+import { CAT, prettyName, titleCase } from "./recipe-names.js?v=91";
+export { CAT, prettyName };
 
 const low = s => String(s ?? "").toLowerCase();
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -17,24 +19,6 @@ const BY_NAME = new Map(RECIPES.map(r => [low(r.name), r]));
 export const recipeByName = n => BY_NAME.get(low(n)) || null;
 const PALETTE = ["#6ccbff", "#ffb547", "#3ed69e", "#5b7bff", "#ff8a5c", "#dce6ff", "#b18cff", "#ff6fb0", "#7de3d0", "#ffd36b", "#8fb4ff", "#c6f36b"];
 const PACK = /tub|cup|lid|napkin|straw|stirrer|tray|glass|dip cup|sachet|box|bag/i;
-export const CAT = { popcorn: ["Popcorn", "فشار"], combo: ["Combo", "كومبو"], fountain: ["Fountain", "مشروب نافورة"], slush: ["Slush", "سلاش"], nachos: ["Nachos", "ناتشوز"],
-  hotdog: ["Hot dog", "هوت دوق"], mocktail: ["Mocktail", "موكتيل"], floss: ["Cotton candy", "غزل البنات"], candy: ["Candy", "حلويات"], packaged: ["Cans & bottles", "معلّب"], refill: ["Refill", "تعبئة"] };
-const FL_AR = { salted: "مملح", cheese: "جبن", caramel: "كراميل", "pizza savory": "بيتزا", coke: "كوكاكولا", "coke zero": "كوكاكولا زيرو", fanta: "فانتا", sprite: "سبرايت",
-  strawberry: "فراولة", "blue raspberry": "توت أزرق", pomegranate: "رمان", chicken: "دجاج", beef: "لحم", nachos: "ناتشوز", combo: "كومبو", lemonade: "ليمون", mojito: "موهيتو" };
-const titleCase = s => low(s).replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\bMl\b/g, "ml").replace(/\bOz\b/g, "oz").replace(/\bGm\b/g, "g");
-
-// "Xtra Large Tub Caramel Popcorn - 130 Oz" → "Caramel · 130 oz"; flavours in Arabic on the Arabic site
-export function prettyName(name, ar) {
-  const size = (name.match(/(\d+)\s*oz/i) || [])[1];
-  let f = name.replace(/\b(Xtra Large|Large|Medium|Regular|Family|Small|Tub|Popcorn|Lrg|Reg|Med)\b/gi, " ").replace(/^SLUSH\s*-\s*/i, "").replace(/^HOT DOG\s*/i, "Hot dog ")
-    .replace(/-?\s*\d+\s*oz\b/gi, "").replace(/[-·]\s*$/, "").replace(/\s{2,}/g, " ").trim();
-  const hd = /^hot dog\s+(\w+)/i.exec(f);
-  if (hd) return ar ? `هوت دوق · ${FL_AR[low(hd[1])] || hd[1]}` : `Hot dog · ${hd[1][0].toUpperCase()}${low(hd[1]).slice(1)}`;
-  if (f.length < 4) f = name.replace(/-?\s*\d+\s*oz\b/gi, "").trim(); // nothing much left ("SND FAMILY"): keep the whole name
-  if (f === f.toUpperCase()) f = titleCase(f);
-  if (ar && FL_AR[low(f)]) f = FL_AR[low(f)];
-  return size ? `${f} · ${size} ${ar ? "أونصة" : "oz"}` : f;
-}
 const nf = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
 const n0 = new Intl.NumberFormat("en", { maximumFractionDigits: 0 });
 function amt(n, u, ar) {
@@ -118,7 +102,7 @@ export function wire(root, H, opts = {}) {
 let cssDone = false;
 export function ensureCss() {
   if (cssDone || document.querySelector("link[data-rt-css]")) { cssDone = true; return; }
-  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "css/recipe-theater.css?v=90"; l.dataset.rtCss = "1"; document.head.append(l); cssDone = true;
+  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "css/recipe-theater.css?v=91"; l.dataset.rtCss = "1"; document.head.append(l); cssDone = true;
 }
 const LIBS = ["vendor/gsap/gsap.min.js", "vendor/gsap/Draggable.min.js", "vendor/gsap/InertiaPlugin.min.js"];
 let libP = null;

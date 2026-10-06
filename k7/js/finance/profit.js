@@ -2,11 +2,11 @@
 // Cost of a serving = Σ recipe qty ÷ recipe-units-per-stock-unit × cost of one stock unit. The stock-unit cost comes from
 // the price list (case price ÷ what the case holds); materials the list does not sell fall back to the system's rate.
 // Profit = menu price net of 15% VAT − serving cost. Group items (one price, several flavours) are costed per option.
-import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=90";
-import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=90";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=90";
-import { wire } from "../stock/recipe-theater.js?v=90";
-import { unitCost, recipeCost, RM, LIST } from "./costing.js?v=90";
+import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=91";
+import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=91";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=91";
+import { wire } from "../stock/recipe-theater.js?v=91";
+import { unitCost, recipeCost, RM, LIST } from "./costing.js?v=91";
 export { unitCost, recipeCost };
 
 const low = s => String(s || "").toLowerCase();

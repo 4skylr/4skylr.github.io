@@ -1,5 +1,10 @@
 # Changelog
 
+## v91 · 2026-10-06 · Product watch on the barcode card
+
+- **The product photo now sits on a watch** (design after chase2k25 on Uiverse.io): the face shows the photo, how many expiry groups the product has, the next expiry date with the days left as a ring, and the quantity on hand. Swipe the screen up (or press the crown, or tap the dots) for: recipes (each opens the recipe theater), stock by location as activity rings, the groups one by one, and sales. The yellow side button goes back to the face. · **صورة المنتج على شاشة ساعة**: المجموعات والانتهاء، واسحب لفوق للوصفة والمعلومات.
+- The photo element itself (`.pc-shot` + its image) is unchanged; it is placed on the watch screen.
+
 ## v90 · 2026-10-06 · Recipe theater, a faster site, the lock removed
 
 - **Recipe theater** replaces every old recipe display (barcode card sheet, showcase back, product 360, Yield menu rows and popcorn board, Profit breakdown). Recipes now appear as tokens; one tap opens a full-screen reactor: the menu item at the core, its ingredients in orbit (drag to spin, with inertia), what the stock makes and which ingredient runs out first, cost per serve and its split ("cost DNA"), menu margin, calories, and a batch planner that shows what each ingredient needs against what is on hand. Swipe or use the arrows to move through the list. · **مسرح الوصفة**: بديل كل طرق عرض الوصفة القديمة.

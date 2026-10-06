@@ -1,9 +1,9 @@
 // Costing shared by the Profit page and the recipe theater: what one serving of a recipe costs, line by line.
 // Stock-unit cost from the supplier price list (case price ÷ what the case holds); materials it does not sell fall back to
 // the system's purchase rate. Cost of a line = recipe qty ÷ recipe-units-per-stock-unit × stock-unit cost.
-import { PRICE_LIST } from "../data/price-list.js?v=90";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=90";
-import { recipeKcal } from "../data/nutrition.js?v=90";
+import { PRICE_LIST } from "../data/price-list.js?v=91";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=91";
+import { recipeKcal } from "../data/nutrition.js?v=91";
 
 const low = s => String(s || "").toLowerCase();
 export const RM = new Map(Object.entries(RAW_MATERIALS).map(([k, v]) => [low(k), { key: k, ...v }]));
