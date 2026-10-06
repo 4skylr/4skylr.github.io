@@ -2,29 +2,30 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=88";
-import { timePinOk } from "./core/time-pin.js?v=88";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=88";
-import { SEED_DATE } from "./data/seed-data.js?v=88";
-import { renderYield } from "./stock/analytics.js?v=88";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=88";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=88";
-import { usageOf } from "./stock/consumption.js?v=88";
-import { AR as NAMES_AR } from "./core/names-ar.js?v=88";
-import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=88";
-import { mountClock } from "./core/clock.js?v=88";
+import * as store from "./core/store.js?v=89";
+import { isOpen, unlock, lock, askPin, MASK } from "./core/lock.js?v=89";
+import { icon } from "./core/icons.js?v=89";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=89";
+import { SEED_DATE } from "./data/seed-data.js?v=89";
+import { renderYield } from "./stock/analytics.js?v=89";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=89";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=89";
+import { usageOf } from "./stock/consumption.js?v=89";
+import { AR as NAMES_AR } from "./core/names-ar.js?v=89";
+import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=89";
+import { mountClock } from "./core/clock.js?v=89";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./stock/export-count.js?v=88");
-const financeView = lazy("./finance/finance-view.js?v=88");
-const unaizahView = lazy("./finance/unaizah-view.js?v=88");
-const syncAdmin = lazy("./reports/sync-admin.js?v=88");
-const toolsMod = lazy("./core/tools.js?v=88");
-const intelMod = lazy("./stock/stock-intel.js?v=88");
-const menuMod = lazy("./stock/menu-lab.js?v=88");
-const labMod = lazy("./stock/stock-lab.js?v=88");
-const showMod = lazy("./stock/showcase.js?v=88");
-const p360Mod = lazy("./stock/product-360.js?v=88");
+const exportCount = lazy("./stock/export-count.js?v=89");
+const financeView = lazy("./finance/finance-view.js?v=89");
+const unaizahView = lazy("./finance/unaizah-view.js?v=89");
+const syncAdmin = lazy("./reports/sync-admin.js?v=89");
+const toolsMod = lazy("./core/tools.js?v=89");
+const intelMod = lazy("./stock/stock-intel.js?v=89");
+const menuMod = lazy("./stock/menu-lab.js?v=89");
+const labMod = lazy("./stock/stock-lab.js?v=89");
+const showMod = lazy("./stock/showcase.js?v=89");
+const p360Mod = lazy("./stock/product-360.js?v=89");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -77,7 +78,8 @@ const nf2 = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFr
 const nfq = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
 const nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const qty = n => nfq.format(Math.round((Number(n) || 0) * 100) / 100);
-const sar = n => nf2.format(Number(n) || 0);
+// money only shows once the clock PIN is in (core/lock.js); everywhere else it reads ••••
+const sar = n => isOpen() ? nf2.format(Number(n) || 0) : MASK;
 const total = p => LOCATIONS.reduce((a, l) => a + (Number(p.stock?.[l.id]) || 0), 0);
 const value = (p, loc) => (loc ? Number(p.stock?.[loc]) || 0 : total(p)) * (Number(p.rate) || 0);
 const catName = id => CATEGORIES.find(c => c.id === id)?.name || "Other";
@@ -108,39 +110,9 @@ const tank = (lv, cls = "") => `<span class="tank ${cls} s-${lv.state}" style="-
 const pctText = lv => lv.state === "unset" ? "—" : `${Math.round(lv.pct * 100)}%`;
 const lsGet = (k, d) => { try { const v = localStorage.getItem("noir-ui2:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem("noir-ui2:" + k, JSON.stringify(v)); } catch {} };
-const splitMoney = n => { const [a, b] = sar(n).split("."); return `${a}<span class="dec">.${b}</span>`; };
+const splitMoney = n => { if (!isOpen()) return `<span class="masked">${MASK}</span>`; const [a, b] = sar(n).split("."); return `${a}<span class="dec">.${b}</span>`; };
 
-const ICON = {
-  dashboard: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M21 12h-3"/>',
-  products: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>',
-  count: '<path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2"/><path d="M8 12h8"/>',
-  yield: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><circle cx="16" cy="8" r="2"/>',
-  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
-  alerts: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
-  settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
-  finance: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="M4 9l6-4 6 3 6-4"/>',
-  safety: '<path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.4 7.5 9.5 4.4-1.1 7.5-4.9 7.5-9.5V6z"/><path d="M12 8.5c1.6 1.6 2.6 3 2.6 4.4a2.6 2.6 0 0 1-5.2 0c0-.8.3-1.5.8-2.1.2.7.6 1.1 1.1 1.2-.2-1.3.1-2.4.7-3.5z"/>',
-  stage: '<ellipse cx="12" cy="19" rx="8" ry="2.5"/><path d="M9 16V7.5a3 3 0 0 1 6 0V16"/><path d="M9 9.5h6"/>',
-  profit: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2.1 0 2.9 6 1.4 6 4.3 0 1.2-1.3 2.1-3 2.1-1.4 0-2.6-.6-3.1-1.6M12 6.5v11"/>',
-  unaizah: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
-  plus: '<path d="M12 5v14M5 12h14"/>',
-  petty: '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M7 15h4"/><path d="M8 3.5h8"/>',
-  links: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
-  halls: '<path d="M3 7.5q9-5 18 0"/><rect x="4" y="11" width="4.5" height="4" rx="1.2"/><rect x="9.75" y="11" width="4.5" height="4" rx="1.2"/><rect x="15.5" y="11" width="4.5" height="4" rx="1.2"/><path d="M5 18.5h14"/>',
-  nightly: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/><path d="M17 3v3M15.5 4.5h3"/>',
-  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
-  upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
-  download: '<path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
-  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
-  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-  x: '<path d="M6 6l12 12M18 6 6 18"/>',
-  image: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
-  check: '<path d="m5 12 5 5L20 7"/>',
-  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
-  grid: '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>',
-  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'
-};
-const icon = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+// icons: Lucide (core/icons.js)
 
 const ROUTES = [
   { id: "dashboard", label: "Overview", kicker: "Treasury", title: 'Stock, <span class="voice">at a glance</span>' },
@@ -232,7 +204,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock/stock-history.js?v=88");
+const histMod = lazy("./stock/stock-history.js?v=89");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -261,7 +233,7 @@ document.addEventListener("click", e => {
 });
 function go(route) {
   if (CARD_DOOR) return;
-  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=88").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=89").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -281,7 +253,7 @@ function render() {
     const p = data.products.find(x => x.id === hash.slice(2));
     if (p) return viewScanProduct(p);
   }
-  renderNav(); renderNet(); renderBell();
+  renderNav(); renderNet(); renderBell(); renderLockBtn();
   const langBtn = document.getElementById("lang-btn");
   if (langBtn && !langBtn.dataset.bound) {
     langBtn.dataset.bound = "1";
@@ -294,7 +266,39 @@ function render() {
   $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
   $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
+  if (LOCKED_ROUTES.has(r.id) && !isOpen()) { ui.lastEnter = null; viewLocked(r); return; }
   ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, petty: viewPetty, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
+  if (ui.lastEnter !== r.id) { ui.lastEnter = r.id; motionMod().then(m => m.enter($("#view"), $("#page-title"))).catch(() => {}); } // only on a page change, not every re-render
+}
+
+// ── Privacy lock: whole pages that are money or recipes ───────
+const LOCKED_ROUTES = new Set(["finance", "profit", "unaizah", "nightly", "yield"]);
+const vaultMod = lazy("./core/vault.js?v=89"), motionMod = lazy("./core/motion.js?v=89");
+function viewLocked(r) {
+  const ar = siteLang() === "ar";
+  $("#view").innerHTML = `<section class="vlock" aria-label="${ar ? "مقفل" : "Locked"}"><div class="vlock-stage" id="vlock-stage"></div>
+    <div class="vlock-copy"><p class="vlock-k">${ar ? "مقفل" : "Locked"}</p><h2>${ar ? "هذي الصفحة فيها أموال أو وصفات" : "This page holds money or recipes"}</h2>
+    <p>${ar ? "اكتب الرقم السري. الكميات والتواريخ والمواقع مفتوحة بباقي الصفحات." : "Enter the PIN. Quantities, dates and locations stay open on the other pages."}</p>
+    <form class="vlock-form" id="vlock-form"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="••••" aria-label="${ar ? "الرقم السري" : "PIN"}"><button class="btn hot" type="submit">${ar ? "فتح" : "Open"}</button></form>
+    <p class="vlock-err" id="vlock-err" hidden>${ar ? "الرقم غلط" : "Wrong PIN"}</p></div></section>`;
+  const f = $("#vlock-form"); let dial = null;
+  vaultMod().then(m => ui.route === r.id && $("#vlock-stage") ? m.mountVault($("#vlock-stage")) : null).then(d => { dial = d; }).catch(() => {});
+  f.pin.addEventListener("input", () => { $("#vlock-err").hidden = true; dial?.digits(f.pin.value); if (f.pin.value.length === 4) f.requestSubmit(); });
+  f.onsubmit = e => { e.preventDefault();
+    if (unlock(f.pin.value)) { dial ? dial.open().then(() => render()) : render(); }
+    else { $("#vlock-err").hidden = false; dial?.deny(); f.pin.value = ""; f.pin.focus(); } };
+  setTimeout(() => f.pin.focus(), 50);
+}
+document.addEventListener("click", e => { if (e.target.closest?.("[data-unlock]")) askPin(); });
+addEventListener("noir-lock", () => { renderLockBtn(); render(); });
+function renderLockBtn() {
+  let b = document.getElementById("lock-btn"); const meta = document.querySelector(".head-meta"); if (!meta) return;
+  if (!b) { b = document.createElement("button"); b.type = "button"; b.id = "lock-btn"; b.className = "btn sm ghost icon lock-btn"; meta.insertBefore(b, document.getElementById("bell-btn")); b.onclick = () => isOpen() ? lock() : askPin(); }
+  const open = isOpen(), ar = siteLang() === "ar";
+  b.classList.toggle("is-open", open);
+  b.innerHTML = icon(open ? "unlock" : "lock");
+  b.title = open ? (ar ? "مفتوح · اضغط للقفل" : "Open · tap to lock") : (ar ? "الأموال والوصفات مقفلة" : "Money and recipes are locked");
+  b.setAttribute("aria-label", b.title);
 }
 
 // ── Overview ─────────────────────────────────────────────────
@@ -303,8 +307,9 @@ function viewDashboard() {
   const grand = P.reduce((a, p) => a + value(p), 0);
   const units = P.reduce((a, p) => a + total(p), 0);
   const stocked = P.filter(p => total(p) > 0).length;
-  const byLoc = LOCATIONS.map(l => ({ ...l, v: P.reduce((a, p) => a + value(p, l.id), 0), n: P.filter(p => Number(p.stock?.[l.id]) > 0).length }));
-  const byCat = CATEGORIES.map((c, i) => ({ ...c, color: CAT_COLORS[i % CAT_COLORS.length], v: P.filter(p => p.category === c.id).reduce((a, p) => a + value(p), 0) }))
+  const byLoc = LOCATIONS.map(l => ({ ...l, v: P.reduce((a, p) => a + (isOpen() ? value(p, l.id) : Number(p.stock?.[l.id]) || 0), 0), n: P.filter(p => Number(p.stock?.[l.id]) > 0).length }));
+  // locked: the category bar sizes by units, so it says nothing about money
+  const byCat = CATEGORIES.map((c, i) => ({ ...c, color: CAT_COLORS[i % CAT_COLORS.length], v: P.filter(p => p.category === c.id).reduce((a, p) => a + (isOpen() ? value(p) : total(p)), 0) }))
     .filter(c => c.v > 0.01).sort((a, b) => b.v - a.v);
   const top = [...P].sort((a, b) => value(b) - value(a)).slice(0, 7);
   const out = P.filter(p => Number(p.rate) > 0 && total(p) === 0);
@@ -321,7 +326,7 @@ function viewDashboard() {
   // orbit rings: one ring per location, radius shrinks inward
   const cols = ["#5b7bff", "#edf1f8", "#8c95a8"];
   const rings = byLoc.map((l, i) => {
-    const R = 112 - i * 22, C = 2 * Math.PI * R, share = grand ? l.v / grand : 0;
+    const R = 112 - i * 22, C = 2 * Math.PI * R, base = isOpen() ? grand : units, share = base ? l.v / base : 0;
     return `<circle cx="130" cy="130" r="${R}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="12"/>
       <circle cx="130" cy="130" r="${R}" fill="none" stroke="${cols[i]}" stroke-width="12" stroke-linecap="round"
         stroke-dasharray="${Math.max(share * C, 2)} ${C}" transform="rotate(-90 130 130)" style="filter:drop-shadow(0 0 6px ${cols[i]})"/>
@@ -357,6 +362,7 @@ function viewDashboard() {
         <div>
           <div class="tag">Total inventory value · net of VAT</div>
           <div class="hero-num">${splitMoney(grand)}<span class="cur">SAR</span></div>
+          ${isOpen() ? "" : `<button type="button" class="btn sm ghost unlock-chip" data-unlock>${icon("lock")}${ar ? "القيم مقفلة · افتح بالرقم" : "Values are locked · open with the PIN"}</button>`}
           <div class="hero-facts">
             <span><b>${nf0.format(units)}</b>units on hand</span>
             <span><b>${stocked}</b>of ${P.length} SKUs in stock</span>
@@ -375,8 +381,8 @@ function viewDashboard() {
       <article class="slab vault">
         <span class="code" aria-hidden="true">${l.code}</span>
         <h3>${l.name}</h3>
-        <div class="amt">${sar(l.v)}<small>SAR</small></div>
-        <div class="meter"><i style="width:${grand ? (l.v / grand * 100).toFixed(1) : 0}%;background:${cols[i]}"></i></div>
+        <div class="amt">${isOpen() ? `${sar(l.v)}<small>SAR</small>` : `${qty(l.v)}<small>${ar ? "وحدة" : "units"}</small>`}</div>
+        <div class="meter"><i style="width:${(isOpen() ? grand : units) ? (l.v / (isOpen() ? grand : units) * 100).toFixed(1) : 0}%;background:${cols[i]}"></i></div>
         <div class="vault-foot"><span class="data">${l.n} SKUs stocked</span><button class="btn sm ghost" data-startcount="${l.id}">Count ${l.short}</button></div>
       </article>`).join("")}
     </div>
@@ -454,7 +460,7 @@ function viewProducts() {
   $("#print-codes").onclick = () => { location.hash = "labels"; };
   $("#reorder").onclick = () => toolsMod().then(m => m.openReorder(toolHelpers()));
   $("#dl-sheet").onclick = () => downloadSheet().then(() => toast("Expiry sheet downloaded")).catch(e => toast(e.message, true));
-  $("#dl-csv").onclick = () => exportLedger();
+  $("#dl-csv").onclick = () => askPin().then(ok => ok && exportLedger()); // the ledger carries unit costs
   const counts = Object.fromEntries(CATEGORIES.map(c => [c.id, data.products.filter(p => p.category === c.id).length]));
   $("#view").innerHTML = `
     <div class="controls">
@@ -772,15 +778,15 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const profitMod = lazy("./finance/profit.js?v=88");
+const profitMod = lazy("./finance/profit.js?v=89");
 function viewProfit() {
   $("#title-actions").innerHTML = "";
   if (!$("#view").querySelector(".pf")) $("#view").innerHTML = `<div id="profit-host"><p class="empty">…</p></div>`;
   profitMod().then(m => { if (ui.route === "profit") m.renderProfit($("#profit-host") || $("#view"), helpers()); }).catch(e => toast(e.message, true));
 }
-const safetyMod = lazy("./safety/safety.js?v=88");
+const safetyMod = lazy("./safety/safety.js?v=89");
 // shift brief tiles that need their own modules: safety checks and system-report freshness
-const likesMod = lazy("./core/likes.js?v=88");
+const likesMod = lazy("./core/likes.js?v=89");
 let briefSeen = null; // the dashboard re-renders on every sync; report freshness is re-read at most once a minute
 function fillBrief(ar) {
   // the crowd's favourites: most-liked products, from the likes people leave on product cards
@@ -815,7 +821,7 @@ function viewSafety() {
   if (!$("#view").querySelector(".sf")) $("#view").innerHTML = `<div id="safety-host"><p class="empty">…</p></div>`;
   safetyMod().then(m => { if (ui.route === "safety") m.renderSafety($("#safety-host") || $("#view"), { putDoc: store.putDoc, allDocs: store.allDocs, localDocs: store.localDocs, toast }); }).catch(e => toast(e.message, true));
 }
-const pettyMod = lazy("../petty/petty.js?v=88");
+const pettyMod = lazy("../petty/petty.js?v=89");
 function viewPetty() {
   if ($("#petty-host .pc, #petty-host .pc-lock")) return; // a store sync must not reset an open review
   $("#title-actions").innerHTML = "";
@@ -828,14 +834,14 @@ function viewAlerts() {
   $("#view").innerHTML = `<div id="alerts-host"></div>`;
   renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
 }
-const linksMod = lazy("./core/links.js?v=88");
+const linksMod = lazy("./core/links.js?v=89");
 function viewLinks() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="links-host"></div>`;
   linksMod().then(m => { if (ui.route === "links") m.renderLinks($("#links-host"), { allDocs: store.allDocs, localDocs: store.localDocs, putDoc: store.putDoc, toast }); })
     .catch(e => toast(e.message, true));
 }
-const hallsMod = lazy("./reports/halls.js?v=88");
+const hallsMod = lazy("./reports/halls.js?v=89");
 function viewHalls() {
   if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
   $("#title-actions").innerHTML = "";
@@ -843,7 +849,7 @@ function viewHalls() {
   hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
     .catch(e => toast(e.message, true));
 }
-const nightlyMod = lazy("./reports/nightly.js?v=88");
+const nightlyMod = lazy("./reports/nightly.js?v=89");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -902,7 +908,7 @@ function detail(s) {
     <div class="actions">${s.status === "draft" ? `<button class="btn" id="sd-resume">Resume counting</button>` : ""}
       <div class="end"><button class="btn" id="sd-csv">${icon("download")}CSV</button><button class="btn hot" id="sd-close">Done</button></div></div>`);
   $("#sd-close", m).onclick = closeModal;
-  $("#sd-csv", m).onclick = () => exportSession(s);
+  $("#sd-csv", m).onclick = () => askPin().then(ok => ok && exportSession(s));
   $("#sd-resume", m)?.addEventListener("click", () => { closeModal(); ui.session = JSON.parse(JSON.stringify(s)); go("count"); });
 }
 function exportSession(s) {
@@ -913,7 +919,7 @@ function exportSession(s) {
 }
 
 // ── Settings ─────────────────────────────────────────────────
-const reportsMod = lazy("./reports/reports-admin.js?v=88");
+const reportsMod = lazy("./reports/reports-admin.js?v=89");
 // every upload of a system report is logged, so Settings can show when each one last came in
 async function markUpload(key, file) { await store.putDoc("uploads", key, { at: new Date().toISOString(), file: String(file || "") }); }
 const fmtN = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -926,10 +932,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=88"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=88"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=89"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=89"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=88")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=89")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -945,7 +951,7 @@ function reportHandlers() {
       toast(T(`Done · ${fmtN(d.tickets)} tickets · ${d.from} → ${d.to}`, `تم · ${fmtN(d.tickets)} تذكرة · ${d.from} → ${d.to}`) + (d.grand && d.grand !== d.tickets ? ` (${T("report", "التقرير")} ${d.grand})` : ""));
     },
     dcs: async (files, step) => {
-      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=88")]);
+      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=89")]);
       const XLSX = await loadXLSX();
       const ledger = await fetch("unaizah/ledger.json").then(r => r.json()).catch(() => ({ days: [] }));
       const known = [...new Set(ledger.days.flatMap(d => (d.cashiers || []).map(c => c.user)))];
@@ -962,7 +968,7 @@ function reportHandlers() {
       toast(`DCS · ${n} ${T("days", "يوم")} · ${from} → ${to}`);
     },
     rdr: async ([f]) => {
-      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=88")]);
+      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=89")]);
       const d = await parseRdrFile(f, await loadXLSX());
       await store.putDoc("rdr", "latest", d);
       await store.log("report", `RDR Exception Register · ${d.shifts.length} shifts · ${d.from} → ${d.to}`);
@@ -972,9 +978,9 @@ function reportHandlers() {
 }
 function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
-  if (sessionStorage.getItem("noir-admin") !== "1") {
+  if (!isOpen()) {
     $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>${T("Master sign-in", "دخول الماستر")}</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" aria-label="PIN"><button class="btn hot" type="submit">${T("Open", "دخول")}</button></form>`;
-    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } sessionStorage.setItem("noir-admin", "1"); viewSettings(); };
+    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } viewSettings(); };
     return;
   }
   $("#view").innerHTML = `
@@ -1046,7 +1052,7 @@ if (CARD_DOOR) {
 } else {
   mountClock($("#clock"), siteLang());
   if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-  if (siteLang() === "ar") import("./core/i18n-ar.js?v=88").then(m => m.startArabic()).catch(() => {});
+  if (siteLang() === "ar") import("./core/i18n-ar.js?v=89").then(m => m.startArabic()).catch(() => {});
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })

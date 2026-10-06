@@ -1,7 +1,8 @@
 // Auditoriums — the four halls seat by seat, with how often each seat was booked.
 //   Seat data: "User Transaction Log - Payment Type wise" (parsed by halls-parse.js with mozilla/pdf.js)
 //   Pinch and zoom: @panzoom/panzoom (timmywil/panzoom) · Charts: ECharts (apache/echarts)
-import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=88";
+import { isOpen, MASK } from "../core/lock.js?v=89";
+import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=89";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "halls";
@@ -176,7 +177,7 @@ function hallView(S) {
     </section>
     <section class="hl-kpis">
       ${["co", "cp", "wc"].map(t => `<article class="t-${t}"><span><i class="sw t-${t}"></i>${tName(t)}</span><b class="data">${S.types[t]}</b><em>${fmt(per(t), 0)} ${T("tickets / seat", "تذكرة للمقعد")}</em></article>`).join("")}
-      <article><span>${T("Tickets", "التذاكر")}</span><b class="data">${fmt(S.H.tickets)}</b><em>${fmt(S.H.free)} ${T("free", "مجانية")} · ${fmt(S.H.revenue)} SAR</em></article>
+      <article><span>${T("Tickets", "التذاكر")}</span><b class="data">${fmt(S.H.tickets)}</b><em>${fmt(S.H.free)} ${T("free", "مجانية")} · ${isOpen() ? fmt(S.H.revenue) : MASK} SAR</em></article>
     </section>
     <section class="hl-two">
       <article class="hl-panel"><h3>${T("Top seats", "أكثر المقاعد حجزاً")}</h3>
@@ -207,7 +208,7 @@ function seatCard(S) {
       <span><i>${T("Rank", "الترتيب")}</i><b class="data">#${s.rank} / ${S.total}</b></span>
       <span><i>${T("vs hall average", "مقابل متوسط القاعة")}</i><b class="data ${rel >= 1 ? "up" : "dn"}">${fmt(rel, 1)}×</b></span>
       <span><i>${T("Share of hall tickets", "حصته من تذاكر القاعة")}</i><b class="data">${(share * 100).toFixed(1)}%</b></span>
-      <span><i>${T("Revenue", "الإيراد")}</i><b class="data">${fmt(s.rev)} SAR</b></span>
+      <span><i>${T("Revenue", "الإيراد")}</i><b class="data">${isOpen() ? fmt(s.rev) : MASK} SAR</b></span>
     </div></div>`;
 }
 
@@ -271,7 +272,7 @@ function echarts() {
 
 // ── upload (Settings) ────────────────────────────────────────
 export async function uploadSeatReport(file, H, onProgress) {
-  const { parseTxLog } = await import("./halls-parse.js?v=88");
+  const { parseTxLog } = await import("./halls-parse.js?v=89");
   const d = await parseTxLog(file, onProgress);
   await H.putDoc(COL, "seats", d);
   await H.log?.("report", `Seat report · ${d.tickets} tickets · ${d.from} → ${d.to}`);

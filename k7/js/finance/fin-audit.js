@@ -1,8 +1,8 @@
 // Cash office audit: the system's RDR Exception Register against the DCS sheets.
 // For every F&B shift: what the POS sold, what the cashier dropped, what the team leader verified,
 // and what the DCS sheet recorded. Gaps are explained by cause, not just totalled.
-import { timePinOk } from "../core/time-pin.js?v=88";
-import { nameKey } from "./fin-dcs.js?v=88";
+import { isOpen, unlock } from "../core/lock.js?v=89";
+import { nameKey } from "./fin-dcs.js?v=89";
 
 const MONEY = ["cash", "card", "prepaid", "voucher", "others"];
 const TN = { cash: ["Cash", "كاش"], card: ["Card", "شبكة"], prepaid: ["Pre-paid / online", "مسبق الدفع / أونلاين"], voucher: ["Voucher", "قسائم"], others: ["Others", "أخرى"], comp: ["Comp", "ضيافة"] };
@@ -168,7 +168,7 @@ export function renderRdrAudit(host, { rdr, days, ar, echarts }) {
   if (!host) return;
   const t = W[ar ? "ar" : "en"];
   if (!rdr) { host.innerHTML = `<div class="uz-h"><div><h3>${t.title}</h3><p>${ar ? "ارفع تقرير RDR Exception Register من الإعدادات." : "Upload the RDR Exception Register from Settings."}</p></div></div>`; return; }
-  const A = audit(rdr, days), S = A.totals, admin = sessionStorage.getItem("noir-admin") === "1";
+  const A = audit(rdr, days), S = A.totals, admin = isOpen();
   const tn = k => TN[k][ar ? 1 : 0];
   const causes = A.causes.filter(c => Math.abs(c.amt) >= 1).sort((a, b) => Math.abs(b.amt) - Math.abs(a.amt));
   host.innerHTML = `
@@ -201,7 +201,7 @@ export function renderRdrAudit(host, { rdr, days, ar, echarts }) {
 function paintPrivate(el, A, t, ar, admin, rerender) {
   if (!admin) {
     el.innerHTML = `<div class="ra-lock"><p><svg class="ic-lock" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg> ${t.lock}</p><form id="ra-lock"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${t.pin}" aria-label="${t.pin}"><button class="uz-btn" type="submit">${t.open}</button></form></div>`;
-    el.querySelector("#ra-lock").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; e.target.pin.placeholder = t.bad; return; } sessionStorage.setItem("noir-admin", "1"); rerender(); };
+    el.querySelector("#ra-lock").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; e.target.pin.placeholder = t.bad; return; } rerender(); };
     return;
   }
   const tn = k => TN[k][ar ? 1 : 0];

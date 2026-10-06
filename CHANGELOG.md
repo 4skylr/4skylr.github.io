@@ -1,5 +1,14 @@
 # Changelog
 
+## v89 · 2026-10-06 · Privacy lock, vault dial, Lucide icons
+
+- **Money and recipes are locked** with the clock PIN (HHMM): stock values, unit costs, menu prices, margins, revenue, recipes and their cost show as •••• until the PIN is in. Quantities, expiry dates, locations and barcodes stay open to everyone. The lock closes after 30 minutes without a tap, or from the lock button in the header. · **الأموال والوصفات مقفلة بالرقم السري** (الساعة والدقايق). الكميات والتواريخ والمواقع والباركود مفتوحة للجميع.
+- **Whole pages behind the lock**: Budget, Profit, Unaizah, Nightly report and Yield open on a 3D vault dial (Three.js); one PIN opens them all, petty cash included. CSV exports with costs ask for the PIN. · صفحات المالية تفتح على خزنة ثلاثية الأبعاد.
+- **Barcode card**: the recipe button asks for the PIN; the recipes are not on the page until it is given. · **بطاقة الباركود**: الوصفة بالرقم السري.
+- **Icons are now Lucide**; pages rise in with GSAP. · أيقونات Lucide وحركة GSAP.
+- **Clean-up**: three dead modules removed (old FEFO report, servings, last count) and dead code in the stock card; ESLint warnings 11 → 3 (the 3 left are in the label code, which is kept as is).
+- **CI** now also checks that no page shows a money amount without the PIN, that the clock PIN opens the locked pages, and that the barcode door shows no prices or recipes.
+
 ## v88 · 2026-10-06 · Two-sided products, likes, sharper photos
 
 - **Showcase products turn round** (tap, T, or the Turn button): the back shows the menu recipes the product goes into, calories per serving and its expiry groups; the front product tilts toward the pointer with a moving glare. · **المنتج يلف**: وراه الوصفة والسعرات والمجموعات.

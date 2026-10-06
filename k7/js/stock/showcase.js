@@ -4,12 +4,13 @@
 // expiry groups. "Open product" opens the full card; the heart records a like under the viewer's name. Motion: GSAP + Draggable + InertiaPlugin (greensock/GSAP, vendored, loaded on first use).
 // Images: the transparent cut-outs in assets/cutouts (made from assets/products by a script); if a cut-out is missing
 // the original photo is shown on a white plate. The original images and their code are not touched.
-import { soldOf } from "../data/sales-data.js?v=88";
-import { alertFor } from "./stock-alerts.js?v=88";
-import { placement } from "./fefo-place.js?v=88";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=88";
-import { KCAL, recipeKcal } from "../data/nutrition.js?v=88";
-import { mountLikes } from "../core/likes.js?v=88";
+import { soldOf } from "../data/sales-data.js?v=89";
+import { alertFor } from "./stock-alerts.js?v=89";
+import { placement } from "./fefo-place.js?v=89";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=89";
+import { KCAL, recipeKcal } from "../data/nutrition.js?v=89";
+import { mountLikes } from "../core/likes.js?v=89";
+import { isOpen } from "../core/lock.js?v=89";
 
 const low = s => String(s || "").toLowerCase();
 // "Xtra Large Tub Caramel Popcorn - 130 Oz" → "Caramel · 130 oz"; flavours in Arabic on the Arabic site
@@ -35,7 +36,7 @@ function usesOf(p) {
 
 const LIBS = ["vendor/gsap/gsap.min.js", "vendor/gsap/Draggable.min.js", "vendor/gsap/InertiaPlugin.min.js"];
 let libP = null;
-const loadLibs = () => libP ??= LIBS.reduce((p, src) => p.then(() => new Promise((res, rej) => {
+const loadLibs = () => libP ??= LIBS.filter(src => !(window.gsap && src.endsWith("/gsap.min.js"))).reduce((p, src) => p.then(() => new Promise((res, rej) => {
   const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => { libP = null; rej(new Error("Could not load the animation library")); }; document.head.append(s);
 })), Promise.resolve()).then(() => { window.gsap.registerPlugin(window.Draggable, window.InertiaPlugin); return window.gsap; });
 
@@ -130,7 +131,8 @@ export async function renderShowcase(host, H, list) {
       <h2 class="sc-name">${ar && nameAr ? nameAr : nameEn}</h2>
       ${own != null ? `<p class="sc-kcal"><b class="data">≈ ${own}</b> ${T("kcal per piece, from its label", "سعرة للحبة حسب الملصق")}</p>` : ""}
       <h3 class="sc-h">${uses.length ? T(`Goes into ${uses.length} menu recipe${uses.length > 1 ? "s" : ""}`, `يدخل في ${plural(uses.length, "وصفة وحدة", "وصفتين", "وصفات", "وصفة")}`) : T("Not used in a menu recipe", "ما يدخل بوصفة منيو")}</h3>
-      ${uses.length ? `<ul class="sc-rec">${uses.slice(0, 6).map(u => `<li title="${esc(u.r.name)}"><span>${esc(prettyRecipe(u.r.name, ar))}</span><b class="data">${+u.qty.toFixed(2)} ${unitOf(u.unit)}</b><em class="data">${u.kcal != null ? `≈ ${u.kcal} ${T("kcal", "سعرة")}` : ""}</em></li>`).join("")}</ul>${uses.length > 6 ? `<p class="sc-more">+${uses.length - 6} ${T("more", "غيرها")}</p>` : ""}` : ""}
+      ${uses.length && !isOpen() ? `<button type="button" class="btn sm ghost unlock-chip" data-unlock>🔒 ${T("Recipes open with the PIN", "الوصفات تنفتح بالرقم السري")}</button>` : ""}
+      ${uses.length && isOpen() ? `<ul class="sc-rec">${uses.slice(0, 6).map(u => `<li title="${esc(u.r.name)}"><span>${esc(prettyRecipe(u.r.name, ar))}</span><b class="data">${+u.qty.toFixed(2)} ${unitOf(u.unit)}</b><em class="data">${u.kcal != null ? `≈ ${u.kcal} ${T("kcal", "سعرة")}` : ""}</em></li>`).join("")}</ul>${uses.length > 6 ? `<p class="sc-more">+${uses.length - 6} ${T("more", "غيرها")}</p>` : ""}` : ""}
       <h3 class="sc-h">${G.length ? T(`${G.length} expiry group${G.length > 1 ? "s" : ""}`, plural(G.length, "مجموعة صلاحية وحدة", "مجموعتين صلاحية", "مجموعات صلاحية", "مجموعة صلاحية")) : T("No dated groups", "ما فيه مجموعات بتاريخ")}</h3>
       ${G.length ? `<ul class="sc-grp">${G.slice(0, 4).map(g => `<li class="${g.left < 0 ? "bad" : g.left <= 30 ? "warn" : ""}"><span>${esc(ar ? LOC_AR[g.loc] || g.location : LOC_EN[g.loc] || g.location)}</span><b class="data">${H.qty(g.qty)}</b><em>${when(g)}</em></li>`).join("")}</ul>` : ""}
       <p class="sc-note">${T("Calories are estimates from the recipe.", "السعرات تقديرية محسوبة من الوصفة.")}</p>

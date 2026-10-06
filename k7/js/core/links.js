@@ -1,4 +1,5 @@
 // Links — quick doors to the systems the reports come from. Opens them in a new tab; no passwords are kept here.
+import { isOpen } from "./lock.js?v=89";
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "links";
 export const BUILT_IN = [
@@ -13,7 +14,7 @@ const host = u => { try { return new URL(u).host; } catch { return u; } };
 const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
 
 export async function renderLinks(el, H) {
-  const ar = AR(), admin = sessionStorage.getItem("noir-admin") === "1";
+  const ar = AR(), admin = isOpen();
   let saved = [];
   try { saved = await H.allDocs(COL); } catch { saved = H.localDocs(COL); }
   const list = [...BUILT_IN, ...saved.filter(l => !l.deleted && safeUrl(l.url)).sort((a, b) => (a.at || "").localeCompare(b.at || ""))];

@@ -5,12 +5,13 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=88";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=88";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=88";
-import { placement } from "./fefo-place.js?v=88";
-import { usageOf } from "./consumption.js?v=88";
-import { mountLikes } from "../core/likes.js?v=88";
+import { AR, LOC_AR } from "../core/names-ar.js?v=89";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=89";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=89";
+import { placement } from "./fefo-place.js?v=89";
+import { usageOf } from "./consumption.js?v=89";
+import { mountLikes } from "../core/likes.js?v=89";
+import { isOpen, askPin } from "../core/lock.js?v=89";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -187,6 +188,22 @@ export async function renderScanCard(root, p, ctx) {
   const unit = H.UNITS[p.unit] || "";
   const locRows = H.LOCATIONS.map((l, i) => ({ l, n: Number(p.stock?.[l.id]) || 0, hue: ["#5b7bff", "#dce6ff", "#6ccbff"][i % 3] }));
   const hits = recipesFor(p);
+  // the recipes (and their cost) only render once the PIN is in; the button asks for it
+  const recipeSheet = () => `
+      <h2>${L.recipeHead} <i>${hits.length}</i></h2>
+      ${hits.length ? hits.map((r, ri) => {
+        const ev = evalRecipe(r, products, H);
+        return `<article class="rx-card" style="--rx:${GROUP_HUES[ri % GROUP_HUES.length]}">
+          <header><span class="rx-cat">${H.esc((lang === "ar" ? RCAT_AR[r.cat] : null) || r.cat)}</span><h3>${H.esc(r.name)}</h3>
+            <div class="rx-make"><small>${L.canMake}</small><b dir="ltr">${ev.make === Infinity ? "∞" : H.qty(ev.make)}</b></div></header>
+          <div class="rx-ings">${ev.lines.map(x => {
+            const l = x.l, item = x.item;
+            const img = item && item.image ? H.src(item.image) : "";
+            return `<figure class="${x === ev.limit ? "lim" : ""} ${item && item.id === p.id ? "me" : ""}">${img ? `<img src="${H.esc(img)}" alt="">` : `<span>${H.esc(String(l.rm).slice(0, 2))}</span>`}<figcaption>${H.esc(item ? nameOf(item) : l.rm)}<i dir="ltr">${H.esc(String(l.qty))} ${H.esc(l.uom)}</i></figcaption></figure>`;
+          }).join("")}</div>
+          <footer>${ev.limit && ev.limit.item ? `<span>${L.limit}: <b>${H.esc(nameOf(ev.limit.item))}</b></span>` : "<span></span>"}${r.cost ? `<span>${L.cost} <b dir="ltr">${Number(r.cost).toFixed(2)}</b></span>` : ""}</footer>
+        </article>`;
+      }).join("") : `<p>${L.noRecipe}</p>`}`;
   const mood = p.category === "hot" ? "hot" : (p.category === "drinks" || p.category === "slush" ? "cold" : "");
   const worst = dated.length ? stateOf(dated[0].left) : "none";
   const locName = l => lang === "ar" ? (LOC_AR[l.id] || l.name) : (H.LOCATIONS.find(x => x.id === l.id)?.name || l.name);
@@ -279,20 +296,7 @@ export async function renderScanCard(root, p, ctx) {
       ${past[0] ? `<button class="btn warn" id="write-off" type="button">شطب ${groupName(past[0].n)}</button>` : ""}
     </section>
     <section class="pc-sheet rx" id="sheet-recipe" hidden>
-      <h2>${L.recipeHead} <i>${hits.length}</i></h2>
-      ${hits.length ? hits.map((r, ri) => {
-        const ev = evalRecipe(r, products, H);
-        return `<article class="rx-card" style="--rx:${GROUP_HUES[ri % GROUP_HUES.length]}">
-          <header><span class="rx-cat">${H.esc((lang === "ar" ? RCAT_AR[r.cat] : null) || r.cat)}</span><h3>${H.esc(r.name)}</h3>
-            <div class="rx-make"><small>${L.canMake}</small><b dir="ltr">${ev.make === Infinity ? "∞" : H.qty(ev.make)}</b></div></header>
-          <div class="rx-ings">${ev.lines.map(x => {
-            const l = x.l, item = x.item;
-            const img = item && item.image ? H.src(item.image) : "";
-            return `<figure class="${x === ev.limit ? "lim" : ""} ${item && item.id === p.id ? "me" : ""}">${img ? `<img src="${H.esc(img)}" alt="">` : `<span>${H.esc(String(l.rm).slice(0, 2))}</span>`}<figcaption>${H.esc(item ? nameOf(item) : l.rm)}<i dir="ltr">${H.esc(String(l.qty))} ${H.esc(l.uom)}</i></figcaption></figure>`;
-          }).join("")}</div>
-          <footer>${ev.limit && ev.limit.item ? `<span>${L.limit}: <b>${H.esc(nameOf(ev.limit.item))}</b></span>` : "<span></span>"}${r.cost ? `<span>${L.cost} <b dir="ltr">${Number(r.cost).toFixed(2)}</b></span>` : ""}</footer>
-        </article>`;
-      }).join("") : `<p>${L.noRecipe}</p>`}
+      ${isOpen() ? recipeSheet() : ""}
     </section>
   </article>`;
 
@@ -301,9 +305,10 @@ export async function renderScanCard(root, p, ctx) {
   if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
   else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
 
-  root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = () => {
+  root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = async () => {
     const sheet = root.querySelector("#sheet-" + btn.dataset.open);
     if (!sheet) return;
+    if (btn.dataset.open === "recipe" && sheet.hidden) { if (!(await askPin({ lang }))) return; sheet.innerHTML = recipeSheet(); }
     const open = sheet.hidden;
     root.querySelectorAll(".pc-sheet").forEach(s => { s.hidden = true; });
     root.querySelectorAll("[data-open]").forEach(b => b.setAttribute("aria-pressed", "false"));

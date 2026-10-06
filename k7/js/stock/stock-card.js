@@ -3,17 +3,12 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, EDIT_PIN, PIN_HOURS } from "../data/expiry-data.js?v=88";
-import { productPanel } from "./analytics.js?v=88";
-import { BARCODES } from "../data/barcodes.js?v=88";
-import { fefoReport } from "./fefo.js?v=88";
-import { servingsFor } from "./servings.js?v=88";
-import { lastCount } from "./last-count.js?v=88";
-import { mountGauges } from "./indicators.js?v=88";
-import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=88";
-import { RECIPES } from "../data/recipes-data.js?v=88";
-import { AR, LOC_AR } from "../core/names-ar.js?v=88";
-import { renderScanCard } from "./scan-view.js?v=88";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=89";
+import { productPanel } from "./analytics.js?v=89";
+import { BARCODES } from "../data/barcodes.js?v=89";
+import { mountGauges } from "./indicators.js?v=89";
+import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=89";
+import { renderScanCard } from "./scan-view.js?v=89";
 
 const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
@@ -77,15 +72,6 @@ function fmtDate(v) {
   }
   return String(v);
 }
-let dayjsP = null;
-function loadDayjs() {
-  dayjsP ??= loadScript(LIB.dayjs).then(() => loadScript(LIB.relative)).then(() => {
-    const d = window.dayjs;
-    if (d && window.dayjs_plugin_relativeTime) d.extend(window.dayjs_plugin_relativeTime);
-    return d || null;
-  }).catch(() => null);
-  return dayjsP;
-}
 function asDate(v) {
   if (!v) return null;
   if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) return new Date(String(v).slice(0, 10) + "T00:00:00");
@@ -97,12 +83,6 @@ function daysLeft(v) {
   if (!dt || isNaN(dt)) return null;
   return Math.round((dt - new Date()) / 86400000);
 }
-function expiryPhrase(v) {
-  const dt = asDate(v);
-  if (!dt) return "";
-  return window.__dayjs ? window.__dayjs(dt).fromNow() : "";
-}
-
 export function requirePin() {
   if (pinUnlocked()) return Promise.resolve(true);
   return new Promise(resolve => {
@@ -151,7 +131,6 @@ export function openProductCard(p, helpers) {
       <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
     <section class="yield-panel"><div class="slab-h"><h2>Expiry batches</h2><span class="tag">${soon.length ? soon.length + " inside 45 days" : "from the September sheet"}</span></div>
       ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)} · row ${r.sr}</p><div class="uses">${r.batches.map(b => {
-        const left = daysLeft(b.date);
         return `<div class="use"><span class="u-name">Batch ${b.n}</span><span class="u-per data">${H.esc(fmtDate(b.date))}<i data-exp="${H.esc(asDate(b.date)?.toISOString() || "")}"></i></span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
       }).join("") || `<p class="note">No batch on file.</p>`}</div>`).join("") : `<p class="note">This item is not on the September expiry sheet.</p>`}
       ${pinUnlocked() ? `<div class="form-actions" style="margin-top:12px"><button class="btn sm" id="edit-exp" type="button">Edit batches</button></div>` : `<p class="note">Batch edits need the pin. Unlock lasts ${PIN_HOURS} hours.</p><button class="btn sm" id="unlock" type="button">Unlock edits</button>`}
@@ -241,48 +220,12 @@ export async function mountLabelSheet(root, products, helpers) {
     return `<article class="cut"><img class="logo" alt="" src="${H.esc(img)}"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><b>${H.esc(p.name)}</b></article>`;
   }).join("");
 }
-function arName(p) { return AR[p.id] || p.name; }
-function recipeBlock(p) {
-  const key = (p.sku || p.name || "").toLowerCase();
-  const hits = RECIPES.filter(r => r.lines.some(l => l.rm.toLowerCase() === key)).slice(0, 4);
-  if (!hits.length) return `<p class="note">لا توجد وصفة مربوطة بهذا الاسم · No recipe is tied to this name.</p>`;
-  return hits.map(r => `<article class="recipe-card"><h3>${H.esc(r.name)}</h3><ol>${r.lines.map((l,i) => `<li><span>${i+1}</span><b>${H.esc(l.rm)}</b><em>${H.esc(String(l.qty))} ${H.esc(l.uom)}</em></li>`).join("")}</ol></article>`).join("");
-}
 export async function mountProductPage(root, p, helpers) {
   H = helpers;
   await loadScript("vendor/decimal.min.js").catch(() => {});
   renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff, requirePin, rotatePin });
 }
 
-async function paintOps(host, p) {
-  const rows = rowsFor(p.id);
-  const report = await fefoReport(rows, Number(p.rate) || 0);
-  const first = report.first;
-  const pct = first && first.left != null ? Math.max(0, Math.min(1, first.left / 30)) : 0;
-  const color = !first ? "#808a9d" : first.left < 0 ? "#ff5468" : first.left <= 7 ? "#ffb547" : "#3ed69e";
-  const serves = servingsFor(p);
-  const last = lastCount(H.data().sessions, p.id);
-  host.innerHTML = `<section class="ops">
-      <div class="gauge" data-gauge="${pct}" data-color="${color}" data-label="${first && first.left != null ? first.left + "d" : "—"}"></div>
-      <div class="ops-copy"><h3>${first ? "Use batch " + first.n + " first" : "No open batch"}</h3>
-        <p class="note" style="margin:0">${first ? H.esc(first.location) + " · " + H.qty(first.qty) + " · " + H.esc(fmtDate(first.date)) : "Nothing dated on the September sheet."}</p></div>
-    </section>
-    <div class="risk">
-      <div><span>Expired</span><b>${report.expired} SAR</b></div>
-      <div><span>7 days</span><b>${report.d7} SAR</b></div>
-      <div><span>14 days</span><b>${report.d14} SAR</b></div>
-      <div><span>30 days</span><b>${report.d30} SAR</b></div>
-    </div>
-    <section class="yield-panel"><div class="slab-h"><h2>This stock can sell</h2></div>
-      ${serves.length ? `<div class="uses">${serves.map(u => `<div class="use"><span class="u-name">${H.esc(u.name)}</span><span class="u-per">alone</span><b class="data">${H.nf0.format(u.sellable)}</b></div>`).join("")}</div>` : `<p class="note">No recipe is tied to this report name.</p>`}
-    </section>
-    <section class="yield-panel"><div class="slab-h"><h2>Last count</h2></div>
-      ${last ? `<p class="note" style="margin:0">${H.esc(last.by)} · ${H.when(last.at)} · system ${H.qty(last.system)} · counted ${H.qty(last.counted)} · variance ${last.diff > 0 ? "+" : ""}${H.qty(last.diff)}</p>` : `<p class="note" style="margin:0">No committed count for this item yet.</p>`}
-    </section>
-    ${first ? `<button class="btn warn" id="write-off" type="button">Write off batch ${first.n}</button>` : ""}`;
-  mountGauges(host);
-  host.querySelector("#write-off")?.addEventListener("click", () => writeOff(p, first));
-}
 async function writeOff(p, batch) {
   if (!await requirePin()) return;
   const all = edits();

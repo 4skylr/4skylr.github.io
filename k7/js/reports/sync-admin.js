@@ -1,9 +1,9 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
-import { timePinOk } from "../core/time-pin.js?v=88";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=88";
-import { REPORT_NAMES } from "../core/report-names.js?v=88";
-import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=88";
+import { isOpen, unlock } from "../core/lock.js?v=89";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=89";
+import { REPORT_NAMES } from "../core/report-names.js?v=89";
+import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=89";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFWORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
@@ -87,7 +87,7 @@ export function reviewGaps(products) {
 function gate(root, H) {
   const ar = AR();
   root.innerHTML = `<section class="slab"><h2>${ar ? "خانة الأدمن" : "Admin"}</h2><form id="adm"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${ar ? "رقم الأدمن" : "Admin PIN"}"><button class="btn" type="submit">${ar ? "دخول" : "Open"}</button></form></section>`;
-  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (!timePinOk(e.target.pin.value)) { e.target.pin.value = ""; H.toast(ar ? "الرقم غلط" : "Wrong PIN", true); return; } sessionStorage.setItem("noir-admin", "1"); draw(root, H); };
+  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; H.toast(ar ? "الرقم غلط" : "Wrong PIN", true); return; } draw(root, H); };
 }
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 // keep the last uploaded copy of each system file on this device
@@ -117,7 +117,7 @@ export async function importExpiry(file, loadExcel) {
   return Object.keys(edits).length;
 }
 export function renderAdmin(root, H) {
-  if (sessionStorage.getItem("noir-admin") !== "1") return gate(root, H);
+  if (!isOpen()) return gate(root, H);
   draw(root, H);
 }
 // Edit PIN for the product cards, the expiry sheet download, and items whose stock and dated groups disagree

@@ -1,13 +1,14 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
 // price and margin, sales / usage, cover and reorder, recipes, sales-space advice and the stock history from reports.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=88";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=88";
-import { usageOf } from "./consumption.js?v=88";
-import { MENU, VAT } from "../data/menu-data.js?v=88";
-import { RECIPES } from "../data/recipes-data.js?v=88";
-import { salesSpace } from "./sales-space.js?v=88";
-import { historyOf } from "./stock-history.js?v=88";
+import { placement, isBulk } from "./fefo-place.js?v=89";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=89";
+import { usageOf } from "./consumption.js?v=89";
+import { MENU, VAT } from "../data/menu-data.js?v=89";
+import { RECIPES } from "../data/recipes-data.js?v=89";
+import { salesSpace } from "./sales-space.js?v=89";
+import { historyOf } from "./stock-history.js?v=89";
+import { isOpen } from "../core/lock.js?v=89";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -56,7 +57,7 @@ export function open360(p, H) {
       <article><span>${L.total}</span><b class="data">${q(total)} <small>${unit}</small></b></article>
       <article><span>${L.value}</span><b class="data">${sar(total * rate)} <small>SAR</small></b></article>
       <article><span>${L.cost}</span><b class="data">${rate ? sar(rate) : "—"} <small>/${unit}</small></b></article>
-      ${menu ? `<article class="hl"><span>${L.price}</span><b class="data">${menu.price} <small>SR</small></b><em>${L.margin} +${sar(net - rate)}</em></article>` : ""}
+      ${menu ? `<article class="hl"><span>${L.price}</span><b class="data">${sar(menu.price)} <small>SR</small></b><em>${L.margin} +${sar(net - rate)}</em></article>` : ""}
     </div>
 
     <section class="p3-sec"><h3>${L.where}</h3>
@@ -80,7 +81,7 @@ export function open360(p, H) {
         <div><span>${L.out}</span><b class="data">${cover > 999 ? "—" : day(cover)}</b><small><span class="si-pill ${st === "now" ? "bad" : st === "soon" ? "warn" : st === "over" ? "info" : "good"}">${L.status[st]}</span></small></div>
         <div><span>${L.rop}</span><b class="data">${q(Math.ceil(rop))}</b><small>${unit}</small></div>` : ""}
       </div>` : `<p class="p3-muted">${L.noSales}</p>`}
-      ${recipes.length ? `<p class="p3-rec">${L.recipes} <b>${recipes.length}</b> ${L.menuItems}: ${recipes.slice(0, 4).map(r => esc(r.name)).join(" · ")}${recipes.length > 4 ? " …" : ""}</p>` : ""}
+      ${recipes.length ? `<p class="p3-rec">${L.recipes} <b>${recipes.length}</b> ${L.menuItems}${isOpen() ? `: ${recipes.slice(0, 4).map(r => esc(r.name)).join(" · ")}${recipes.length > 4 ? " …" : ""}` : ` <button type="button" class="btn sm ghost unlock-chip" data-unlock>🔒 ${ar ? "الوصفات مقفلة" : "Recipes are locked"}</button>`}</p>` : ""}
     </section>
 
     <section class="p3-sec p3-space t-${sp.tone}"><h3>${L.space}</h3>
