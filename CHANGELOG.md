@@ -1,5 +1,10 @@
 # Changelog
 
+## v93 · 2026-10-06 · New logo
+
+- **New site logo** (the glasses loader by anand_4957 on Uiverse.io): in the header in place of the old 67 logo, and on the opening screen. The full shutters play on the first open of a visit; every later open or refresh (including the refresh button) shows the logo on black for a moment, then fades. The barcode door opens with it too. The old logo and its images are removed. · **شعار جديد** بالأعلى وعند الفتح والتحديث.
+- Fix: a stray CSS fragment in style.css swallowed the product-360 sheet width rule.
+
 ## v92 · 2026-10-06 · Scan opens the watch alone
 
 - A label scan now shows only the watch, on the design's own cream page: no card, frame or other sections. The face adds the product name; the grey side button switches Arabic / English. The full card stays for the product card inside the app. · **المسح يفتح الساعة فقط.**

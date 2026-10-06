@@ -34,7 +34,7 @@ const S = { entries: [], month: null, queue: [], H: null, host: null, float: 478
 
 export async function renderPetty(host, H) {
   S.host = host; S.H = H;
-  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=92", import.meta.url).href; document.head.append(l); }
+  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=93", import.meta.url).href; document.head.append(l); }
   if (!unlocked()) return lockScreen(host);
   touch();
   host.innerHTML = `<div class="pc"><p class="pc-empty">…</p></div>`;

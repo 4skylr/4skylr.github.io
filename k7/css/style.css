@@ -844,8 +844,6 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
   color: #1a1200; background: linear-gradient(120deg, #ffe08a, #ffb547 40%, #ff9f43); box-shadow: 0 6px 18px -8px #ffb547; }
 .top-seller b { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #1a1200; color: #ffb547; font-size: 11px; }
 
-/* ── Developer contact chip ── */
-  background: rgba(37,211,102,.08); border: 1px solid rgba(37,211,102,.35); transition: background .2s, transform .2s; }
 
 /* ── Product 360 ── */
 .p360-sheet { max-width: 860px; }
@@ -884,19 +882,7 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
   }
 .ml-card-b header strong { white-space: nowrap; }
 
-/* ── 67 logo: the image with its two hands as separate layers that weigh up and down ── */
-.s67 { position: relative; display: inline-block; width: 60px; aspect-ratio: 335 / 417; border-radius: 14px; overflow: hidden; flex: none;
-  box-shadow: 0 0 0 1.5px rgba(91,123,255,.7), 0 0 18px rgba(91,123,255,.55), 0 0 34px rgba(220,230,255,.3); background: #000; }
-.s67 img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-.s67.big { width: clamp(150px, 42vw, 240px); border-radius: 26px; box-shadow: 0 0 0 2px rgba(91,123,255,.8), 0 0 40px rgba(91,123,255,.7), 0 0 90px rgba(220,230,255,.45); }
-@media (prefers-reduced-motion: no-preference) {
-  .s67 .hl { animation: s67-l .9s ease-in-out infinite; }
-  .s67 .hr { animation: s67-r .9s ease-in-out infinite; }
-}
-@keyframes s67-l { 0%, 100% { transform: translateY(-7%); } 50% { transform: translateY(5%); } }
-@keyframes s67-r { 0%, 100% { transform: translateY(5%); } 50% { transform: translateY(-7%); } }
 .six7-tag { font-family: var(--f-data); font-size: 9.5px; letter-spacing: .3em; padding: 3px 7px; border-radius: 6px; color: #b9c9ff; border: 1px solid rgba(91,123,255,.45); background: rgba(91,123,255,.1); }
-#curtain .logo.s67 { background: #000; animation: none; filter: none; color: inherit; -webkit-background-clip: border-box; background-clip: border-box; margin: 6px auto; }
 
 .l-refuel.si-loc { color: #6ccbff; } .l-mini.si-loc { color: #b9c9ff; } .l-stores.si-loc { color: #e6eeff; }
 /* sales-space advice (analysis list) */
@@ -1225,7 +1211,6 @@ code { font-family: var(--f-data); font-size: 11.5px; padding: 2px 7px; border-r
 }
 @media (max-width: 640px) {
   .head { grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
-  .head .s67 { width: 46px; border-radius: 12px; }
   .head .six7-tag { display: none; }
   .head .clk { justify-self: stretch; padding: 6px 12px 6px 6px; gap: 10px; }
   .clk-ring { width: 36px; height: 36px; }

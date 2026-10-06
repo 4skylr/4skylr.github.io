@@ -132,6 +132,7 @@ export async function startTour() {
 // Refresh: clear the offline cache, pull the newest files and reload (no need to re-add the link on the phone)
 export async function hardRefresh() {
   document.documentElement.classList.add("refreshing");
+  window.NoirSplash?.();
   try {
     const regs = (await navigator.serviceWorker?.getRegistrations?.()) || [];
     await Promise.all(regs.map(r => r.update().catch(() => {})));

@@ -7,15 +7,16 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236ccbff'/%3E%3Cstop offset='.5' stop-color='%235b7bff'/%3E%3Cstop offset='1' stop-color='%23dce6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='%23000000'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='18' fill='url%28%23g%29'%3E67%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=92">
-<link rel="stylesheet" href="css/fonts.css?v=92">
-<link rel="stylesheet" href="css/indicators.css?v=92">
-<link rel="stylesheet" href="css/scan-card.css?v=92">
-<link rel="stylesheet" href="css/scan-pass.css?v=92">
-<link rel="stylesheet" href="css/brand.css?v=92">
-<link rel="stylesheet" href="css/theme.css?v=92">
-<link rel="stylesheet" href="css/recipe-theater.css?v=92" data-rt-css>
-<link rel="stylesheet" href="css/watch.css?v=92">
+<link rel="stylesheet" href="css/style.css?v=93">
+<link rel="stylesheet" href="css/fonts.css?v=93">
+<link rel="stylesheet" href="css/indicators.css?v=93">
+<link rel="stylesheet" href="css/scan-card.css?v=93">
+<link rel="stylesheet" href="css/scan-pass.css?v=93">
+<link rel="stylesheet" href="css/brand.css?v=93">
+<link rel="stylesheet" href="css/theme.css?v=93">
+<link rel="stylesheet" href="css/logo.css?v=93">
+<link rel="stylesheet" href="css/recipe-theater.css?v=93" data-rt-css>
+<link rel="stylesheet" href="css/watch.css?v=93">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
@@ -54,6 +55,8 @@
 #curtain.open .bulbs{opacity:0}
 #curtain.open .hud{opacity:0;transform:scale(1.15)}
 #curtain.gone{display:none}
+#curtain.quick{background:#000;transition:opacity .4s}#curtain.quick .cv,#curtain.quick .val,#curtain.quick .bulbs,#curtain.quick .now,#curtain.quick .feat,#curtain.quick .hash{display:none}
+#curtain.quick.open{opacity:0}#curtain.quick.open .hud{transform:none;opacity:1}
 @media (prefers-reduced-motion:reduce){#curtain .cv,#curtain .val,#curtain .hud{transition-duration:.01s}}
 </style>
 </head>
@@ -63,7 +66,7 @@
   <div class="val"></div><div class="bulbs"></div>
   <div class="hud">
     <span class="now" id="cur-now">Now showing</span>
-    <span class="logo s67 big"><img src="assets/67/base.webp" alt=""><img class="hl" src="assets/67/l.webp" alt=""><img class="hr" src="assets/67/r.webp" alt=""></span>
+    <span class="nlogo" style="--s:1.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span>
     <span class="feat" id="cur-feat">Concession Stock</span>
     <span class="load"><i></i></span>
     <span class="hash" id="cur-hash">0x0000…</span>
@@ -82,13 +85,15 @@
   var spin = setInterval(function () { var s = "0x"; for (var i = 0; i < 16; i++) s += hex[Math.random() * 16 | 0]; h.textContent = s; }, 70);
   function open() {
     if (done) return; done = true;
-    var wait = Math.max(0, 950 - (Date.now() - t0));
+    var wait = Math.max(0, 1200 - (Date.now() - t0)); // long enough to see the logo
     setTimeout(function () {
       clearInterval(spin); c.classList.add("open");
-      setTimeout(function () { c.classList.add("gone"); }, 1400);
+      setTimeout(function () { c.classList.add("gone"); }, c.classList.contains("quick") ? 450 : 1400);
     }, wait);
   }
   window.NoirCurtain = { open: open };
+  // the refresh button shows the logo while it clears the cache and reloads
+  window.NoirSplash = function () { c.classList.remove("gone", "open"); c.classList.add("quick"); };
   setTimeout(open, 4500); // never block the page
   c.addEventListener("click", open);
 })();
@@ -112,6 +117,6 @@
 <div class="toasts" id="toasts" role="status"></div>
 
 <script>window.CARD_DOOR = true;</script>
-<script type="module" src="app.js?v=155284"></script>
+<script type="module" src="app.js?v=101725"></script>
 </body>
 </html>

@@ -2,8 +2,8 @@
 // Face: the product photo (the card's own .pc-shot, passed in untouched), how many expiry groups it has, the next
 // expiry date and the days left. Swipe the screen up (or turn the crown, or use the dots) for the next screens:
 // recipes (each opens the recipe theater), stock by location, the groups one by one, and sales.
-import { RAW_MATERIALS } from "../data/recipes-data.js?v=92";
-import { CAT, prettyName } from "./recipe-names.js?v=92";
+import { RAW_MATERIALS } from "../data/recipes-data.js?v=93";
+import { CAT, prettyName } from "./recipe-names.js?v=93";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const low = s => String(s ?? "").toLowerCase();
