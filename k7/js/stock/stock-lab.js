@@ -1,8 +1,8 @@
 // Stock Lab — the product list in the Menu Lab style: KPI strip, one glowing board per category,
 // and a row per product with its level ring, ready-to-sell stock, sales and status.
-import { soldOf, moveOf } from "../data/sales-data.js?v=94";
-import { usageOf } from "./consumption.js?v=94";
-import { placement } from "./fefo-place.js?v=94";
+import { soldOf, moveOf } from "../data/sales-data.js?v=95";
+import { usageOf } from "./consumption.js?v=95";
+import { placement } from "./fefo-place.js?v=95";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const HUES = ["#5b7bff", "#6ccbff", "#dce6ff", "#ffb547", "#3ed69e", "#ff8a5c", "#7f95ff", "#5ad1ff", "#f06a7c", "#747e93", "#5b7bff"];

@@ -1,7 +1,7 @@
 // Product likes: whoever opens a product (a barcode scan, the showcase) can like it under their name.
 // One like per name per product, kept in the "likes" collection (Firestore when connected, this browser otherwise).
 // The name is asked once and remembered on this device.
-import * as store from "./store.js?v=94";
+import * as store from "./store.js?v=95";
 
 const COL = "likes", NAME_KEY = "noir-like-name";
 let all = null, loading = null;
@@ -53,4 +53,13 @@ function burst(btn) {
   box.className = "lk-burst"; box.style.left = `${r.left + r.width / 2}px`; box.style.top = `${r.top + r.height / 2}px`;
   box.innerHTML = Array.from({ length: 10 }, (_, i) => `<i style="--a:${i * 36}deg;--d:${(i % 3) * .05}s">${HEART}</i>`).join("");
   document.body.append(box); setTimeout(() => box.remove(), 900);
+}
+
+// one-tap like from a product card: the saved name, or ask once; true when the product is now liked by this person
+export const likedByMe = pid => { const me = myName(); return !!me && likesFor(pid).some(d => slug(d.name) === slug(me)); };
+export async function quickLike(pid, ar) {
+  let n = myName();
+  if (!n) { n = (prompt(ar ? "اكتب اسمك عشان يتسجل الإعجاب" : "Your name, so the like is yours") || "").trim().slice(0, 30); if (!n) return false; try { localStorage.setItem(NAME_KEY, n); } catch {} }
+  if (likedByMe(pid)) return true;
+  await addLike(pid, n); return true;
 }

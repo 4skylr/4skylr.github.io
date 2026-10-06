@@ -1,5 +1,9 @@
 # Changelog
 
+## v95 · 2026-10-06 · Product cards
+
+- **Stock → Cards uses Smit-Prajapati's product card (Uiverse.io)**, without any "buy": the image with the unit price, the heart (a like under your name), category and name; **colours** are the stores the product is in now (tap a dot for the quantity there); **sizes** are the product's other sizes (tubs, cups, lids, glasses, pack sizes…; tap one to flip the card to it); **stars** rank sales since 1 January against the other products, with the number sold. The yellow button opens the product, the small one its barcode card. White and Night versions. · **بطاقات المنتجات الجديدة.**
+
 ## v94 · 2026-10-06 · Glass theme, White and Night
 
 - **New theme from marcelodolza's glass card (Uiverse.io)**: frosted panels with white inner light and soft indigo shadows, lavender blobs behind the page, and a pink → periwinkle → blue accent for the main action and the page you are on. · **ثيم زجاجي جديد.**
