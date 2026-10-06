@@ -1,6 +1,6 @@
 // How many menu servings each raw material makes, for the product card's "sells as" list.
-import { RAW_MATERIALS } from "../data/recipes-data.js?v=87";
-import { usesOf, evaluate } from "./analytics.js?v=87";
+import { RAW_MATERIALS } from "../data/recipes-data.js?v=88";
+import { usesOf, evaluate } from "./analytics.js?v=88";
 export function servingsFor(p) {
   const key = Object.keys(RAW_MATERIALS).find(k => k.toLowerCase() === String(p.sku || "").toLowerCase());
   if (!key) return [];

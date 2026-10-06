@@ -1,5 +1,13 @@
 # Changelog
 
+## v88 · 2026-10-06 · Two-sided products, likes, sharper photos
+
+- **Showcase products turn round** (tap, T, or the Turn button): the back shows the menu recipes the product goes into, calories per serving and its expiry groups; the front product tilts toward the pointer with a moving glare. · **المنتج يلف**: وراه الوصفة والسعرات والمجموعات.
+- **Likes**: anyone who opens a product (barcode card or showcase) can like it under their name, once per name; the Overview shows the most-liked products. · **الإعجاب** باسم الشخص.
+- **Calories** per serving, estimated from each recipe's ingredients (packs from their label), on the showcase back and the Profit page. · **السعرات الحرارية** محسوبة من الوصفة.
+- **All 71 product photos re-made**: Real-ESRGAN (general-x4v3, run as ONNX) upscaling, ISNet masks refined with a guided filter, 1200 px cut-outs. · **صور المنتجات بجودة أعلى.**
+- Fix caught by CI: mask images in CSS variables resolved against the stylesheet (404).
+
 ## v87 · 2026-10-06 · Shift brief, quick actions, accessibility, CI
 
 ### What's new · الجديد

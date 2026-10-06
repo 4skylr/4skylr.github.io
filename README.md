@@ -52,4 +52,4 @@ Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an i
 [idb-keyval](https://github.com/jakearchibald/idb-keyval) ·
 [Geist](https://github.com/vercel/geist-font) ·
 [IBM Plex](https://github.com/IBM/plex) ·
-product cut-outs made with [rembg](https://github.com/danielgatis/rembg).
+product photos upscaled with [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) and cut out with [rembg](https://github.com/danielgatis/rembg).

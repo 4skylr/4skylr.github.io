@@ -5,11 +5,12 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=87";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=87";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=87";
-import { placement } from "./fefo-place.js?v=87";
-import { usageOf } from "./consumption.js?v=87";
+import { AR, LOC_AR } from "../core/names-ar.js?v=88";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=88";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=88";
+import { placement } from "./fefo-place.js?v=88";
+import { usageOf } from "./consumption.js?v=88";
+import { mountLikes } from "../core/likes.js?v=88";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -264,6 +265,7 @@ export async function renderScanCard(root, p, ctx) {
       </div>
     </div>
 
+    <div class="pc-like" id="pc-like"></div>
     ${laneHtml}
     ${dated.length ? `<h2 class="cd-title"><span>${L.countdowns}</span><i>${dated.length}</i></h2>
       <div class="cd-stack">${dated.map(b => podHtml(b, L, gname, H, unit, next && b === next, locName)).join("")}</div>
@@ -332,6 +334,7 @@ export async function renderScanCard(root, p, ctx) {
   root.querySelector("#write-off")?.addEventListener("click", () => writeOff(p, past[0]));
 
   startTicking(root, asDate);
+  mountLikes(root.querySelector("#pc-like"), p.id, { lang });
   if (H.quiet) settle(root); else animateIn(root, worst);
 }
 

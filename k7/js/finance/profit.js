@@ -2,10 +2,11 @@
 // Cost of a serving = Σ recipe qty ÷ recipe-units-per-stock-unit × cost of one stock unit. The stock-unit cost comes from
 // the price list (case price ÷ what the case holds); materials the list does not sell fall back to the system's rate.
 // Profit = menu price net of 15% VAT − serving cost. Group items (one price, several flavours) are costed per option.
-import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=87";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=87";
-import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=87";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=87";
+import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=88";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=88";
+import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=88";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=88";
+import { recipeKcal } from "../data/nutrition.js?v=88";
 
 const low = s => String(s || "").toLowerCase();
 const RM = new Map(Object.entries(RAW_MATERIALS).map(([k, v]) => [low(k), { key: k, ...v }]));
@@ -27,7 +28,7 @@ export function recipeCost(name) {
     return { rm: m?.key || l.rm, qty: l.qty, unit: m?.recipe || "", cost, was, src: u.src, per: u.cost, stock: u.unit };
   });
   const total = lines.reduce((a, l) => a + l.cost, 0), was = lines.reduce((a, l) => a + l.was, 0);
-  return { name: r.name, cat: r.cat, lines, total, was };
+  return { name: r.name, cat: r.cat, lines, total, was, kcal: recipeKcal(r, RAW_MATERIALS) };
 }
 
 // what one option of a group item is: its flavour, and the ingredients that make it different
@@ -95,7 +96,7 @@ export function renderProfit(host, H) {
     </summary>
     <div class="pf-opts">${i.options.map(o => `<section class="pf-opt">
       <header><b>${esc(ar ? o.label.ar : o.label.en)}</b><span class="pf-chips">${o.chips.map(c => `<em>${esc(c[ar ? 1 : 0])}</em>`).join("")}</span>
-        <span class="pf-o-num data">${T("cost", "تكلفة")} ${o.total.toFixed(2)} · ${T("profit", "ربح")} <b>${o.profit.toFixed(2)}</b> · ${pct(o.margin)}</span></header>
+        <span class="pf-o-num data">${T("cost", "تكلفة")} ${o.total.toFixed(2)} · ${T("profit", "ربح")} <b>${o.profit.toFixed(2)}</b> · ${pct(o.margin)}${o.kcal != null ? ` · <i class="pf-kcal">≈ ${o.kcal} ${T("kcal", "سعرة")}</i>` : ""}</span></header>
       ${breakdown(o)}</section>`).join("")}</div></details>`;
   };
   const groups = Object.keys(GROUPS).filter(g => state.group === "all" || state.group === g);

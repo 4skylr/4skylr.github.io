@@ -320,3 +320,7 @@ body.card-only { background: #0b0f17; }
 .sold-chip .sc-rank { position: absolute; top: 8px; inset-inline-end: 10px; font-style: normal; font-family: var(--f-data); font-size: 9.5px; font-weight: 700; letter-spacing: .12em; color: #1a1200;
   padding: 2px 8px; border-radius: 99px; background: linear-gradient(120deg, #ffe08a, #ffb547, #ff9f43); }
 .sold-chip.hot .sc-side { margin-top: 14px; }
+/* likes on the scanned card */
+.pass .pc-like { margin: 14px 0 4px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, .1); background: rgba(0, 0, 0, .25); }
+.pass .pc-like .lk { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+.pass .pc-like .lk-name { grid-column: 1 / -1; }
