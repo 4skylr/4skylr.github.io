@@ -44,7 +44,7 @@ Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an i
 ## Open-source libraries
 
 [GSAP](https://github.com/greensock/GSAP) ·
-[Lucide](https://github.com/lucide-icons/lucide) ·
+[Ionicons](https://github.com/ionic-team/ionicons) ·
 [Apache ECharts](https://github.com/apache/echarts) ·
 [pdf.js](https://github.com/mozilla/pdf.js) ·
 [SheetJS](https://github.com/SheetJS/sheetjs) ·

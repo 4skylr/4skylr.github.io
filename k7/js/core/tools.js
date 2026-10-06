@@ -181,7 +181,7 @@ export function mountTools(H) {
     b.setAttribute("aria-label", b.title); b.innerHTML = H.icon("search");
     b.onclick = () => openFinder(H); meta.prepend(b);
     const help = document.createElement("button");
-    help.type = "button"; help.id = "tour-btn"; help.className = "btn sm ghost icon"; help.textContent = "?";
+    help.type = "button"; help.id = "tour-btn"; help.className = "btn sm ghost icon"; help.innerHTML = H.icon("help");
     help.title = AR() ? "جولة تعريفية" : "Guided tour"; help.setAttribute("aria-label", help.title);
     help.onclick = () => startTour().catch(() => {}); meta.prepend(help);
     const gear = document.createElement("button");
@@ -189,7 +189,7 @@ export function mountTools(H) {
     gear.title = AR() ? "الإعدادات" : "Settings"; gear.setAttribute("aria-label", gear.title);
     gear.onclick = () => H.go("settings"); meta.prepend(gear);
     const rf = document.createElement("button");
-    rf.type = "button"; rf.id = "refresh-btn"; rf.className = "btn sm ghost icon"; rf.innerHTML = "<span>⟳</span>";
+    rf.type = "button"; rf.id = "refresh-btn"; rf.className = "btn sm ghost icon"; rf.innerHTML = H.icon("refresh");
     rf.title = AR() ? "تحديث الصفحة" : "Refresh"; rf.setAttribute("aria-label", rf.title);
     rf.onclick = hardRefresh; meta.prepend(rf);
   }

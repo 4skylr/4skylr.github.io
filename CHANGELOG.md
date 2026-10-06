@@ -1,5 +1,17 @@
 # Changelog
 
+## v97 · 2026-10-07 · Apple-style design
+
+- **The whole site follows Apple's Human Interface Guidelines and iOS UI kit** (developer.apple.com/design/resources), with no Apple logo or artwork. · **تصميم الموقع كامل بأسلوب أبل.**
+  - **Type:** the device's own system font: SF Pro and SF Arabic on iPhone, iPad and Mac. Other devices use Inter and IBM Plex Sans Arabic. No SF font files are shipped; Apple licenses them for its own platforms only.
+  - **Colour:** the iOS system colours and grouped backgrounds in Light and Dark, with flat cards on the gray (or black) background. Text uses the readable versions of each colour; the contrast scan passes.
+  - **Bars:** a floating Liquid Glass tab bar with labels; the current tab is tinted blue with a filled icon. The header buttons are glass circles.
+  - **Controls:** capsule buttons (gray, blue or text-only), gray rounded text fields and search, iOS segmented controls, and filter chips.
+  - **Windows:** sheets slide up from the bottom on a phone, with a grabber and a round close button, and appear as a centred card on a big screen. Messages drop in at the top like an iOS notification, with a green check or a red mark.
+  - **Icons:** Ionicons in the iOS style, filled when selected. Charts use the iOS system colours.
+  - **Launch screen:** the plain background with the logo.
+- Unchanged: the logo, the watch screen, the product cards, the barcodes and their links, and the product photos.
+
 ## v96 · 2026-10-06 · Scanner fix
 
 - **The in-app Scan button opens the product again.** After a code was read, the camera sheet stayed on top of the product, so nothing seemed to happen; it now closes. Reading is more reliable: the phone's own barcode detector where there is one, else zxing-cpp (Sec-ant/zxing-wasm), else the older ZXing reader, for both the QR and the Code 128 on each label. Tested with a camera feed of a label QR and barcode. · **إصلاح المسح من داخل الموقع.**

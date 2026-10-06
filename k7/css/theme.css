@@ -195,7 +195,7 @@ em, i { font-style: normal; }
 .lk-card { grid-template-rows: 1fr auto; }
 .lk-act { align-self: end; align-items: center; }
 
-/* Lucide icons */
+/* icons (core/icons.js) */
 .lu{width: 1.15em;height: 1.15em;flex: none}
 /* clock frames: a 24-line reel stepped on the compositor (no layout per frame) */
 .clk-t .ff{display: inline-block;height: 1.2em;line-height: 1.2em;overflow: hidden;vertical-align: bottom;contain: strict;width: 3.2ch}
