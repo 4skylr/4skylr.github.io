@@ -2,8 +2,8 @@
 // Face: the product photo (the card's own .pc-shot, passed in untouched), how many expiry groups it has, the next
 // expiry date and the days left. Swipe the screen up (or turn the crown, or use the dots) for the next screens:
 // recipes (each opens the recipe theater), stock by location, the groups one by one, and sales.
-import { RAW_MATERIALS } from "../data/recipes-data.js?v=91";
-import { CAT, prettyName } from "./recipe-names.js?v=91";
+import { RAW_MATERIALS } from "../data/recipes-data.js?v=92";
+import { CAT, prettyName } from "./recipe-names.js?v=92";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const low = s => String(s ?? "").toLowerCase();
@@ -24,7 +24,7 @@ function makes(r, products, total) {
 const tone = d => (d == null ? "none" : d < 0 ? "exp" : d <= 7 ? "crit" : d <= 30 ? "soon" : "ok");
 
 export function watchHtml(o) {
-  const { ar, shot, groups, next, recipes, locs, total, unit, sold, perDay, code, H, products, gname, locName } = o;
+  const { ar, shot, groups, next, recipes, locs, total, unit, sold, perDay, code, H, products, gname, locName, name = "" } = o;
   const T = (e, a) => (ar ? a : e), q = n => H.qty(n);
   const d = next ? next.left : null, t = tone(d), frac = d == null ? 0 : Math.max(0, Math.min(1, d / 365));
   const ringDeg = Math.round((d == null ? 0 : d < 0 ? 1 : Math.min(1, d / 90)) * 360);
@@ -33,7 +33,7 @@ export function watchHtml(o) {
     `<section class="nw-view nw-face" aria-label="${T("Product", "المنتج")}">
       <div class="nw-comp nw-tl"><b class="data">${groups.length || "—"}</b><small>${groups.length ? T(groups.length === 1 ? "group" : "groups", "مجموعة") : T("no date", "بدون تاريخ")}</small></div>
       <div class="nw-comp nw-tr t-${t}" style="--deg:${ringDeg}deg"><b class="data">${d == null ? "∞" : d < 0 ? "!" : d}</b><small>${d == null ? T("days", "يوم") : d < 0 ? T("expired", "منتهي") : T("days", "يوم")}</small></div>
-      <div class="nw-photo">${shot}<span class="pass-laser" aria-hidden="true"></span></div>
+      <div class="nw-photo">${shot}<span class="pass-laser" aria-hidden="true"></span></div>${name ? `<p class="nw-name">${esc(name)}</p>` : ""}
       <div class="nw-comp nw-bottom t-${t}">
         <div><small>${next ? (d < 0 ? T("Expired on", "انتهى في") : T("Expires", "ينتهي")) : T("Expiry", "الانتهاء")}</small><b class="data" dir="ltr">${next ? esc(next.when) : "—"}</b>
           <div class="nw-progress"><i style="width:${(frac * 100).toFixed(1)}%"></i></div></div>
@@ -76,7 +76,7 @@ export function watchHtml(o) {
     <div class="nw-strap top" aria-hidden="true"></div><div class="nw-strap bottom" aria-hidden="true"></div>
     <div class="nw-case">
       <span class="nw-crown-well" aria-hidden="true"></span><button type="button" class="nw-crown" aria-label="${T("Next screen", "الشاشة التالية")}"></button>
-      <span class="nw-side-well" aria-hidden="true"></span><span class="nw-side" aria-hidden="true"></span>
+      <span class="nw-side-well" aria-hidden="true"></span><button type="button" class="nw-side" aria-label="${ar ? "English" : "عربي"}" title="${ar ? "English" : "عربي"}"></button>
       <span class="nw-action-well" aria-hidden="true"></span><button type="button" class="nw-action" aria-label="${T("Back to the product", "رجوع للمنتج")}"></button>
       <div class="nw-display" tabindex="0" role="region" aria-roledescription="${T("watch", "ساعة")}" aria-label="${T("Product watch: swipe up for more", "ساعة المنتج: اسحب لفوق للمزيد")}" dir="${ar ? "rtl" : "ltr"}">
         <div class="nw-status" dir="ltr"><span class="nw-time data">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="nw-brand">NOIR<i></i></span></div>
@@ -88,7 +88,7 @@ export function watchHtml(o) {
 }
 
 // screens move up and down: swipe, wheel, arrow keys, crown (next), action button (back to the face), dots
-export function mountWatch(root, { onRecipe } = {}) {
+export function mountWatch(root, { onRecipe, onLang } = {}) {
   const w = root.querySelector(".nw"); if (!w) return;
   const disp = w.querySelector(".nw-display"), wrap = w.querySelector(".nw-wrap"), dots = [...w.querySelectorAll(".nw-dot")], n = dots.length;
   let at = 0;
@@ -103,6 +103,7 @@ export function mountWatch(root, { onRecipe } = {}) {
   dots.forEach(d => d.onclick = e => { e.stopPropagation(); set(Number(d.dataset.go)); });
   w.querySelector(".nw-crown").onclick = () => set(at + 1 >= n ? 0 : at + 1);
   w.querySelector(".nw-action").onclick = () => set(0);
+  w.querySelector(".nw-side").onclick = () => onLang?.(); // the side button switches Arabic / English
   disp.addEventListener("keydown", e => { if (e.key === "ArrowDown" || e.key === "PageDown") { e.preventDefault(); set(at + 1); } if (e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); set(at - 1); } });
   let wheelAt = 0;
   disp.addEventListener("wheel", e => { if (Math.abs(e.deltaY) < 12 || Date.now() - wheelAt < 600) return; const i = at + (e.deltaY > 0 ? 1 : -1); if (i < 0 || i >= n) return; e.preventDefault(); wheelAt = Date.now(); set(i); }, { passive: false });

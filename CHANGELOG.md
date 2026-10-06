@@ -1,5 +1,9 @@
 # Changelog
 
+## v92 · 2026-10-06 · Scan opens the watch alone
+
+- A label scan now shows only the watch, on the design's own cream page: no card, frame or other sections. The face adds the product name; the grey side button switches Arabic / English. The full card stays for the product card inside the app. · **المسح يفتح الساعة فقط.**
+
 ## v91 · 2026-10-06 · Product watch on the barcode card
 
 - **The product photo now sits on a watch** (design after chase2k25 on Uiverse.io): the face shows the photo, how many expiry groups the product has, the next expiry date with the days left as a ring, and the quantity on hand. Swipe the screen up (or press the crown, or tap the dots) for: recipes (each opens the recipe theater), stock by location as activity rings, the groups one by one, and sales. The yellow side button goes back to the face. · **صورة المنتج على شاشة ساعة**: المجموعات والانتهاء، واسحب لفوق للوصفة والمعلومات.

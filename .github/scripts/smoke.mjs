@@ -1,7 +1,7 @@
 // Smoke test for the site (run by .github/workflows/ci.yml, or locally: node .github/scripts/smoke.mjs).
 // Serves the repo, opens every page in English and Arabic at phone and desktop width, and fails on:
 //   a JavaScript error · a missing local file · a page wider than the screen · an empty page.
-// Also checks the barcode door: one product card, no menu, no way into the site.
+// Also checks the barcode door: the product watch alone, no menu, no way into the site.
 // Writes a Markdown table to the GitHub job summary and screenshots to ./smoke-shots.
 import { chromium } from "playwright";
 import http from "node:http";
@@ -51,9 +51,9 @@ for (const lang of ["en", "ar"]) for (const width of [390, 1300]) {
   await ctx.route(/googleapis|gstatic\.com|firebaseio/, r => r.abort());
   const page = await ctx.newPage(); const errs = []; page.on("pageerror", e => errs.push(e.message));
   await page.goto(`${BASE}/noir-stock/?p=tub-46`); await wait(4000);
-  const d = await page.evaluate(() => ({ card: document.querySelectorAll(".pass, .phone-card").length, nav: document.querySelectorAll("#nav, .dock-nav, .head").length, links: [...document.querySelectorAll("a[href]")].map(a => a.getAttribute("href")) }));
+  const d = await page.evaluate(() => ({ card: document.querySelectorAll(".pass, .phone-card, .nw-page").length, nav: document.querySelectorAll("#nav, .dock-nav, .head").length, links: [...document.querySelectorAll("a[href]")].map(a => a.getAttribute("href")) }));
   await page.evaluate(() => { location.hash = "dashboard"; }); await wait(1200);
-  const still = await page.evaluate(() => document.querySelectorAll(".pass, .phone-card").length);
+  const still = await page.evaluate(() => document.querySelectorAll(".pass, .phone-card, .nw-page").length);
   const why = [...errs.map(e => "error: " + e), ...(d.card !== 1 ? ["no product card"] : []), ...(d.nav ? ["site menu visible"] : []), ...(d.links.some(h => /k7/.test(h)) ? ["link into the site"] : []), ...(still !== 1 ? ["#dashboard left the card"] : [])];
   rows.push({ lang: "door", width: 390, route: "noir-stock/?p=tub-46", ok: !why.length, why });
   if (why.length) { failures.push(`door: ${why.join("; ")}`); await page.screenshot({ path: "smoke-shots/door.png" }); }
