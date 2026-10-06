@@ -17,7 +17,7 @@
   --line-hi: rgba(160, 180, 220, .24);
   --ink: #edf1f8;
   --ink-2: #a3adbf;
-  --muted: #687286;
+  --muted: #808a9d;
   --xenon: #dce6ff;
   --ice: #6ccbff;
   --chain: #5b7bff;
@@ -181,3 +181,16 @@ em, i { font-style: normal; }
 /* thirteen destinations on a phone: icons only, tighter */
 @media (max-width: 420px) { .dock-nav { gap: 0; padding: 4px; } .dock-nav button { padding: 10px 4.5px; } .dock-nav button svg { width: 17px; height: 17px; } }
 @media (max-width: 350px) { .dock-nav button { padding: 9px 3px; } .dock-nav button svg { width: 16px; height: 16px; } }
+/* contrast fixes from the accessibility scan (WCAG AA 4.5:1) */
+:root { --muted: #808a9d; }
+.bell.ring sup { color: #04070c; }
+.hl-mode button[aria-pressed="true"] { background: var(--xenon); color: #04070c; }
+.sf-tasks li.s-info { opacity: 1; }
+/* analyst scores use the status colours, not a free hue */
+.an-score.sc-good circle.v { stroke: var(--good); filter: drop-shadow(0 0 8px rgba(62, 214, 158, .6)); }
+.an-score.sc-warn circle.v { stroke: var(--amber); filter: drop-shadow(0 0 8px rgba(255, 181, 71, .6)); }
+.an-score.sc-bad circle.v { stroke: var(--bad); filter: drop-shadow(0 0 8px rgba(255, 84, 104, .6)); }
+.an-pill.sc-good { background: var(--good); } .an-pill.sc-warn { background: var(--amber); } .an-pill.sc-bad { background: #ff8a98; }
+/* link cards: actions sit on the bottom edge at their own height */
+.lk-card { grid-template-rows: 1fr auto; }
+.lk-act { align-self: end; align-items: center; }

@@ -1,0 +1,23 @@
+name: Something is wrong · فيه مشكلة
+description: A page shows the wrong number, breaks, or does not load. · صفحة فيها رقم غلط أو ما تشتغل.
+labels: [bug]
+body:
+  - type: dropdown
+    id: page
+    attributes:
+      label: Page · الصفحة
+      options: [Overview, Stock, Count, Yield, Ledger, Budget, Profit, Unaizah, Halls, Nightly, Safety, Petty cash, Links, Settings, Alerts, Product card (barcode)]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened · وش صار
+      description: What you did, what you expected, what you saw. A screenshot helps. · وش سويت، وش توقعت، ووش طلع لك. الصورة تساعد.
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device · الجهاز
+      options: [Phone · جوال, Computer · كمبيوتر, Tablet · تابلت]

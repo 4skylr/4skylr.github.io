@@ -1,7 +1,7 @@
 // Auditoriums — the four halls seat by seat, with how often each seat was booked.
 //   Seat data: "User Transaction Log - Payment Type wise" (parsed by halls-parse.js with mozilla/pdf.js)
 //   Pinch and zoom: @panzoom/panzoom (timmywil/panzoom) · Charts: ECharts (apache/echarts)
-import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=86";
+import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=87";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "halls";
@@ -10,7 +10,8 @@ const pct = n => `${Math.round(n * 100)}%`;
 const T = (en, ar) => AR() ? ar : en;
 const TYPE = { co: ["Comfort", "كومفورت"], cp: ["Comfort+", "كومفورت+"], wc: ["Wheelchair", "كرسي متحرك"] };
 const tName = t => T(...TYPE[t]);
-const HEAT = [[0, [36, 28, 58]], [0.3, [106, 63, 214]], [0.6, [255, 79, 216]], [0.82, [255, 138, 92]], [1, [255, 211, 110]]];
+// booking heat in the booth palette: cold steel → chain blue → ice → xenon → tungsten for the busiest seats
+const HEAT = [[0, [20, 28, 52]], [0.3, [91, 123, 255]], [0.6, [108, 203, 255]], [0.82, [220, 230, 255]], [1, [255, 181, 71]]];
 function heat(t) {
   t = Math.max(0, Math.min(1, t));
   for (let i = 1; i < HEAT.length; i++) if (t <= HEAT[i][0]) {
@@ -48,8 +49,8 @@ function mapSvg(S, { big = false, mode = ui.mode } = {}) {
     const fill = mode === "heat" ? (cold ? "transparent" : heat(t)) : TYPE_FILL[s.type];
     const ink = mode === "heat" ? (t > 0.55 ? "#0c111b" : "#edf1f8") : "#0c111b";
     const top = top3.has(s.id);
-    return `<g class="hl-seat${top ? " top" : ""}${cold ? " cold" : ""}${ui.seat === s.id ? " sel" : ""}" data-seat="${s.id}" tabindex="${big ? 0 : -1}" role="button" aria-label="${s.id} ${tName(s.type)} ${s.count}">
-      <rect class="bk" x="${x}" y="${yy}" width="32" height="25" rx="8" fill="${fill}" ${cold && mode === "heat" ? 'stroke="#5b4f7c" stroke-dasharray="3 3"' : ""}/>
+    return `<g class="hl-seat${top ? " top" : ""}${cold ? " cold" : ""}${ui.seat === s.id ? " sel" : ""}" data-seat="${s.id}" ${big ? `tabindex="0" role="button" aria-label="${s.id} ${tName(s.type)} ${s.count}"` : ""}>
+      <rect class="bk" x="${x}" y="${yy}" width="32" height="25" rx="8" fill="${fill}" ${cold && mode === "heat" ? 'stroke="#4a5570" stroke-dasharray="3 3"' : ""}/>
       <rect class="cu" x="${x + 3}" y="${yy + 21}" width="26" height="9" rx="4" fill="${fill}" ${s.type === "cp" && mode === "heat" ? 'stroke="#ffb547" stroke-width="1.6"' : ""} opacity="${cold && mode === "heat" ? 0 : 0.78}"/>
       ${s.type === "wc" ? `<text class="wc" x="${x + 16}" y="${yy + 17}" text-anchor="middle">♿</text>` : big ? `<text x="${x + 16}" y="${yy + 16.5}" text-anchor="middle" fill="${ink}">${mode === "heat" ? s.count : s.n}</text>` : ""}
       ${top ? `<g class="crown"><rect x="${x + 2}" y="${yy - 15}" width="28" height="13" rx="6.5"/><text x="${x + 16}" y="${yy - 5.6}" text-anchor="middle">#${S.ranked.findIndex(r => r.id === s.id) + 1}</text></g>` : ""}
@@ -58,7 +59,7 @@ function mapSvg(S, { big = false, mode = ui.mode } = {}) {
   const labels = hall.rows.map((r, i) => { const n = seats.filter(s => s.r === r.r).length;
     return `<text class="rl" x="${LBL - 10}" y="${rowY[i] + 20}" text-anchor="end">${r.r}</text><text class="rl" x="${w - LBL + 10}" y="${rowY[i] + 20}">${r.r}</text>${big ? `<text class="rn" x="${LBL - 10}" y="${rowY[i] + 31}" text-anchor="end">1-${n}</text>` : ""}`; }).join("");
   const id = `sg${hall.id}${big ? "b" : ""}`;
-  return `<svg class="hl-svg" viewBox="0 0 ${w} ${h}" style="max-width:${Math.round(w * (big ? 1.25 : 1.05))}px" role="img" aria-label="Screen ${hall.id}">
+  return `<svg class="hl-svg" viewBox="0 0 ${w} ${h}" style="max-width:${Math.round(w * (big ? 1.25 : 1.05))}px" role="${big ? "group" : "img"}" aria-label="Screen ${hall.id}">
     <defs><linearGradient id="${id}" x1="0" x2="1"><stop offset="0" stop-color="#5b7bff" stop-opacity=".1"/><stop offset=".5" stop-color="#dce6ff"/><stop offset="1" stop-color="#6ccbff" stop-opacity=".1"/></linearGradient>
       <radialGradient id="${id}g" cx=".5" cy="0" r=".6"><stop offset="0" stop-color="#dce6ff" stop-opacity=".28"/><stop offset="1" stop-color="#dce6ff" stop-opacity="0"/></radialGradient></defs>
     <rect x="0" y="0" width="${w}" height="${TOP + 40}" fill="url(#${id}g)"/>
@@ -150,7 +151,7 @@ function allView(all, inv) {
       </footer></article>`).join("")}</section>
     <section class="hl-two">
       <article class="hl-panel"><h3>${T("Seat inventory", "جرد المقاعد")}</h3>
-        <table class="hl-inv"><thead><tr><th></th>${["co", "cp", "wc"].map(t => `<th><i class="sw t-${t}"></i>${tName(t)}</th>`).join("")}<th>${T("Total", "المجموع")}</th></tr></thead>
+        <table class="hl-inv"><thead><tr><th><span class="sr">${T("Hall", "القاعة")}</span></th>${["co", "cp", "wc"].map(t => `<th><i class="sw t-${t}"></i>${tName(t)}</th>`).join("")}<th>${T("Total", "المجموع")}</th></tr></thead>
         <tbody>${all.map(s => `<tr><td>SCREEN ${s.hall.id}</td><td class="data">${s.types.co}</td><td class="data">${s.types.cp}</td><td class="data">${s.types.wc}</td><td class="data b">${s.total}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td>${T("All halls", "كل القاعات")}</td><td class="data">${inv.co}</td><td class="data">${inv.cp}</td><td class="data">${inv.wc}</td><td class="data b">${inv.total}</td></tr></tfoot></table></article>
       <article class="hl-panel"><h3>${T("What the seats say", "وش تقول المقاعد")}</h3><ul class="hl-ins">${ins.map(([t, k]) => `<li class="${k}">${t}</li>`).join("")}</ul></article>
@@ -229,7 +230,7 @@ async function wireHall(host, S) {
   chart(ec, host.querySelector("#hl-ch-hours"), {
     grid: { left: 40, right: 12, top: 16, bottom: 28 },
     xAxis: { type: "category", data: order.map(h => `${String(h).padStart(2, "0")}:00`), axisLabel: { color: "#a3adbf", fontSize: 10 } },
-    yAxis: { type: "value", axisLabel: { color: "#687286", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
+    yAxis: { type: "value", axisLabel: { color: "#808a9d", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
     tooltip: { trigger: "axis", valueFormatter: v => fmt(v) + " " + T("tickets", "تذكرة") },
     series: [{ type: "bar", data: order.map(h => S.H.hours[h]), barWidth: "60%", itemStyle: { borderRadius: [6, 6, 0, 0], color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#dce6ff" }, { offset: 1, color: "#4662d6" }] } } }]
   });
@@ -270,7 +271,7 @@ function echarts() {
 
 // ── upload (Settings) ────────────────────────────────────────
 export async function uploadSeatReport(file, H, onProgress) {
-  const { parseTxLog } = await import("./halls-parse.js?v=86");
+  const { parseTxLog } = await import("./halls-parse.js?v=87");
   const d = await parseTxLog(file, onProgress);
   await H.putDoc(COL, "seats", d);
   await H.log?.("report", `Seat report · ${d.tickets} tickets · ${d.from} → ${d.to}`);

@@ -64,7 +64,7 @@ let observer = null;
 let renderId = 0;
 function dispose() { charts.forEach(c => c.dispose()); charts = []; observer?.disconnect(); }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#687286", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
 const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 const weekNo = label => parseInt(label.match(/\d+/)?.[0] || "0", 10);
@@ -240,7 +240,7 @@ export async function renderFinance(root) {
       </div>
       <section class="uz-card"><div class="uz-h"><div><h3>${t.matrix}</h3><p>${t.matrixSub}</p></div></div><div class="uz-chart" id="fx-matrix" style="height:300px"></div></section>
       <section class="uz-card"><div class="uz-h"><div><h3>${t.months}</h3><p>${t.monthsSub}</p></div></div><div class="uz-chart" id="fx-months"></div></section>
-      <section class="uz-card"><div class="uz-h"><div><h3>${t.table}</h3></div></div><div class="fx-table-wrap"><table class="fx-table">
+      <section class="uz-card"><div class="uz-h"><div><h3>${t.table}</h3></div></div><div class="fx-table-wrap" tabindex="0"><table class="fx-table">
         <thead><tr><th>${t.cols.branch}</th><th>${t.cols.hit}</th><th>${t.cols.actual}</th><th>${t.cols.target}</th><th>${t.cols.gap}</th><th>${t.cols.adm}</th><th>${t.cols.atp}</th><th>${t.cols.need}</th><th>${t.cols.fc}</th></tr></thead>
         <tbody>${ranked.map(b => `<tr data-b="${b.id}"><td><i class="fx-dot" style="background:${BRANCH[b.id]?.color}"></i>${name(b.id)}</td><td><span class="fx-hitbar"><i style="width:${Math.min(100, b.hit * 100)}%;background:${BRANCH[b.id]?.color}"></i></span><b class="data">${pct(b.hit)}</b></td>
           <td class="data">${fmt(b.ytdRevActual)}</td><td class="data">${fmt(b.ytdRevTarget)}</td><td class="data ${b.gap > 0 ? "neg" : "pos"}">${b.gap > 0 ? "−" : "+"}${fmt(Math.abs(b.gap))}</td>
@@ -265,7 +265,7 @@ export async function renderFinance(root) {
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
       legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 12, itemHeight: 4 },
       grid: { left: 8, right: 12, top: 36, bottom: 40, containLabel: true },
-      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#687286" } }],
+      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#808a9d" } }],
       xAxis: { type: "category", data: labels, boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
@@ -297,7 +297,7 @@ export async function renderFinance(root) {
         labelLine: { lineStyle: { color: "rgba(150,170,210,.35)" } },
         data: rows.map(b => ({ name: name(b.id), value: Math.round(b.ytdRevActual), itemStyle: { color: BRANCH[b.id]?.color } })) }],
       graphic: [{ type: "text", left: "center", top: "46%", style: { text: compact(net.actual), fill: "#edf1f8", font: "600 18px Geist Mono, monospace", textAlign: "center" } },
-                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#687286", font: "11px sans-serif", textAlign: "center" } }]
+                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#808a9d", font: "11px sans-serif", textAlign: "center" } }]
     });
 
     // matrix
@@ -308,7 +308,7 @@ export async function renderFinance(root) {
       grid: { left: 8, right: 8, top: 6, bottom: 52, containLabel: true },
       xAxis: { type: "category", data: labels.slice(0, doneCount), ...AXIS, splitLine: { show: false }, axisLabel: { ...AXIS.axisLabel, interval: 3 } },
       yAxis: { type: "category", data: rows.map(b => name(b.id)), ...AXIS, axisLabel: { ...AXIS.axisLabel, color: "#a3adbf", fontSize: 11 } },
-      visualMap: { type: "piecewise", orient: "horizontal", left: "center", bottom: 0, textStyle: { color: "#687286", fontSize: 10 }, itemWidth: 12, itemHeight: 8,
+      visualMap: { type: "piecewise", orient: "horizontal", left: "center", bottom: 0, textStyle: { color: "#808a9d", fontSize: 10 }, itemWidth: 12, itemHeight: 8,
         pieces: [{ lt: 50, color: "#ff3b5c", label: "<50%" }, { gte: 50, lt: 80, color: "#a3304f", label: "50–80" }, { gte: 80, lt: 100, color: "#33427a", label: "80–100" }, { gte: 100, lt: 130, color: "#2f9e7a", label: "100–130" }, { gte: 130, color: "#3ed69e", label: "130%+" }] },
       series: [{ type: "heatmap", data: mData, itemStyle: { borderColor: "#000000", borderWidth: 2, borderRadius: 3 }, emphasis: { itemStyle: { borderColor: "#fff" } } }]
     });
@@ -348,7 +348,7 @@ export async function renderFinance(root) {
       <section class="uz-card"><div class="uz-h"><div><h3>${t.weekly}</h3><p>${t.weeklySub}</p></div></div><div class="uz-chart xl" id="fx-weekly"></div></section>
       <div class="uz-two">
         <section class="uz-card"><div class="uz-h"><div><h3>${t.burn}</h3><p>${t.burnSub}</p></div></div><div class="uz-chart" id="fx-burn1"></div></section>
-        <section class="uz-card"><div class="uz-h"><div><h3>${t.monthTable}</h3></div></div><div class="fx-table-wrap"><table class="fx-table">
+        <section class="uz-card"><div class="uz-h"><div><h3>${t.monthTable}</h3></div></div><div class="fx-table-wrap" tabindex="0"><table class="fx-table">
           <thead><tr><th>${t.cols.month}</th><th>${t.actual}</th><th>${t.target}</th><th>${t.variance}</th><th>${t.cols.hit}</th></tr></thead>
           <tbody>${b.months.filter(m => m.t).map(m => { const v = m.a == null ? null : m.a - m.tDone; return `<tr class="${m.a == null ? "future" : ""}"><td>${monthName(m.m, ar)}</td><td class="data">${m.a == null ? "—" : fmt(m.a)}</td><td class="data">${fmt(m.t)}</td><td class="data ${v == null ? "" : v >= 0 ? "pos" : "neg"}">${v == null ? "—" : `${v >= 0 ? "+" : "−"}${fmt(Math.abs(v))}`}</td><td>${m.a == null ? "—" : `<span class="fx-hitbar"><i style="width:${Math.min(100, m.a / (m.tDone || 1) * 100)}%;background:${c}"></i></span><b class="data">${pct(m.a / (m.tDone || 1), 0)}</b>`}</td></tr>`; }).join("")}</tbody>
         </table></div></section>
@@ -359,7 +359,7 @@ export async function renderFinance(root) {
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => (v == null ? "—" : `${fmt(v)} ${t.sar}`) },
       legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 10, itemHeight: 6 },
       grid: { left: 8, right: 8, top: 36, bottom: 40, containLabel: true },
-      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: c }, textStyle: { color: "#687286" } }],
+      dataZoom: [{ type: "inside" }, { type: "slider", height: 14, bottom: 4, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: c }, textStyle: { color: "#808a9d" } }],
       xAxis: { type: "category", data: labels, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
       series: [
@@ -401,6 +401,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=86").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
+  import("./fin-analyst.js?v=87").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

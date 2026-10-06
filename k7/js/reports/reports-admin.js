@@ -19,7 +19,7 @@ export function loadXLSX() {
 }
 
 // last upload: the upload log first, else what the data itself says
-async function lastSeen(H) {
+export async function lastSeen(H) {
   const json = u => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
   const [seats, rdr, ledger, remote] = await Promise.all([json("halls/seats.json"), json("finance/rdr.json"), json("unaizah/ledger.json"), Promise.race([H.allDocs("uploads").catch(() => []), new Promise(r => setTimeout(() => r([]), 2500))])]);
   const log = Object.fromEntries([...remote, ...H.localDocs("uploads")].map(d => [d.id, d]));

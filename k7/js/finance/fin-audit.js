@@ -1,8 +1,8 @@
 // Cash office audit: the system's RDR Exception Register against the DCS sheets.
 // For every F&B shift: what the POS sold, what the cashier dropped, what the team leader verified,
 // and what the DCS sheet recorded. Gaps are explained by cause, not just totalled.
-import { timePinOk } from "../core/time-pin.js?v=86";
-import { nameKey } from "./fin-dcs.js?v=86";
+import { timePinOk } from "../core/time-pin.js?v=87";
+import { nameKey } from "./fin-dcs.js?v=87";
 
 const MONEY = ["cash", "card", "prepaid", "voucher", "others"];
 const TN = { cash: ["Cash", "كاش"], card: ["Card", "شبكة"], prepaid: ["Pre-paid / online", "مسبق الدفع / أونلاين"], voucher: ["Voucher", "قسائم"], others: ["Others", "أخرى"], comp: ["Comp", "ضيافة"] };
@@ -247,7 +247,7 @@ function monthChart(ec, el, A, ar) {
     animationDuration: 700, grid: { left: 48, right: 12, top: 34, bottom: 26 }, tooltip: { trigger: "axis", valueFormatter: v => fmt(v) + " SAR" },
     legend: { top: 0, textStyle: { color: "#a3adbf", fontSize: 11 }, itemWidth: 10, itemHeight: 10 },
     xAxis: { type: "category", data: lab, axisLabel: { color: "#a3adbf", fontSize: 10 }, axisLine: { lineStyle: { color: "rgba(150,170,210,.2)" } } },
-    yAxis: { type: "value", axisLabel: { color: "#687286", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
+    yAxis: { type: "value", axisLabel: { color: "#808a9d", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.08)" } } },
     series: [
       { name: ar ? "عجز" : "Short", type: "bar", stack: "n", data: L.map(m => m.short), itemStyle: { color: "#ff5468", borderRadius: [0, 0, 5, 5] } },
       { name: ar ? "زيادة" : "Over", type: "bar", stack: "n", data: L.map(m => m.over), itemStyle: { color: "#3ed69e", borderRadius: [5, 5, 0, 0] } },

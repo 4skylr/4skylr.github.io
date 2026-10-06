@@ -223,7 +223,7 @@ body.card-only { background: #0b0f17; }
 .lane-chip.s-crit, .lane-chip.s-exp { border-color: #ff5468; }
 .lane-chip.flag { border: 1.5px solid #ff5468; box-shadow: 0 0 0 3px rgba(255,84,104,.18), 0 0 18px rgba(255,84,104,.45); }
 .lane-chip > b { position: absolute; top: -8px; inset-inline-end: -4px; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%;
-  font-size: 10px; background: #ff5468; color: #fff; }
+  font-size: 10px; background: #ff5468; color: #04070c; }
 .lane-empty { font-size: 10.5px; color: var(--dim); opacity: .7; }
 .lane-note { margin: 8px 0 0 !important; font-size: 11px; color: var(--dim) !important; text-align: center; }
 

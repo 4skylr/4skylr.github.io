@@ -1,0 +1,53 @@
+# Checks every change to the site before anyone opens it: lint, then a browser smoke test of every page.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["k7/**", "noir-stock/**", ".github/**", "eslint.config.mjs"]
+  pull_request:
+    paths: ["k7/**", "noir-stock/**", ".github/**", "eslint.config.mjs"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes eslint@9 --max-warnings=-1 .
+
+  smoke:
+    name: Smoke test (every page, AR/EN, phone/desktop)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright + Chromium
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+      - name: Run
+        run: node .github/scripts/smoke.mjs .
+      - name: Screenshots of failing pages
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-shots
+          path: smoke-shots/
+          retention-days: 7

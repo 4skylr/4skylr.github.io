@@ -4,7 +4,7 @@
 //   indicators  github.com/anandanand84/technicalindicators  (SMA · Bollinger · RSI · MACD)
 //   counters    github.com/inorganik/countUp.js
 // Vendored copies of the npm releases live in vendor/ so the board works offline.
-import { timePinOk } from "../core/time-pin.js?v=86";
+import { timePinOk } from "../core/time-pin.js?v=87";
 const CDN = {
   echarts: "vendor/echarts.min.js",
   ta: "vendor/technicalindicators.min.js",
@@ -121,7 +121,7 @@ function dispose() {
   charts.forEach(c => c.dispose()); charts = []; observer?.disconnect();
 }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#687286", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
 const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontFamily: "Geist, system-ui", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 // ── period filter ───────────────────────────────────────────────────
@@ -220,7 +220,7 @@ export async function renderUnaizah(root, H = {}) {
       load(CDN.echarts), load(CDN.ta), load(CDN.countup)
     ]);
     // DCS months uploaded from Settings sit on top of the built ledger
-    if (dcsUps.length) data = (await import("./fin-dcs.js?v=86")).mergeLedger(data, dcsUps);
+    if (dcsUps.length) data = (await import("./fin-dcs.js?v=87")).mergeLedger(data, dcsUps);
     rdr = [rdrBase, ...rdrUps].filter(Boolean).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""))[0] || null;
   } catch (e) {
     root.innerHTML = `<div class="uz-error">${ar ? "تعذر تحميل بيانات عنيزة." : "Could not load the Unaizah ledger."} <small>${esc(e.message)}</small></div>`;
@@ -295,7 +295,7 @@ export async function renderUnaizah(root, H = {}) {
 
     <section class="uz-card">
       <div class="uz-h"><div><h3>${t.board}</h3><p>${t.boardSub}</p></div></div>
-      <div class="uz-board" id="uz-board"></div>
+      <div class="uz-board" id="uz-board" tabindex="0" aria-label="${ar ? "الكاشيرية" : "Cashiers"}"></div>
     </section>
 
     <section class="uz-card">
@@ -321,9 +321,9 @@ export async function renderUnaizah(root, H = {}) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=86").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=87").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
-  import("./fin-audit.js?v=86").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
+  import("./fin-audit.js?v=87").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
     .catch(e => console.warn("Cash office audit unavailable", e));
 
   let view = { rows: [], prev: [] };
@@ -398,7 +398,7 @@ export async function renderUnaizah(root, H = {}) {
     if (ui.osc === "rsi") {
       const r = series(base, 14, RSI);
       osc = [{ name: "RSI", type: "line", xAxisIndex: 1, yAxisIndex: 1, data: r.map(v => v && +v.toFixed(1)), showSymbol: false, lineStyle: { color: "#ffb547", width: 1.4 },
-        markLine: { silent: true, symbol: "none", label: { color: "#687286", fontSize: 9 }, lineStyle: { type: "dashed", color: "rgba(255,84,104,.5)" }, data: [{ yAxis: 70 }, { yAxis: 30, lineStyle: { color: "rgba(62,214,158,.5)" } }] },
+        markLine: { silent: true, symbol: "none", label: { color: "#808a9d", fontSize: 9 }, lineStyle: { type: "dashed", color: "rgba(255,84,104,.5)" }, data: [{ yAxis: 70 }, { yAxis: 30, lineStyle: { color: "rgba(62,214,158,.5)" } }] },
         markArea: { silent: true, itemStyle: { color: "rgba(91,123,255,.06)" }, data: [[{ yAxis: 30 }, { yAxis: 70 }]] } }];
     } else {
       const m = base.length >= 35 ? pad(MACD.calculate({ values: base, fastPeriod: 12, slowPeriod: 26, signalPeriod: 9, SimpleMAOscillator: false, SimpleMASignal: false }), base.length) : Array(base.length).fill(null);
@@ -429,7 +429,7 @@ export async function renderUnaizah(root, H = {}) {
       yAxis: [{ scale: false, ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
               { gridIndex: 1, ...AXIS, splitNumber: 2, axisLabel: { ...AXIS.axisLabel, formatter: compact }, ...(ui.osc === "rsi" ? { min: 0, max: 100 } : {}) },
               { show: false, gridIndex: 0 }],
-      dataZoom: [{ type: "inside", xAxisIndex: [0, 1] }, { type: "slider", xAxisIndex: [0, 1], bottom: 0, height: 16, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#687286" }, dataBackground: { lineStyle: { color: "#5b7bff" }, areaStyle: { color: "rgba(91,123,255,.15)" } } }],
+      dataZoom: [{ type: "inside", xAxisIndex: [0, 1] }, { type: "slider", xAxisIndex: [0, 1], bottom: 0, height: 16, borderColor: "transparent", backgroundColor: "rgba(91,123,255,.06)", fillerColor: "rgba(91,123,255,.18)", handleStyle: { color: "#5b7bff" }, textStyle: { color: "#808a9d" }, dataBackground: { lineStyle: { color: "#5b7bff" }, areaStyle: { color: "rgba(91,123,255,.15)" } } }],
       series: [...bandSeries, ...main,
         { name: `SMA ${f1}`, type: "line", data: sma1, showSymbol: false, smooth: true, lineStyle: { color: "#ffb547", width: 1.3 } },
         { name: `SMA ${f2}`, type: "line", data: sma2, showSymbol: false, smooth: true, lineStyle: { color: "#6ccbff", width: 1.3, type: "dashed" } },
@@ -446,12 +446,12 @@ export async function renderUnaizah(root, H = {}) {
     el.heat.resize();
     el.heat.setOption({
       tooltip: { ...TIP, formatter: p => `<b>${p.value[0]}</b><br>${fmt(p.value[1])} ${t.sar}` },
-      visualMap: { min: 0, max: Math.round(max * .8), show: true, orient: "horizontal", left: "center", bottom: 0, itemHeight: 140, itemWidth: 10, textStyle: { color: "#687286", fontSize: 10 }, formatter: v => compact(v),
+      visualMap: { min: 0, max: Math.round(max * .8), show: true, orient: "horizontal", left: "center", bottom: 0, itemHeight: 140, itemWidth: 10, textStyle: { color: "#808a9d", fontSize: 10 }, formatter: v => compact(v),
         inRange: { color: ["#161227", "#1d2a4a", "#4c6bff", "#dce6ff", "#6ccbff"] } },
       calendar: ys.map((y, i) => ({ top: 24 + i * h, left: 34, right: 8, cellSize: ["auto", 13], range: y, itemStyle: { color: "rgba(255,255,255,.025)", borderColor: "#000000", borderWidth: 3 },
         splitLine: { show: false }, yearLabel: { color: "#a3adbf", fontFamily: "Geist, sans-serif", fontSize: 11, position: ar ? "right" : "left", margin: 26 },
-        dayLabel: { color: "#687286", fontSize: 9, firstDay: 0, nameMap: ar ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"] },
-        monthLabel: { color: "#687286", fontSize: 10, nameMap: ar ? ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"] : "EN" } })),
+        dayLabel: { color: "#808a9d", fontSize: 9, firstDay: 0, nameMap: ar ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"] },
+        monthLabel: { color: "#808a9d", fontSize: 10, nameMap: ar ? ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"] : "EN" } })),
       series: ys.map((y, i) => ({ type: "heatmap", coordinateSystem: "calendar", calendarIndex: i, data: rows.filter(r => r.date.startsWith(y)).map(r => [r.date, r.total]) }))
     }, true);
   }
@@ -491,7 +491,7 @@ export async function renderUnaizah(root, H = {}) {
     const ks = KEYS.filter(k => months.some(m => m[k] > 0));
     el.mix.setOption({
       tooltip: { ...TIP, trigger: "axis", valueFormatter: v => fmt(v) },
-      legend: { type: "scroll", bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 6, pageIconColor: "#5b7bff", pageTextStyle: { color: "#687286" } },
+      legend: { type: "scroll", bottom: 0, textStyle: { color: "#a3adbf", fontSize: 10 }, itemWidth: 10, itemHeight: 6, pageIconColor: "#5b7bff", pageTextStyle: { color: "#808a9d" } },
       grid: { left: 8, right: 8, top: 14, bottom: 34, containLabel: true },
       xAxis: { type: "category", data: months.map(m => monthLabel(m.month, ar)), boundaryGap: false, ...AXIS, splitLine: { show: false } },
       yAxis: { ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
@@ -558,7 +558,7 @@ export async function renderUnaizah(root, H = {}) {
         <div><p>${c.shortage}</p><b class="data neg">${money2(tot.shortage)}</b></div>
         <div><p>${c.net}</p><b class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</b></div>
       </div>
-      <div class="fx-table-wrap"><table class="fx-table uz-cash-table">
+      <div class="fx-table-wrap" tabindex="0"><table class="fx-table uz-cash-table">
         <thead><tr>${[c.month, c.days, c.cash, c.safe, c.diff, c.excess, c.shortage, c.net, c.onHand].map(h => `<th>${h}</th>`).join("")}</tr></thead>
         <tbody>${list.slice().reverse().map(row).join("")}</tbody>
         <tfoot><tr><td>${t.cashTotal}</td><td class="data">${tot.days}</td><td class="data">${money2(tot.cash)}</td><td class="data">${money2(tot.safe)}</td><td class="data">${money2(tot.cashCounted - tot.safe)}</td><td class="data pos">${money2(tot.excess)}</td><td class="data neg">${money2(tot.shortage)}</td><td class="data ${net >= 0 ? "pos" : "neg"}">${net > 0 ? "+" : ""}${money2(net)}</td><td></td><td></td></tr></tfoot>
@@ -595,9 +595,9 @@ export async function renderUnaizah(root, H = {}) {
     const groups = ["committee", "audit", "inquiry"].map(k => ({ k, list: items.filter(i => i.k === k).sort((a, b) => Math.abs(b.amt) - Math.abs(a.amt)) }));
     const money2 = n => fmt(n, 2);
     host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
-      <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
+      <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}" tabindex="0" aria-label="${A[g.k]}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
         ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
-    import("./fin-analyst.js?v=86").then(m => {
+    import("./fin-analyst.js?v=87").then(m => {
       const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
       if (!cz.length || !host.isConnected) return;
       host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);
@@ -681,7 +681,7 @@ export async function renderUnaizah(root, H = {}) {
     const host = $("#uz-grid");
     if (!host.querySelector(".uz-search")) {
       host.innerHTML = `<input class="uz-search data" type="search" placeholder="${ar ? "ابحث بالتاريخ أو الهاش أو المبلغ…" : "Search date, hash, amount…"}" aria-label="Search">
-        <div class="fx-table-wrap"><table class="fx-table uz-explorer"><thead></thead><tbody></tbody></table></div>
+        <div class="fx-table-wrap" tabindex="0"><table class="fx-table uz-explorer"><thead></thead><tbody></tbody></table></div>
         <div class="uz-pager"><span class="uz-pager-info"></span><div class="uz-pager-btns"></div></div>`;
       host.querySelector(".uz-search").oninput = e => { table.q = e.target.value.trim().toLowerCase(); table.page = 0; draw(); };
     }

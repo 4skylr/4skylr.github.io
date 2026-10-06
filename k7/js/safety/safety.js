@@ -2,8 +2,8 @@
 // A check's next date = last logged date + its interval. Never-logged checks are shown as "not logged yet", not as
 // overdue, so the board only raises what it actually knows. Logs live in the "safetyLog" collection (Firestore when
 // connected, this browser otherwise). Device list: data/safety-assets.js · drawings: safety/art.js.
-import { ASSETS, SYSTEMS } from "../data/safety-assets.js?v=86";
-import { ART } from "./art.js?v=86";
+import { ASSETS, SYSTEMS } from "../data/safety-assets.js?v=87";
+import { ART } from "./art.js?v=87";
 
 const COL = "safetyLog", DAY = 864e5, NAME_KEY = "noir-safety-by";
 const state = { sys: "all", remote: null, loading: false };
@@ -21,6 +21,14 @@ function statusOf(a, t, L, now) {
   const due = Date.parse(last.at) + t.every * DAY, left = Math.floor((due - now) / DAY);
   const soon = Math.max(1, Math.min(7, Math.round(t.every / 4)));
   return { state: !last.ok ? "issue" : left < 0 ? "late" : left <= soon ? "soon" : "ok", last, due, left };
+}
+
+// counts for the overview's shift brief (local log plus whatever the page already pulled from Firestore)
+export function safetySummary(H) {
+  const now = Date.now(), L = logs(H), out = { late: 0, soon: 0, issue: 0, none: 0, ok: 0, devices: ASSETS.reduce((s, a) => s + a.count, 0), next: null };
+  ASSETS.forEach(a => a.tasks.forEach(t => { const s = statusOf(a, t, L, now); if (s.state === "info") return; out[s.state]++;
+    if ((s.state === "late" || s.state === "soon" || s.state === "issue") && (!out.next || (s.left ?? -1e9) < (out.next.left ?? -1e9))) out.next = { a, t, left: s.left, state: s.state }; }));
+  return out;
 }
 
 export function renderSafety(host, H) {

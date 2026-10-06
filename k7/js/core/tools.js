@@ -1,11 +1,11 @@
 // Everyday tools: quick find (Ctrl/⌘ K or the search button), reorder list, and install-to-home-screen.
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
-  en: { find: "Find a product, page or code", none: "Nothing matches.", pages: "Pages", items: "Products", hint: "↑ ↓ to move · Enter to open · Esc to close",
+  en: { find: "Find a product, page or code", none: "Nothing matches.", pages: "Pages", items: "Products", acts: "Actions", hint: "↑ ↓ to move · Enter to open · Esc to close",
     reorder: "Reorder list", rlede: "Items at or under their low-stock alert, out of stock, or below half of their full level. Suggested order fills each item back to its full level.",
     item: "Item", have: "On hand", full: "Full level", order: "Order", cost: "Est. cost SAR", totalc: "Estimated order cost", none2: "Nothing needs reordering right now.",
     csv: "Download CSV", copy: "Copy as text", copied: "Copied", install: "Install app", why: { out: "Out", low: "Low", alert: "Alert" } },
-  ar: { find: "ابحث عن منتج أو صفحة أو كود", none: "لا توجد نتائج.", pages: "الصفحات", items: "المنتجات", hint: "↑ ↓ للتنقل · Enter للفتح · Esc للإغلاق",
+  ar: { find: "ابحث عن منتج أو صفحة أو كود", none: "لا توجد نتائج.", pages: "الصفحات", items: "المنتجات", acts: "إجراءات", hint: "↑ ↓ للتنقل · Enter للفتح · Esc للإغلاق",
     reorder: "قائمة الطلب", rlede: "الأصناف التي وصلت لحد التنبيه أو نفدت أو أقل من نصف المستوى الكامل. الكمية المقترحة ترجع كل صنف لمستواه الكامل.",
     item: "الصنف", have: "المتوفر", full: "المستوى الكامل", order: "اطلب", cost: "التكلفة التقديرية", totalc: "تكلفة الطلب التقديرية", none2: "لا يوجد صنف يحتاج طلب حالياً.",
     csv: "تنزيل CSV", copy: "نسخ كنص", copied: "تم النسخ", install: "تثبيت التطبيق", why: { out: "نفد", low: "منخفض", alert: "تنبيه" } }
@@ -57,6 +57,19 @@ export function openReorder(H) {
 export function openFinder(H) {
   const L = t();
   const pages = H.routes.map(r => ({ kind: "page", id: r.id, name: AR() ? (H.navAr[r.id] || r.label) : r.label, hay: `${r.label} ${H.navAr[r.id] || ""} ${r.kicker}` }));
+  const ar = AR(), A = (id, icon, en, a, run, kw = "") => ({ kind: "act", id, icon, name: ar ? a : en, hay: `${en} ${a} ${kw}`, run });
+  // things people do, not just places they go
+  const acts = [
+    A("count", "count", "Start a count", "ابدأ جرد", () => H.go("count"), "stocktake jard"),
+    A("transfer", "alerts", "Today's transfer list", "قائمة النقل اليوم", () => H.go("alerts"), "move alerts naql tanbihat"),
+    A("reorder", "list", "Reorder list", "قائمة الطلب", () => openReorder(H), "order purchase talab"),
+    A("safety", "safety", "Log a safety check", "سجّل فحص سلامة", () => H.go("safety"), "fire extinguisher maintenance salama"),
+    A("upload", "settings", "Upload a system report", "ارفع تقرير من النظام", () => H.go("settings"), "pdf excel report taqrir"),
+    A("labels", "grid", "Print barcode labels", "اطبع الباركود", () => { location.hash = "labels"; }, "qr barcode print"),
+    A("lang", "links", ar ? "Switch to English" : "Switch to Arabic", ar ? "التبديل للإنجليزي" : "التبديل للعربي", () => document.getElementById("lang-btn")?.click(), "language lugha"),
+    A("refresh", "history", "Refresh the app", "تحديث التطبيق", () => hardRefresh(), "reload update"),
+    A("tour", "yield", "Take the tour", "الجولة التعريفية", () => startTour().catch(() => {}), "help guide")
+  ];
   const items = H.data().products.map(p => ({ kind: "item", p, name: AR() ? (H.namesAr?.[p.id] || p.name) : p.name, hay: `${p.name} ${p.sku || ""} ${p.code || ""} ${p.id} ${H.namesAr?.[p.id] || ""}` }));
   const m = H.openModal(`
     <div class="qf"><div class="seek">${H.icon("search")}<input id="qf-in" type="search" placeholder="${L.find}" aria-label="${L.find}" autocomplete="off"></div>
@@ -67,16 +80,18 @@ export function openFinder(H) {
     const q = inp.value.trim();
     const rank = arr => q ? arr.map(x => ({ x, s: score(x.hay, q) })).filter(o => o.s >= 0).sort((a, b) => b.s - a.s).map(o => o.x) : arr;
     const fz = q && H.fuzzyIds ? H.fuzzyIds(q) : null; // Fuse.js: typos and Arabic names
-    const pg = rank(pages).slice(0, q ? 4 : 8), it = (fz ? items.filter(x => fz.has(x.p.id)) : rank(items)).slice(0, q ? 12 : 6);
-    hits = [...pg, ...it]; at = Math.min(at, Math.max(hits.length - 1, 0));
-    const row = (h, i) => h.kind === "page"
+    const ac = rank(acts).slice(0, q ? 4 : 5), pg = rank(pages).slice(0, q ? 4 : 8), it = (fz ? items.filter(x => fz.has(x.p.id)) : rank(items)).slice(0, q ? 12 : 6);
+    hits = [...ac, ...pg, ...it]; at = Math.min(at, Math.max(hits.length - 1, 0));
+    const row = (h, i) => h.kind === "act"
+      ? `<button class="qf-row qf-act" data-i="${i}" role="option" aria-selected="${i === at}">${H.icon(h.icon)}<b>${H.esc(h.name)}</b><span class="qf-go" aria-hidden="true">↵</span></button>`
+      : h.kind === "page"
       ? `<button class="qf-row" data-i="${i}" role="option" aria-selected="${i === at}">${H.icon(h.id)}<b>${H.esc(h.name)}</b></button>`
       : `<button class="qf-row" data-i="${i}" role="option" aria-selected="${i === at}">${H.pic(h.p, "qf-pic")}<b>${H.esc(h.name)}</b><span class="data">${H.qty(H.total(h.p))} ${H.esc(H.UNITS[h.p.unit] || "")}</span></button>`;
     list.innerHTML = hits.length
-      ? (pg.length ? `<h6>${L.pages}</h6>${pg.map((h, i) => row(h, i)).join("")}` : "") + (it.length ? `<h6>${L.items}</h6>${it.map((h, i) => row(h, i + pg.length)).join("")}` : "")
+      ? (ac.length ? `<h6>${L.acts}</h6>${ac.map((h, i) => row(h, i)).join("")}` : "") + (pg.length ? `<h6>${L.pages}</h6>${pg.map((h, i) => row(h, i + ac.length)).join("")}` : "") + (it.length ? `<h6>${L.items}</h6>${it.map((h, i) => row(h, i + ac.length + pg.length)).join("")}` : "")
       : `<p class="empty">${L.none}</p>`;
   };
-  const pick = i => { const h = hits[i]; if (!h) return; H.closeModal(); h.kind === "page" ? H.go(h.id) : H.openCard(h.p); };
+  const pick = i => { const h = hits[i]; if (!h) return; H.closeModal(); h.kind === "act" ? h.run() : h.kind === "page" ? H.go(h.id) : H.openCard(h.p); };
   inp.addEventListener("input", () => { at = 0; draw(); });
   inp.addEventListener("keydown", e => {
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -90,13 +105,17 @@ export function openFinder(H) {
 
 // Guided tour (kamranahmedse/driver.js), shown once and again from the ? button
 const TOUR = {
-  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, Unaizah and the nightly reports. Settings is the gear at the top."],
-    ["#qf-btn", "Quick find", "Search any product, code or page. Typos and Arabic names work. Shortcut: Ctrl K."],
+  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, product profit, Unaizah, halls, nightly reports, safety, petty cash and links. Settings is the gear at the top."],
+    ["#clock", "Clock", "24-hour time with the ISO week and the week as a film strip."],
+    ["#bell-btn", "Stock alerts", "How many items need action today across the three locations, with the transfer list behind it."],
+    ["#qf-btn", "Quick find", "Search any product, page or action (start a count, log a safety check, upload a report). Typos and Arabic names work. Shortcut: Ctrl K."],
     ["#dash-reorder", "Reorder list", "Everything that is out or running low, with the quantity and cost to order."],
     ["#lang-btn", "Language", "Switch the whole site between English and Arabic."],
     ["#net", "Sync", "Shows whether you are live on Firebase or working in this browser."]],
-  ar: [["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، عنيزة، والتقارير الليلية. الإعدادات من الترس فوق."],
-    ["#qf-btn", "بحث سريع", "ابحث عن أي منتج أو كود أو صفحة، حتى لو فيه غلط إملائي أو بالعربي. الاختصار Ctrl K."],
+  ar: [["#clock", "الساعة", "الوقت بنظام 24 ساعة مع رقم الأسبوع وأيامه."],
+    ["#bell-btn", "تنبيهات المخزون", "كم صنف يحتاج إجراء اليوم بالمواقع الثلاثة، ووراه قائمة النقل."],
+    ["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، الربحية، عنيزة، القاعات، التقارير الليلية، السلامة، بيتي كاش، والروابط. الإعدادات من الترس فوق."],
+    ["#qf-btn", "بحث سريع", "ابحث عن أي منتج أو صفحة أو إجراء (ابدأ جرد، سجّل فحص سلامة، ارفع تقرير)، حتى لو فيه غلط إملائي. الاختصار Ctrl K."],
     ["#dash-reorder", "قائمة الطلب", "كل شي نفد أو قارب، مع الكمية والتكلفة المقترحة للطلب."],
     ["#lang-btn", "اللغة", "حوّل الموقع كامل بين العربي والإنجليزي."],
     ["#net", "المزامنة", "يوضح إذا أنت متصل على Firebase أو شغال على هذا المتصفح."]]

@@ -1,0 +1,11 @@
+name: Idea · فكرة
+description: Something the site should do or show. · شي ودك الموقع يسويه أو يعرضه.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea · الفكرة
+      description: Who needs it, and what they would do with it. · مين يحتاجه ووش بيسوي فيه.
+    validations:
+      required: true

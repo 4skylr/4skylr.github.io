@@ -130,7 +130,7 @@ export async function budgetReport(host, rows, net, ctx) {
 
   host.innerHTML = `
     <section class="uz-card an-head">
-      <div class="an-score" style="--v:${netScore}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50"/><circle class="v" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="${netScore} 100"/></svg><b class="data">${netScore}</b><span>${t.score}</span></div>
+      <div class="an-score sc-${netScore >= 70 ? "good" : netScore >= 45 ? "warn" : "bad"}" style="--v:${netScore}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50"/><circle class="v" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="${netScore} 100"/></svg><b class="data">${netScore}</b><span>${t.score}</span></div>
       <div class="an-intro"><h3>${t.title}</h3><p>${t.sub}</p></div>
       ${brief(items.filter(Boolean), ar)}
     </section>
@@ -141,11 +141,11 @@ export async function budgetReport(host, rows, net, ctx) {
       ${card("an-trend", t.trend, t.trendSub)}
     </div>
     <section class="uz-card an-card"><div class="uz-h"><div><h3>${t.risk}</h3><p>${t.riskSub}</p></div></div>
-      <div class="an-table-wrap"><table class="fx-table an-table"><thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>
+      <div class="an-table-wrap" tabindex="0"><table class="fx-table an-table"><thead><tr>${t.cols.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>
       ${byScore.map((x, i) => `<tr><td class="data">${i + 1}</td><td><i class="an-dot" style="--c:${color(x.b.id)}"></i>${esc(name(x.b.id))}</td>
         <td class="data">${pct(x.b.hit)}</td><td class="data ${x.mom >= 0 ? "pos" : "neg"}">${sgn(x.mom)}</td><td class="data">${pct(x.vol, 0)}</td>
         <td class="data ${x.uplift > .3 ? "neg" : ""}">${x.uplift > 0 ? sgn(x.uplift, 0) : "—"}</td>
-        <td><span class="an-pill" style="--s:${x.score}">${x.score}</span></td><td class="an-act">${t.act[x.act]}</td></tr>`).join("")}
+        <td><span class="an-pill sc-${x.score >= 70 ? "good" : x.score >= 45 ? "warn" : "bad"}" style="--s:${x.score}">${x.score}</span></td><td class="an-act">${t.act[x.act]}</td></tr>`).join("")}
       </tbody></table></div></section>`;
 
   // waterfall

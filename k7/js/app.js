@@ -2,29 +2,29 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=86";
-import { timePinOk } from "./core/time-pin.js?v=86";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=86";
-import { SEED_DATE } from "./data/seed-data.js?v=86";
-import { renderYield } from "./stock/analytics.js?v=86";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=86";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=86";
-import { usageOf } from "./stock/consumption.js?v=86";
-import { AR as NAMES_AR } from "./core/names-ar.js?v=86";
-import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=86";
-import { mountClock } from "./core/clock.js?v=86";
+import * as store from "./core/store.js?v=87";
+import { timePinOk } from "./core/time-pin.js?v=87";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=87";
+import { SEED_DATE } from "./data/seed-data.js?v=87";
+import { renderYield } from "./stock/analytics.js?v=87";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=87";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=87";
+import { usageOf } from "./stock/consumption.js?v=87";
+import { AR as NAMES_AR } from "./core/names-ar.js?v=87";
+import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=87";
+import { mountClock } from "./core/clock.js?v=87";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./stock/export-count.js?v=86");
-const financeView = lazy("./finance/finance-view.js?v=86");
-const unaizahView = lazy("./finance/unaizah-view.js?v=86");
-const syncAdmin = lazy("./reports/sync-admin.js?v=86");
-const toolsMod = lazy("./core/tools.js?v=86");
-const intelMod = lazy("./stock/stock-intel.js?v=86");
-const menuMod = lazy("./stock/menu-lab.js?v=86");
-const labMod = lazy("./stock/stock-lab.js?v=86");
-const showMod = lazy("./stock/showcase.js?v=86");
-const p360Mod = lazy("./stock/product-360.js?v=86");
+const exportCount = lazy("./stock/export-count.js?v=87");
+const financeView = lazy("./finance/finance-view.js?v=87");
+const unaizahView = lazy("./finance/unaizah-view.js?v=87");
+const syncAdmin = lazy("./reports/sync-admin.js?v=87");
+const toolsMod = lazy("./core/tools.js?v=87");
+const intelMod = lazy("./stock/stock-intel.js?v=87");
+const menuMod = lazy("./stock/menu-lab.js?v=87");
+const labMod = lazy("./stock/stock-lab.js?v=87");
+const showMod = lazy("./stock/showcase.js?v=87");
+const p360Mod = lazy("./stock/product-360.js?v=87");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -232,7 +232,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock/stock-history.js?v=86");
+const histMod = lazy("./stock/stock-history.js?v=87");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -261,7 +261,7 @@ document.addEventListener("click", e => {
 });
 function go(route) {
   if (CARD_DOOR) return;
-  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=86").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=87").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -329,11 +329,25 @@ function viewDashboard() {
   }).join("");
 
   const AL = stockAlerts(P), ar = siteLang() === "ar", needs = AL.items.filter(a => a.level === "critical" || a.level === "warn").slice(0, 4);
-  const alertStrip = `<button class="dash-alerts ${AL.counts.critical ? "hot" : AL.counts.warn ? "warm" : "calm"}" data-route="alerts">
-      <span class="da-ic">${icon("alerts")}</span>
-      <span class="da-n"><b class="data">${AL.counts.critical}</b><i>${ar ? "حرج" : "critical"}</i></span><span class="da-n"><b class="data">${AL.counts.warn}</b><i>${ar ? "اليوم" : "today"}</i></span><span class="da-n"><b class="data">${AL.moves.length}</b><i>${ar ? "نقلات" : "moves"}</i></span>
-      <span class="da-list">${needs.map(a => `<em>${esc((ar ? NAMES_AR[a.p.id] : null) || a.p.name)}</em>`).join("") || `<em>${ar ? "كل الأصناف بمكانها الصح" : "Every item is where it should be"}</em>`}</span>
-      <span class="da-go">${ar ? "التنبيهات ←" : "Alerts →"}</span></button>`;
+  // shift brief: the four things a supervisor checks at the start of a shift, each a door to its page
+  const expd = AL.items.filter(a => a.expiry.some(e => e.kind === "expired")).length, expSoon = AL.items.filter(a => a.expiry.some(e => e.kind === "soon" || e.kind === "month")).length;
+  const T2 = (en, a) => ar ? a : en, today = new Date();
+  const alertStrip = `<section class="brief" aria-labelledby="brief-h">
+    <header class="brief-h"><h2 id="brief-h">${T2("Shift brief", "موجز الوردية")}</h2><span class="data">${today.toLocaleDateString(ar ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB", { weekday: "long", day: "2-digit", month: "short" })}</span></header>
+    <div class="brief-grid">
+      <button class="bf ${AL.counts.critical ? "t-bad" : AL.counts.warn ? "t-warn" : "t-ok"}" data-route="alerts">
+        <span class="bf-ic">${icon("alerts")}</span><span class="bf-k">${T2("Stock", "المخزون")}</span>
+        <b class="data">${AL.counts.critical}</b><span class="bf-l">${T2("critical", "حرج")} · ${AL.counts.warn} ${T2("today", "اليوم")} · ${AL.moves.length} ${T2("moves", "نقلات")}</span>
+        <span class="bf-list">${needs.slice(0, 3).map(a => `<em>${esc((ar ? NAMES_AR[a.p.id] : null) || a.p.name)}</em>`).join("") || `<em>${T2("Everything is where it should be", "كل الأصناف بمكانها الصح")}</em>`}</span></button>
+      <button class="bf ${expd ? "t-bad" : expSoon ? "t-warn" : "t-ok"}" data-route="alerts">
+        <span class="bf-ic">${icon("history")}</span><span class="bf-k">${T2("Expiry", "الصلاحية")}</span>
+        <b class="data">${expd}</b><span class="bf-l">${T2("items with an expired group", "أصناف فيها مجموعة منتهية")}</span>
+        <span class="bf-list"><em>${expSoon} ${T2("expiring within a month", "تنتهي خلال شهر")}</em></span></button>
+      <button class="bf t-wait" data-route="safety" id="bf-safety">
+        <span class="bf-ic">${icon("safety")}</span><span class="bf-k">${T2("Safety", "السلامة")}</span><b class="data">…</b><span class="bf-l"></span><span class="bf-list"></span></button>
+      <button class="bf t-wait" data-route="settings" id="bf-reports">
+        <span class="bf-ic">${icon("settings")}</span><span class="bf-k">${T2("System reports", "تقارير النظام")}</span><b class="data">…</b><span class="bf-l"></span><span class="bf-list"></span></button>
+    </div></section>`;
   $("#view").innerHTML = `
   <div class="dash">
     ${alertStrip}
@@ -413,6 +427,7 @@ function viewDashboard() {
         <span class="mv-n">${i + 1}</span>${pic(m.p, "pic")}<span class="mv-nm"><b>${esc(m.p.name)}</b><small>${m.est ? "≈ " : ""}${qty(m.q)} ${esc(m.u)}</small></span><span class="mv-v">${sar(m.v)}</span><i></i></button>`).join("")}</div>
     </section>
   </div>`;
+  fillBrief(ar);
 }
 
 // ── Collection ───────────────────────────────────────────────
@@ -580,7 +595,7 @@ function viewCount() {
         <div class="slab-h"><h2>New count</h2><span class="voice">pick a vault</span></div>
         <div class="gates" role="group" aria-label="Location">
           ${LOCATIONS.map(l => `<button class="gate" data-pick="${l.id}" aria-pressed="${ui.setupLoc === l.id}">
-            <span class="code">${l.code}</span><b>${l.name}</b><span>${data.products.filter(p => Number(p.stock?.[l.id]) > 0).length} SKUs on system</span></button>`).join("")}
+            <span class="code" aria-hidden="true">${l.code}</span><b>${l.name}</b><span>${data.products.filter(p => Number(p.stock?.[l.id]) > 0).length} SKUs on system</span></button>`).join("")}
         </div>
         <div class="fl" style="margin-bottom:16px"><label for="counter">Counted by</label><input class="input" id="counter" value="${esc(lsGet("counter", ""))}" placeholder="Your name"></div>
         <label class="check"><input type="checkbox" id="only" ${ui.countOnlyStock ? "checked" : ""}> Only list items the system has at this location</label>
@@ -756,20 +771,39 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const profitMod = lazy("./finance/profit.js?v=86");
+const profitMod = lazy("./finance/profit.js?v=87");
 function viewProfit() {
   $("#title-actions").innerHTML = "";
   if (!$("#view").querySelector(".pf")) $("#view").innerHTML = `<div id="profit-host"><p class="empty">…</p></div>`;
   profitMod().then(m => { if (ui.route === "profit") m.renderProfit($("#profit-host") || $("#view"), helpers()); }).catch(e => toast(e.message, true));
 }
-const safetyMod = lazy("./safety/safety.js?v=86");
+const safetyMod = lazy("./safety/safety.js?v=87");
+// shift brief tiles that need their own modules: safety checks and system-report freshness
+let briefSeen = null; // the dashboard re-renders on every sync; report freshness is re-read at most once a minute
+function fillBrief(ar) {
+  const T2 = (en, a) => ar ? a : en, put = (id, tone, n, l, list) => { const b = $("#" + id); if (!b) return; b.className = `bf ${tone}`; b.querySelector("b").textContent = n; b.querySelector(".bf-l").textContent = l; b.querySelector(".bf-list").innerHTML = list; };
+  safetyMod().then(m => {
+    const S = m.safetySummary({ localDocs: store.localDocs }), open = S.late + S.issue;
+    put("bf-safety", open ? "t-bad" : S.soon ? "t-warn" : S.none ? "t-info" : "t-ok", String(open),
+      T2(`overdue or open issues · ${S.soon} due soon`, `متأخرة أو ملاحظات · ${S.soon} قريبة`),
+      S.next ? `<em>${esc(ar ? S.next.a.ar : S.next.a.en)}</em>` : S.none ? `<em>${T2(`${S.none} checks not logged yet`, `${S.none} فحص ما انسجل`)}</em>` : `<em>${T2("All checks up to date", "كل الفحوصات بوقتها")}</em>`);
+  }).catch(() => {});
+  reportsMod().then(async m => {
+    if (!briefSeen || Date.now() - briefSeen.at > 60e3) briefSeen = { at: Date.now(), p: m.lastSeen({ allDocs: store.allDocs, localDocs: store.localDocs, salesTo: SALES_TO }) };
+    const seen = await briefSeen.p;
+    const R = m.REPORTS.map(r => ({ r, d: seen[r.key] ? (Date.now() - Date.parse(seen[r.key].at)) / 864e5 : Infinity }));
+    const fresh = R.filter(x => x.d <= 8).length, late = R.filter(x => x.d > 8);
+    put("bf-reports", late.length > 2 ? "t-warn" : "t-ok", `${fresh}/${R.length}`, T2("uploaded in the last 8 days", "انرفعت آخر 8 أيام"),
+      late.slice(0, 3).map(x => `<em dir="ltr">${esc(x.r.name.replace(/ - <Month> <Year>/, ""))}</em>`).join(""));
+  }).catch(() => {});
+}
 function viewSafety() {
   if ($("#sf-dlg")?.open) return; // a sync must not wipe a check being logged
   $("#title-actions").innerHTML = "";
   if (!$("#view").querySelector(".sf")) $("#view").innerHTML = `<div id="safety-host"><p class="empty">…</p></div>`;
   safetyMod().then(m => { if (ui.route === "safety") m.renderSafety($("#safety-host") || $("#view"), { putDoc: store.putDoc, allDocs: store.allDocs, localDocs: store.localDocs, toast }); }).catch(e => toast(e.message, true));
 }
-const pettyMod = lazy("../petty/petty.js?v=86");
+const pettyMod = lazy("../petty/petty.js?v=87");
 function viewPetty() {
   if ($("#petty-host .pc, #petty-host .pc-lock")) return; // a store sync must not reset an open review
   $("#title-actions").innerHTML = "";
@@ -782,14 +816,14 @@ function viewAlerts() {
   $("#view").innerHTML = `<div id="alerts-host"></div>`;
   renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
 }
-const linksMod = lazy("./core/links.js?v=86");
+const linksMod = lazy("./core/links.js?v=87");
 function viewLinks() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="links-host"></div>`;
   linksMod().then(m => { if (ui.route === "links") m.renderLinks($("#links-host"), { allDocs: store.allDocs, localDocs: store.localDocs, putDoc: store.putDoc, toast }); })
     .catch(e => toast(e.message, true));
 }
-const hallsMod = lazy("./reports/halls.js?v=86");
+const hallsMod = lazy("./reports/halls.js?v=87");
 function viewHalls() {
   if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
   $("#title-actions").innerHTML = "";
@@ -797,7 +831,7 @@ function viewHalls() {
   hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
     .catch(e => toast(e.message, true));
 }
-const nightlyMod = lazy("./reports/nightly.js?v=86");
+const nightlyMod = lazy("./reports/nightly.js?v=87");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -867,7 +901,7 @@ function exportSession(s) {
 }
 
 // ── Settings ─────────────────────────────────────────────────
-const reportsMod = lazy("./reports/reports-admin.js?v=86");
+const reportsMod = lazy("./reports/reports-admin.js?v=87");
 // every upload of a system report is logged, so Settings can show when each one last came in
 async function markUpload(key, file) { await store.putDoc("uploads", key, { at: new Date().toISOString(), file: String(file || "") }); }
 const fmtN = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -880,10 +914,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=86"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=86"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=87"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=87"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=86")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=87")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -899,7 +933,7 @@ function reportHandlers() {
       toast(T(`Done · ${fmtN(d.tickets)} tickets · ${d.from} → ${d.to}`, `تم · ${fmtN(d.tickets)} تذكرة · ${d.from} → ${d.to}`) + (d.grand && d.grand !== d.tickets ? ` (${T("report", "التقرير")} ${d.grand})` : ""));
     },
     dcs: async (files, step) => {
-      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=86")]);
+      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=87")]);
       const XLSX = await loadXLSX();
       const ledger = await fetch("unaizah/ledger.json").then(r => r.json()).catch(() => ({ days: [] }));
       const known = [...new Set(ledger.days.flatMap(d => (d.cashiers || []).map(c => c.user)))];
@@ -916,7 +950,7 @@ function reportHandlers() {
       toast(`DCS · ${n} ${T("days", "يوم")} · ${from} → ${to}`);
     },
     rdr: async ([f]) => {
-      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=86")]);
+      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=87")]);
       const d = await parseRdrFile(f, await loadXLSX());
       await store.putDoc("rdr", "latest", d);
       await store.log("report", `RDR Exception Register · ${d.shifts.length} shifts · ${d.from} → ${d.to}`);
@@ -1000,7 +1034,7 @@ if (CARD_DOOR) {
 } else {
   mountClock($("#clock"), siteLang());
   if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-  if (siteLang() === "ar") import("./core/i18n-ar.js?v=86").then(m => m.startArabic()).catch(() => {});
+  if (siteLang() === "ar") import("./core/i18n-ar.js?v=87").then(m => m.startArabic()).catch(() => {});
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })

@@ -2,10 +2,10 @@
 // Cost of a serving = Σ recipe qty ÷ recipe-units-per-stock-unit × cost of one stock unit. The stock-unit cost comes from
 // the price list (case price ÷ what the case holds); materials the list does not sell fall back to the system's rate.
 // Profit = menu price net of 15% VAT − serving cost. Group items (one price, several flavours) are costed per option.
-import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=86";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=86";
-import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=86";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=86";
+import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=87";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=87";
+import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=87";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=87";
 
 const low = s => String(s || "").toLowerCase();
 const RM = new Map(Object.entries(RAW_MATERIALS).map(([k, v]) => [low(k), { key: k, ...v }]));
@@ -140,8 +140,8 @@ export function renderProfit(host, H) {
       <div class="pf-k"><span>${T("Thinnest margin", "أقل هامش")}</span><b>${nm(thin)}</b><small class="data">${thin.profit.toFixed(2)} SAR · ${pct(thin.margin)}</small></div>
       <p class="pf-src-line">${T(`Costs: ${SUPPLIER} price list, ${PRICE_LIST_DATE} · ${PRICE_LIST.length} lines. Menu prices include 15% VAT; profit is on the net price.`, `التكاليف: قائمة أسعار ${SUPPLIER} بتاريخ ${PRICE_LIST_DATE} · ${PRICE_LIST.length} صنف. أسعار المنيو شاملة الضريبة 15%، والربح محسوب على السعر الصافي.`)}</p>
     </section>
-    <div class="seg pf-tabs" role="tablist">${[["items", T("Menu items", "أصناف المنيو")], ["combos", T("Combos", "الكومبو")], ["list", T("Price list", "قائمة الأسعار")], ["changes", `${T("Price changes", "فروقات الأسعار")} <sup class="data">${A.changes.length}</sup>`]]
-      .map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${state.tab === k}" aria-pressed="${state.tab === k}">${l}</button>`).join("")}</div>
+    <div class="seg pf-tabs" role="group">${[["items", T("Menu items", "أصناف المنيو")], ["combos", T("Combos", "الكومبو")], ["list", T("Price list", "قائمة الأسعار")], ["changes", `${T("Price changes", "فروقات الأسعار")} <sup class="data">${A.changes.length}</sup>`]]
+      .map(([k, l]) => `<button data-tab="${k}" aria-pressed="${state.tab === k}">${l}</button>`).join("")}</div>
     <section class="slab pf-body">${{ items: tabItems, combos: tabCombos, list: tabList, changes: tabChanges }[state.tab]()}</section>
   </div>`;
   const again = () => renderProfit(host, H);

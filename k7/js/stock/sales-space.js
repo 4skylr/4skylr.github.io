@@ -1,7 +1,7 @@
 // Sales-space advice for one product: where it should sit on the floor, what to do now, and why.
 // The Concession is stock that is ready to sell right away; the Mini Store is the next refill;
 // the Store is reserve. Advice is in English and Arabic.
-import { placement } from "./fefo-place.js?v=86";
+import { placement } from "./fefo-place.js?v=87";
 
 const SPACE = {
   drinks: ["Concession fridge, front row", "ثلاجة الكونسيشن، الصف الأمامي"],
