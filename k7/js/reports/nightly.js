@@ -2,7 +2,7 @@
 // a full financial analysis of every day on file, and the morning Team Brief card.
 //   pdf.js (mozilla/pdf.js) reads the PDF · fflate (101arrowz/fflate) writes the workbook
 //   ECharts (apache/echarts) charts · html-to-image (bubkoo/html-to-image) renders the brief
-import { parsePerformancePdf } from "./nightly-parse.js?v=93";
+import { parsePerformancePdf } from "./nightly-parse.js?v=94";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "nightly";
@@ -116,14 +116,14 @@ function paint(H) {
   };
   host.querySelector("#nr-xlsx").onclick = async () => {
     try {
-      const { buildWorkbook } = await import("./nightly-xlsx.js?v=93");
+      const { buildWorkbook } = await import("./nightly-xlsx.js?v=94");
       const blob = await buildWorkbook(D);
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = `NC Performance Unaizah ${isoOf(new Date())}.xlsx`; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000); H.toast(L.built);
     } catch (err) { console.error(err); H.toast(err.message, true); }
   };
-  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=93").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
+  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=94").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
   drawCharts(D, L, ar);
 }
 

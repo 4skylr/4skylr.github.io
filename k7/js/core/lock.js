@@ -1,6 +1,6 @@
 // The admin sign-in shared by Settings, the Unaizah audit, the cash-office audit and sync admin:
 // the clock PIN (HHMM) opens them for this tab. Nothing on the site is hidden by it apart from those admin tools.
-import { timePinOk } from "./time-pin.js?v=93";
+import { timePinOk } from "./time-pin.js?v=94";
 
 const KEY = "noir-admin";
 const get = () => { try { return sessionStorage.getItem(KEY); } catch { return null; } };

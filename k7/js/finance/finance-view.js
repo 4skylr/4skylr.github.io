@@ -116,7 +116,7 @@ function model(b) {
 function ring(value, color, size = 84) {
   const r = 34, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, value));
   return `<svg class="fx-ring" viewBox="0 0 84 84" width="${size}" height="${size}" aria-hidden="true">
-    <circle cx="42" cy="42" r="${r}" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="7"/>
+    <circle cx="42" cy="42" r="${r}" fill="none" style="stroke:rgba(var(--tint),.08)" stroke-width="7"/>
     <circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(c * v).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 42 42)" style="filter:drop-shadow(0 0 6px ${color})"/>
     ${value > 1 ? `<circle cx="42" cy="42" r="${r - 10}" fill="none" stroke="${color}" stroke-opacity=".5" stroke-width="3" stroke-linecap="round" stroke-dasharray="${(2 * Math.PI * (r - 10) * Math.min(1, value - 1)).toFixed(1)} 999" transform="rotate(-90 42 42)"/>` : ""}
   </svg>`;
@@ -401,6 +401,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=93").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
+  import("./fin-analyst.js?v=94").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

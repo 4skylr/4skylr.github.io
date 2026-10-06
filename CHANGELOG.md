@@ -1,5 +1,13 @@
 # Changelog
 
+## v94 · 2026-10-06 · Glass theme, White and Night
+
+- **New theme from marcelodolza's glass card (Uiverse.io)**: frosted panels with white inner light and soft indigo shadows, lavender blobs behind the page, and a pink → periwinkle → blue accent for the main action and the page you are on. · **ثيم زجاجي جديد.**
+- **Two versions**: White and Night, switched from the sun / moon button in the header; the choice is remembered on the device, and the first visit follows the phone's setting. Charts follow the theme too. · **نسختين: أبيض وليلي** من زر الشمس/القمر.
+- **Fonts**: Inter for Latin text and numbers (tabular figures), IBM Plex Sans Arabic for Arabic. · **خط جديد.**
+- Every hard-coded night colour in the style sheets now goes through theme tokens (≈1,000 values), so both versions pass the WCAG AA contrast scan.
+- Fixes: the product 360 sheet and the Nightly page were wider than a phone screen (a recipe deck and the chart grid stretched them); the Stock page's action row no longer widens the page.
+
 ## v93 · 2026-10-06 · New logo
 
 - **New site logo** (the glasses loader by anand_4957 on Uiverse.io): in the header in place of the old 67 logo, and on the opening screen. The full shutters play on the first open of a visit; every later open or refresh (including the refresh button) shows the logo on black for a moment, then fades. The barcode door opens with it too. The old logo and its images are removed. · **شعار جديد** بالأعلى وعند الفتح والتحديث.
