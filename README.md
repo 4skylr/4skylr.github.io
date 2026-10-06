@@ -33,7 +33,7 @@ npm i --no-save playwright && npx playwright install chromium
 node .github/scripts/smoke.mjs .
 ```
 
-Problems and ideas: open an issue with the forms under **Issues → New issue**.
+Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an issue with the forms under **Issues → New issue**.
 
 ## Open-source libraries
 
