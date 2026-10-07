@@ -4,13 +4,13 @@
 // expiry groups. "Open product" opens the full card; the heart records a like under the viewer's name. Motion: GSAP + Draggable + InertiaPlugin (greensock/GSAP, vendored, loaded on first use).
 // Images: the transparent cut-outs in assets/cutouts (made from assets/products by a script); if a cut-out is missing
 // the original photo is shown on a white plate. The original images and their code are not touched.
-import { soldOf } from "../data/sales-data.js?v=100";
-import { alertFor } from "./stock-alerts.js?v=100";
-import { placement } from "./fefo-place.js?v=100";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=100";
-import { KCAL, recipeKcal } from "../data/nutrition.js?v=100";
-import { mountLikes } from "../core/likes.js?v=100";
-import { deck, wire } from "./recipe-theater.js?v=100";
+import { soldOf } from "../data/sales-data.js?v=101";
+import { alertFor } from "./stock-alerts.js?v=101";
+import { placement } from "./fefo-place.js?v=101";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=101";
+import { KCAL, recipeKcal } from "../data/nutrition.js?v=101";
+import { mountLikes } from "../core/likes.js?v=101";
+import { deck, wire } from "./recipe-theater.js?v=101";
 
 const low = s => String(s || "").toLowerCase();
 // "Xtra Large Tub Caramel Popcorn - 130 Oz" → "Caramel · 130 oz"; flavours in Arabic on the Arabic site

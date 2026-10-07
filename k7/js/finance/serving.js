@@ -2,9 +2,9 @@
 // everything else its recipe uses), what it sells for, and the profit, flavour by flavour. Costs come from costing.js
 // (supplier price list, else the system rate); prices from the menu boards (VAT included, profit is on the net price).
 // A product that is an ingredient rather than a serving (corn, oil, caramel …) shows what one stock unit costs.
-import { MENU, VAT } from "../data/menu-data.js?v=100";
-import { RECIPES } from "../data/recipes-data.js?v=100";
-import { unitCost, recipeCost } from "./costing.js?v=100";
+import { MENU, VAT } from "../data/menu-data.js?v=101";
+import { RECIPES } from "../data/recipes-data.js?v=101";
+import { unitCost, recipeCost } from "./costing.js?v=101";
 
 const low = s => String(s || "").toLowerCase();
 export const FLAVOUR_AR = { salted: "مملح", cheese: "جبن", caramel: "كراميل", "pizza savory": "بيتزا", coke: "كوكاكولا", "coke zero": "كوكاكولا زيرو", fanta: "فانتا",

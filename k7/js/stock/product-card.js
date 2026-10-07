@@ -4,9 +4,9 @@
 //   sizes   = the other sizes of the same product (tap one to flip the card to it),
 //   rating  = how much it sold since the start of the year (stars rank it against the other products).
 // The main button opens the product; the small one opens its barcode card. No "buy".
-import { soldOf, moveOf } from "../data/sales-data.js?v=100";
-import { likesFor, likedByMe, quickLike, loadLikes } from "../core/likes.js?v=100";
-import { servingOf } from "../finance/serving.js?v=100";
+import { soldOf, moveOf } from "../data/sales-data.js?v=101";
+import { likesFor, likedByMe, quickLike, loadLikes } from "../core/likes.js?v=101";
+import { servingOf } from "../finance/serving.js?v=101";
 
 const SIZE = /\s*(\d+(?:\.\d+)?)\s*(oz|ml|g|gm|kg|l)\b\.?|\s*\b(big|small|large|medium|regular)\b|\s*(\d)-comp\b/i;
 const LOC_COL = { refuel: "#ffd426", mini: "#144076", stores: "#00b9ff" };

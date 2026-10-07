@@ -5,15 +5,15 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=100";
-import { RECIPES } from "../data/recipes-data.js?v=100";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=100";
-import { placement } from "./fefo-place.js?v=100";
-import { usageOf } from "./consumption.js?v=100";
-import { mountLikes } from "../core/likes.js?v=100";
-import { watchHtml, mountWatch } from "./watch.js?v=100";
-import { readEdits, writeEdits } from "../data/expiry-edits.js?v=100";
-import { noDate, startMission, loadCounts, openRecount, locLabel } from "./watch-count.js?v=100";
+import { AR, LOC_AR } from "../core/names-ar.js?v=101";
+import { RECIPES } from "../data/recipes-data.js?v=101";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=101";
+import { placement } from "./fefo-place.js?v=101";
+import { usageOf } from "./consumption.js?v=101";
+import { mountLikes } from "../core/likes.js?v=101";
+import { watchHtml, mountWatch } from "./watch.js?v=101";
+import { readEdits, writeEdits } from "../data/expiry-edits.js?v=101";
+import { noDate, startMission, loadCounts, openRecount, locLabel } from "./watch-count.js?v=101";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -226,7 +226,7 @@ export async function renderScanCard(root, p, ctx) {
   if (document.body.classList.contains("card-only")) {
     document.body.classList.add("watch-only");
     root.innerHTML = `<div class="nw-page">${watchHtml({ ...watchData, name: lang === "ar" ? (AR[p.id] || p.name) : p.name })}</div>`;
-    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=100").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
+    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=101").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
       onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); }, onCount: mission });
     lockPage();
     showRecount();
@@ -308,12 +308,12 @@ export async function renderScanCard(root, p, ctx) {
   </article>`;
 
   mountGauges(root);
-  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=100").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
+  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=101").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
     onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); }, onCount: mission });
   showRecount();
   // the recipe deck (and the theater behind it) loads the first time the Recipe sheet opens
   const fillRecipes = () => { const slot = root.querySelector("#sheet-recipe .rt-slot"); if (!slot || slot.dataset.done) return; slot.dataset.done = "1";
-    import("./recipe-theater.js?v=100").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
+    import("./recipe-theater.js?v=101").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age) age.textContent = ago(age.dataset.age, lang === "ar") || age.dataset.age.slice(0, 16).replace("T", " ");
 

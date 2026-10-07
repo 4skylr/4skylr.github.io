@@ -1,10 +1,10 @@
 // Menu Lab — the price boards joined to recipe costs, sales and stock.
 //   Menu engineering (Kasavana & Smith): popularity × contribution margin → Stars / Plowhorses / Puzzles / Dogs
 //   Charts: apache/echarts (vendored)
-import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=100";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=100";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=100";
-import { loadEcharts } from "../core/chart-theme.js?v=100";
+import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=101";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=101";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=101";
+import { loadEcharts } from "../core/chart-theme.js?v=101";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {

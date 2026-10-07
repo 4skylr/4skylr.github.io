@@ -1,5 +1,24 @@
 # Changelog
 
+## v101 · 2026-10-07 · Gallery theme
+
+- **New and only theme, from the Apple product-page style reference you sent**, with our own products in place of Apple's: the reference's tokens as given, in css/gallery.css. · **الثيم الجديد بالكامل.**
+  - **Canvas and cards:** a white canvas and Studio Mist (#f5f5f7) bands; flat white cards with a 28px radius and no shadow; Ink text.
+  - **Colour:** Apple Blue for links, Pricing Blue only for the one main action, and Launch Orange for small status words.
+  - **Type:** the type scale (12 / 14 / 17 / 19 / 21 / 24 / 40 / 80px) in Inter, the reference's named substitute for SF Pro.
+- **Navigation as in the reference:**
+  - **Global bar:** a 44px bar at the top with the pages as 12px text links. On phones and narrow screens they move into a full-screen menu with 28px links.
+  - **Page bar:** a local bar with the page name (19px/600) and its actions as compact pills (outlined, plus one blue).
+  - **Hero:** each page opens on a white hero with its label and an 80px statement. The clock is a quiet line with the week as an orange label.
+  - **Page views:** in-page views (Showcase, Lab, Cards …) are 17px text labels.
+- **Overview opens like a product page:**
+  - **The best seller:** our top seller (Popcorn Tub 85 oz) is the hero render, with its sales and profit as the statement and a floating price callout with a blue "View" pill.
+  - **Highlights:** a band of large white cards of the eight top sellers that advance on their own, with dots and a pause control.
+- **Removed so nothing old lingers:**
+  - the Apple/iOS theme, the "booth" theme, the brand patch and the dock keys (apple.css, theme.css, brand.css, dock.css);
+  - the Night mode and its switch, and every Night rule left in the other stylesheets.
+  - Blue and status tints under text are neutral now; the contrast scan passes apart from decorative marks.
+
 ## v100 · 2026-10-07 · Loader, branch cards, dock keys
 
 - **One loading mark everywhere**, after Cobp's loader on Uiverse.io: three rings turning in 3D with "Loading..." / "جاري التحميل..." under them. It shows on the launch screen, on the barcode page and on every page change while a page loads its code. · **علامة التحميل الجديدة.**

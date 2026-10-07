@@ -1,7 +1,6 @@
 /* ════════════════════════════════════════════════════════════
-   NOIR / STOCK — concessions ledger
-   Type: Unbounded (display) · Instrument Serif italic (voice)
-         Bricolage Grotesque (text) · Martian Mono (data)
+   67 Stock — page layout (grids, sizes, positions) for every page.
+   The look (colour, type, controls, navigation) is css/gallery.css, the only theme file; fonts in css/fonts.css.
    ════════════════════════════════════════════════════════════ */
 :root {
   color-scheme: dark;

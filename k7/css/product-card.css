@@ -11,10 +11,6 @@ pk-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)
   box-shadow: var(--pc-shadow); transition: transform .5s ease-in-out; cursor: pointer; color: var(--pc-ink); text-align: start;
   display: flex; flex-direction: column;
 }
-:root[data-theme="dark"] .pcard {
-  --pc-bg: #1d1c40; --pc-ink: #e6e5f7; --pk-name: #cfcdea; --pk-brand: #a3a2c8; --pc-dim: #a3a2c8; --pc-tip: #ffffff; --pc-tip-ink: #111;
-  --pc-shadow: rgba(0, 0, 0, .55) 0px 40px 30px -22px; border: 1px solid rgba(190, 190, 255, .12);
-}
 .pcard:hover { transform: scale(1.03); }
 .pcard:focus-within { outline: 2px solid var(--accent-color); outline-offset: 2px; }
 .pcard.is-out .pk-img { filter: grayscale(.85); opacity: .75; }
@@ -23,11 +19,9 @@ pk-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)
 
 .pk-image { position: relative; width: 100%; height: 150px; border-radius: .7rem; border-start-end-radius: 4rem; margin-bottom: 1rem;
   background: #fff; display: grid; place-items: center; }
-:root[data-theme="dark"] .pk-image { background: #f3f3f8; }
 .pk-image .pk-img { width: 100%; height: 150px !important; aspect-ratio: auto !important; max-width: none; object-fit: contain; border-radius: inherit; padding: 10px; box-sizing: border-box; background: transparent; }
 .pk-price { position: absolute; inset-inline-end: .7rem; bottom: -1rem; background: var(--pc-bg); color: #d4a700; font-weight: 900; font-size: .9rem;
   padding: .5rem; border-radius: 1rem 1rem 2rem 2rem; box-shadow: rgba(100, 100, 111, .2) 0px 0px 15px 0px; white-space: nowrap; }
-:root[data-theme="dark"] .pk-price { color: var(--accent-color); }
 .pk-price small { font-size: .62rem; font-weight: 700; color: var(--pc-dim); }
 .pk-out { position: absolute; inset-inline-start: .6rem; top: .6rem; font-size: .7rem; font-weight: 800; color: #fff; background: #ff5f5f; padding: .15rem .55rem; border-radius: 99px; }
 
@@ -64,7 +58,6 @@ pk-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)
 .pk-stars { display: inline-flex; gap: 2px; }
 .pk-stars i { display: inline-grid; }
 .pk-stars svg { height: 12px; width: 12px; fill: #d9d9d9; }
-:root[data-theme="dark"] .pk-stars svg { fill: #4a4970; }
 .pk-stars i.on svg { fill: var(--accent-color); }
 
 .pk-buttons { display: flex; gap: .3rem; }
