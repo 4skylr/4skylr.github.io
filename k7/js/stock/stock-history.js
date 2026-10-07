@@ -12,6 +12,20 @@ export async function applyStockReport(found, H, source = "") {
     doc.stock[row.loc] = to;
     if (Math.abs(to - from) > 1e-9) lines.push({ id: p.id, name: p.name, unit: p.unit, loc: row.loc, from, to, delta: Math.round((to - from) * 1000) / 1000 });
   });
+  // A full report lists everything the branch holds. A product it does not list (sold out, expired and written off …) is
+  // kept and marked out of stock, never deleted; a listed product no longer shows a place the report leaves out.
+  const listed = new Set(found.map(r => r.id)), full = listed.size >= Math.max(10, products.length * .4), at0 = new Date().toISOString();
+  if (full) {
+    for (const p of products) {
+      const doc = byId[p.id] || (listed.has(p.id) ? null : (byId[p.id] = { ...p, stock: { ...(p.stock || {}) } })); if (!doc) continue;
+      const here = new Set(found.filter(r => r.id === p.id).map(r => r.loc));
+      for (const loc of Object.keys(doc.stock)) if (!here.has(loc) && Number(doc.stock[loc])) {
+        const from = Number(p.stock?.[loc]) || 0; doc.stock[loc] = 0; lines.push({ id: p.id, name: p.name, unit: p.unit, loc, from, to: 0, delta: -from });
+      }
+      if (listed.has(p.id)) { if (doc.outOfStock) delete doc.outOfStock; }
+      else if (!p.outOfStock) doc.outOfStock = { at: at0, source };
+    }
+  } else for (const doc of Object.values(byId)) if (doc.outOfStock) delete doc.outOfStock;
   for (const doc of Object.values(byId)) await H.saveProduct(doc, { silent: true });
   // one net figure per product, for the upload summary
   const net = {};

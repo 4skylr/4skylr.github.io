@@ -2,31 +2,32 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=98";
-import { isOpen, unlock } from "./core/lock.js?v=98";
-import { icon } from "./core/icons.js?v=98";
-import { tone, loadEcharts } from "./core/chart-theme.js?v=98";
-import { pcardHtml, wirePcards } from "./stock/product-card.js?v=98";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=98";
-import { SEED_DATE } from "./data/seed-data.js?v=98";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=98";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=98";
-import { usageOf } from "./stock/consumption.js?v=98";
-import { AR as NAMES_AR } from "./core/names-ar.js?v=98";
-import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=98";
-import { mountClock } from "./core/clock.js?v=98";
+import * as store from "./core/store.js?v=99";
+import { isOpen, unlock } from "./core/lock.js?v=99";
+import { icon } from "./core/icons.js?v=99";
+import { tone, loadEcharts } from "./core/chart-theme.js?v=99";
+import { reviewHtml, approve, syncCountsToSheet, pendingCount, cachedCounts } from "./stock/watch-count.js?v=99";
+import { pcardHtml, wirePcards } from "./stock/product-card.js?v=99";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=99";
+import { SEED_DATE } from "./data/seed-data.js?v=99";
+import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=99";
+import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=99";
+import { usageOf } from "./stock/consumption.js?v=99";
+import { AR as NAMES_AR } from "./core/names-ar.js?v=99";
+import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=99";
+import { mountClock } from "./core/clock.js?v=99";
 // Heavy sections load only when opened, so the first paint (and every scan) stays light.
 const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.done = m))); return f; };
-const exportCount = lazy("./stock/export-count.js?v=98");
-const financeView = lazy("./finance/finance-view.js?v=98");
-const unaizahView = lazy("./finance/unaizah-view.js?v=98");
-const syncAdmin = lazy("./reports/sync-admin.js?v=98");
-const toolsMod = lazy("./core/tools.js?v=98");
-const intelMod = lazy("./stock/stock-intel.js?v=98");
-const menuMod = lazy("./stock/menu-lab.js?v=98"), yieldMod = lazy("./stock/analytics.js?v=98");
-const labMod = lazy("./stock/stock-lab.js?v=98");
-const showMod = lazy("./stock/showcase.js?v=98");
-const p360Mod = lazy("./stock/product-360.js?v=98");
+const exportCount = lazy("./stock/export-count.js?v=99");
+const financeView = lazy("./finance/finance-view.js?v=99");
+const unaizahView = lazy("./finance/unaizah-view.js?v=99");
+const syncAdmin = lazy("./reports/sync-admin.js?v=99");
+const toolsMod = lazy("./core/tools.js?v=99");
+const intelMod = lazy("./stock/stock-intel.js?v=99");
+const menuMod = lazy("./stock/menu-lab.js?v=99"), yieldMod = lazy("./stock/analytics.js?v=99");
+const labMod = lazy("./stock/stock-lab.js?v=99");
+const showMod = lazy("./stock/showcase.js?v=99");
+const p360Mod = lazy("./stock/product-360.js?v=99");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -126,7 +127,6 @@ const ROUTES = [
   { id: "halls", label: "Halls", kicker: "Auditoriums", title: 'The <span class="voice">auditoriums</span>' },
   { id: "nightly", label: "Nightly", kicker: "Reports", title: 'Nightly <span class="voice">reports</span>' },
   { id: "safety", label: "Safety", kicker: "Safety", title: 'Safety <span class="voice">&amp; maintenance</span>' },
-  { id: "petty", label: "Petty cash", kicker: "Expenses", title: 'Petty <span class="voice">cash</span>' },
   { id: "links", label: "Links", kicker: "Systems", title: 'Quick <span class="voice">links</span>' },
   { id: "alerts", label: "Alerts", kicker: "Stock", title: 'Stock <span class="voice">alerts</span>' },
   { id: "settings", label: "Settings", kicker: "Node", title: 'Sync <span class="voice">&amp; backup</span>' }
@@ -135,7 +135,7 @@ const TITLE_AR = {
   dashboard: ["الخزينة", 'المخزون <span class="voice">بنظرة</span>'], products: ["المخزون", 'قائمة <span class="voice">الستوك</span>'],
   count: ["الجرد", 'جرد <span class="voice">الموقع</span>'], yield: ["التحليل", 'ما يمكن <span class="voice">بيعه</span>'],
   history: ["السجل", 'سجل <span class="voice">الجرد</span>'], finance: ["المالية", 'ميزانية <span class="voice">الفروع</span>'], profit: ["المالية", 'ربحية <span class="voice">المنتجات</span>'], safety: ["السلامة", 'السلامة <span class="voice">والصيانة</span>'],
-  unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], halls: ["القاعات", 'القاعات <span class="voice">والمقاعد</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], alerts: ["المخزون", 'تنبيهات <span class="voice">المخزون</span>'], petty: ["المصروفات", 'بيتي <span class="voice">كاش</span>'], links: ["الأنظمة", 'روابط <span class="voice">سريعة</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
+  unaizah: ["عنيزة", 'خزينة <span class="voice">عنيزة</span>'], halls: ["القاعات", 'القاعات <span class="voice">والمقاعد</span>'], nightly: ["التقارير", 'التقارير <span class="voice">الليلية</span>'], alerts: ["المخزون", 'تنبيهات <span class="voice">المخزون</span>'], links: ["الأنظمة", 'روابط <span class="voice">سريعة</span>'], settings: ["العقدة", 'المزامنة <span class="voice">والنسخ</span>']
 };
 const CAT_COLORS = ["#5b7bff", "#4c6bff", "#edf1f8", "#8c95a8", "#7f95ff", "#33427a", "#c9d4e6", "#7c8599", "#ffffff", "#a3adbf", "#26305a"];
 
@@ -191,10 +191,11 @@ const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace
 
 // ── Chrome ───────────────────────────────────────────────────
 const LANG_KEY = "noir-lang";
-const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", petty: "بيتي كاش", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
+const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
 function siteLang() { return sessionStorage.getItem(LANG_KEY) || "en"; }
 function renderNav() {
-  $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings" && r.id !== "alerts").map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span></button>`).join("");
+  const wc = pendingCount(cachedCounts());
+  $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings" && r.id !== "alerts").map(r => `<button data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}">${icon(r.id)}<span>${siteLang()==="ar" ? (NAV_AR[r.id] || r.label) : r.label}</span>${r.id === "count" && wc ? `<sup class="nav-badge data">${wc}</sup>` : ""}</button>`).join("");
 }
 function renderNet() {
   const live = data.mode === "firebase", el = $("#net");
@@ -204,7 +205,7 @@ function renderNet() {
 }
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
-const histMod = lazy("./stock/stock-history.js?v=98");
+const histMod = lazy("./stock/stock-history.js?v=99");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
   const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
@@ -244,7 +245,7 @@ document.addEventListener("click", e => {
 });
 function go(route) {
   if (CARD_DOOR) return;
-  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=98").then(m => m.playSkylr()).catch(() => {});
+  if (route === "settings" && ui.route !== "settings") import("./core/skylr.js?v=99").then(m => m.playSkylr()).catch(() => {});
   ui.route = route; lsSet("route", route);
   try { history.replaceState(null, "", "#" + route); } catch {}
   render(); window.scrollTo(0, 0);
@@ -252,7 +253,7 @@ function go(route) {
 function render() {
   if (CARD_DOOR) return renderDoor();
   if (!isScanUrl()) lastCard = null;
-  document.body.classList.remove("card-only", "watch-only");
+  document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   const qid = new URLSearchParams(location.search).get("p");
   if (qid && data.products?.length) {
     const p = data.products.find(x => x.id === qid);
@@ -277,11 +278,11 @@ function render() {
   $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
   $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, petty: viewPetty, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
   if (ui.lastEnter !== r.id) { ui.lastEnter = r.id; motionMod().then(m => m.enter($("#view"), $("#page-title"))).catch(() => {}); } // only on a page change, not every re-render
 }
 
-const motionMod = lazy("./core/motion.js?v=98");
+const motionMod = lazy("./core/motion.js?v=99");
 
 // ── Overview ─────────────────────────────────────────────────
 function viewDashboard() {
@@ -542,7 +543,7 @@ function newSession(where, counter) {
 function viewCount() {
   if (ui.session) return viewRun();
   const drafts = data.sessions.filter(s => s.status === "draft");
-  $("#view").innerHTML = `
+  $("#view").innerHTML = `<div id="wc-host">${reviewHtml(cachedCounts(), helpers(), siteLang() === "ar")}</div>
     <div class="setup">
       <section class="slab">
         <div class="slab-h"><h2>New count</h2><span class="voice">pick a vault</span></div>
@@ -566,6 +567,23 @@ function viewCount() {
   $("#only").onchange = e => { ui.countOnlyStock = e.target.checked; lsSet("countOnlyStock", ui.countOnlyStock); };
   $("#start").onclick = () => { const c = $("#counter").value.trim(); lsSet("counter", c); ui.session = newSession(ui.setupLoc, c); ui.countQ = ""; ui.countCat = "all"; render(); };
   $$("[data-resume]").forEach(b => b.onclick = () => { ui.session = JSON.parse(JSON.stringify(data.sessions.find(s => s.id === b.dataset.resume))); render(); });
+  wireWc(); refreshWc();
+}
+// watch counts waiting for a supervisor (watch-count.js): approve, see what differs, download the expiry sheet
+function paintWc() { const h = $("#wc-host"); if (!h) return; h.innerHTML = reviewHtml(cachedCounts(), helpers(), siteLang() === "ar"); wireWc(); }
+function wireWc() {
+  const h = $("#wc-host"); if (!h) return;
+  h.querySelector("#wc-xlsx")?.addEventListener("click", () => downloadSheet().then(() => toast(siteLang() === "ar" ? "نزل ملف الصلاحيات" : "Expiry sheet downloaded")).catch(e => toast(e.message, true)));
+  h.querySelectorAll("[data-wc-ok]").forEach(b => b.onclick = async () => { b.disabled = true; await approve(b.dataset.wcOk, lsGet("counter", "")).catch(e => toast(e.message, true)); paintWc(); renderNav();
+    toast(siteLang() === "ar" ? "اعتمد" : "Approved"); });
+}
+let wcSeen = null;
+function refreshWc() {
+  return syncCountsToSheet(data.products || []).then(list => {
+    const open = list.filter(r => r.status === "match" || r.status === "recount"), ids = open.map(r => r.id + r.at);
+    if (wcSeen && ids.some(id => !wcSeen.has(id))) toast(siteLang() === "ar" ? "وصل جرد جديد من الساعة" : "New watch count in");
+    wcSeen = new Set(ids); renderNav(); if (ui.route === "count" && !ui.session && !typing()) paintWc();
+  }).catch(() => {});
 }
 
 const inScope = (s, p) => !ui.countOnlyStock || (s.system?.[p.id] || 0) > 0 || s.counts[p.id] != null;
@@ -678,7 +696,7 @@ const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
 const p360Helpers = () => ({ ...toolHelpers(), catName, topRank, stockHist: () => stockHist });
 const toolHelpers = () => ({ ...cardHelpers(), fuzzyIds, namesAr: NAMES_AR, level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
 function viewLabels() {
-  document.body.classList.remove("card-only", "watch-only");
+  document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   renderNav(); renderNet();
   $("#kicker").textContent = "Labels";
   $("#page-title").innerHTML = 'Cut <span class="voice">sheet</span>';
@@ -724,15 +742,15 @@ function viewScanProduct(p) {
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
 function viewFinance() { if (!$("#view").querySelector(".fx")) financeView().then(m => { if (ui.route === "finance") m.renderFinance($("#view")); }); }
-const profitMod = lazy("./finance/profit.js?v=98");
+const profitMod = lazy("./finance/profit.js?v=99");
 function viewProfit() {
   $("#title-actions").innerHTML = "";
   if (!$("#view").querySelector(".pf")) $("#view").innerHTML = `<div id="profit-host"><p class="empty">…</p></div>`;
   profitMod().then(m => { if (ui.route === "profit") m.renderProfit($("#profit-host") || $("#view"), helpers()); }).catch(e => toast(e.message, true));
 }
-const safetyMod = lazy("./safety/safety.js?v=98");
+const safetyMod = lazy("./safety/safety.js?v=99");
 // shift brief tiles that need their own modules: safety checks and system-report freshness
-const likesMod = lazy("./core/likes.js?v=98");
+const likesMod = lazy("./core/likes.js?v=99");
 let briefSeen = null; // the dashboard re-renders on every sync; report freshness is re-read at most once a minute
 function fillBrief(ar) {
   // the crowd's favourites: most-liked products, from the likes people leave on product cards
@@ -767,27 +785,19 @@ function viewSafety() {
   if (!$("#view").querySelector(".sf")) $("#view").innerHTML = `<div id="safety-host"><p class="empty">…</p></div>`;
   safetyMod().then(m => { if (ui.route === "safety") m.renderSafety($("#safety-host") || $("#view"), { putDoc: store.putDoc, allDocs: store.allDocs, localDocs: store.localDocs, toast }); }).catch(e => toast(e.message, true));
 }
-const pettyMod = lazy("../petty/petty.js?v=98");
-function viewPetty() {
-  if ($("#petty-host .pc, #petty-host .pc-lock")) return; // a store sync must not reset an open review
-  $("#title-actions").innerHTML = "";
-  $("#view").innerHTML = `<div id="petty-host"></div>`;
-  pettyMod().then(m => { if (ui.route === "petty") m.renderPetty($("#petty-host"), { putDoc: store.putDoc, allDocs: store.allDocs, localDocs: store.localDocs, putRemote: store.putRemote, getRemote: store.getRemote, deleteRemote: store.deleteRemote, deleteLocalDoc: store.deleteLocalDoc, uploadFile: store.uploadFile, toast, log: store.log }); })
-    .catch(e => toast(e.message, true));
-}
 function viewAlerts() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="alerts-host"></div>`;
   renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
 }
-const linksMod = lazy("./core/links.js?v=98");
+const linksMod = lazy("./core/links.js?v=99");
 function viewLinks() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="links-host"></div>`;
   linksMod().then(m => { if (ui.route === "links") m.renderLinks($("#links-host"), { allDocs: store.allDocs, localDocs: store.localDocs, putDoc: store.putDoc, toast }); })
     .catch(e => toast(e.message, true));
 }
-const hallsMod = lazy("./reports/halls.js?v=98");
+const hallsMod = lazy("./reports/halls.js?v=99");
 function viewHalls() {
   if ($("#halls-host .hl")) return; // a store sync must not reset the open hall
   $("#title-actions").innerHTML = "";
@@ -795,7 +805,7 @@ function viewHalls() {
   hallsMod().then(m => { if (ui.route === "halls") m.renderHalls($("#halls-host"), { allDocs: store.allDocs, localDocs: store.localDocs }); })
     .catch(e => toast(e.message, true));
 }
-const nightlyMod = lazy("./reports/nightly.js?v=98");
+const nightlyMod = lazy("./reports/nightly.js?v=99");
 function viewNightly() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="nightly-host"></div>`;
@@ -865,7 +875,7 @@ function exportSession(s) {
 }
 
 // ── Settings ─────────────────────────────────────────────────
-const reportsMod = lazy("./reports/reports-admin.js?v=98");
+const reportsMod = lazy("./reports/reports-admin.js?v=99");
 // every upload of a system report is logged, so Settings can show when each one last came in
 async function markUpload(key, file) { await store.putDoc("uploads", key, { at: new Date().toISOString(), file: String(file || "") }); }
 const fmtN = n => Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
@@ -878,10 +888,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=98"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=98"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=99"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=99"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=98")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=99")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -897,7 +907,7 @@ function reportHandlers() {
       toast(T(`Done · ${fmtN(d.tickets)} tickets · ${d.from} → ${d.to}`, `تم · ${fmtN(d.tickets)} تذكرة · ${d.from} → ${d.to}`) + (d.grand && d.grand !== d.tickets ? ` (${T("report", "التقرير")} ${d.grand})` : ""));
     },
     dcs: async (files, step) => {
-      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=98")]);
+      const [{ loadXLSX }, dcs] = await Promise.all([reportsMod(), import("./finance/fin-dcs.js?v=99")]);
       const XLSX = await loadXLSX();
       const ledger = await fetch("unaizah/ledger.json").then(r => r.json()).catch(() => ({ days: [] }));
       const known = [...new Set(ledger.days.flatMap(d => (d.cashiers || []).map(c => c.user)))];
@@ -914,7 +924,7 @@ function reportHandlers() {
       toast(`DCS · ${n} ${T("days", "يوم")} · ${from} → ${to}`);
     },
     rdr: async ([f]) => {
-      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=98")]);
+      const [{ loadXLSX }, { parseRdrFile }] = await Promise.all([reportsMod(), import("./finance/fin-rdr.js?v=99")]);
       const d = await parseRdrFile(f, await loadXLSX());
       await store.putDoc("rdr", "latest", d);
       await store.log("report", `RDR Exception Register · ${d.shifts.length} shifts · ${d.from} → ${d.to}`);
@@ -986,8 +996,12 @@ let renderQueued = 0;
 store.onChange(snap => {
   data = fixCats(snap); topCache = null;
   if (ui.route === "count" && ui.session) { renderNet(); renderBell(); return; }
-  if (!renderQueued) renderQueued = requestAnimationFrame(() => { renderQueued = 0; if (!typing()) render(); });
+  if (!renderQueued) renderQueued = requestAnimationFrame(() => { renderQueued = 0; if (!typing() && !counting()) render(); });
 });
+// a count mission open on the watch is never redrawn under the person counting; the page catches up when it closes
+let missionWaits = false;
+function counting() { if (!document.querySelector(".nw-m")) return false; missionWaits = true; return true; }
+addEventListener("nw-mission-end", () => { if (missionWaits) { missionWaits = false; requestAnimationFrame(() => { if (!typing() && !counting()) render(); }); } });
 // someone typing in a field on the page (a new link, a PIN, a note): a sync from another device waits until they leave the field
 let waitingForBlur = false;
 function typing() {
@@ -1008,13 +1022,17 @@ window.addEventListener("hashchange", () => {
   if (r === "labels" || r.startsWith("p/")) { render(); window.scrollTo(0, 0); return; }
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
+// watch counts: picked up when the app opens and every minute after, so the Count tab shows what arrived
+if (!CARD_DOOR) { setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
+// petty cash is gone from the site: clear what it left behind, once per device (a device that could not reach Firebase tries again next time)
+if (!CARD_DOOR && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
 if (CARD_DOOR) {
   render();
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });
 } else {
   mountClock($("#clock"), siteLang());
   if (!isScanUrl()) { render(); window.NoirCurtain?.open(); }
-  if (siteLang() === "ar") import("./core/i18n-ar.js?v=98").then(m => m.startArabic()).catch(() => {});
+  if (siteLang() === "ar") import("./core/i18n-ar.js?v=99").then(m => m.startArabic()).catch(() => {});
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })

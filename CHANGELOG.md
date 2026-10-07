@@ -1,5 +1,18 @@
 # Changelog
 
+## v99 · 2026-10-07 · Count from the watch, cost on the photo
+
+- **Count from the product watch.** Under the watch, a **Start count** button walks the counter through the places that hold the product, in order: Store, then Mini Store, then Concession. Places with no stock are skipped. · **الجرد من الساعة.**
+  - **Each place:** a map opens like a maps app and shows "Go to …". After OK, the counter enters the quantity and the expiry date on an iOS-style scroll wheel. Products with a date can take more groups (up to 5); items with no date (cups, tubs, trays, CO₂) ask for the quantity only.
+  - **On send:** each place is checked against the current stock report. A matching place gets a tick and waits for a supervisor. A place that differs comes straight back to the watch as a recount of that place only. The watch says which place differs but not the report's figure.
+  - **Count page:** the watch counts appear on the Count page with a badge on the tab and a notice when a new one arrives. Each shows what was counted, the report's figure and the difference. The supervisor can approve, or approve despite a difference.
+- **The expiry Excel is always current.** Every date and quantity counted on a watch, from any phone, goes into the monthly expiry sheet: groups 1–5 are filled, emptied groups are cleared, and a place the sheet had no row for gets a new row. The sheet downloads at any time from the Count page.
+  - Excel dates are written as midnight UTC, so they no longer show a day early.
+- **Out of stock, not deleted:** a full stock report now marks any product it does not list (sold out, expired …) as **Out of stock** and sets it to zero. The product stays on the site. A place the report leaves out is set to zero.
+- **Cost on the photo:** the product cards show the cost of one full serving on the photo. That cost includes the tub, corn, oil, salt or flavour and everything else the recipe uses. Next to it are the selling price and the profit, flavour by flavour; tap the flavour to switch. Ingredients show what one stock unit costs and how many recipes use it. The watch has a new screen with the same figures.
+- **The watch:** a visible language button (ع / EN) under the watch. On the barcode page the page no longer scrolls or bounces: the watch is fitted to the screen and slides one screen per swipe or wheel turn, with a slower, smoother motion.
+- **Petty cash removed completely:** the page, its folder (k7/petty) and its libraries are gone. Each device clears what petty cash saved, once: its Firestore collections, its Storage files and this browser's copies. The barcode reader it shared moved to k7/vendor.
+
 ## v98 · 2026-10-07 · Inter everywhere, clean-up and fixes
 
 - **Inter is the site's only Latin font**, from the Inter 4 files supplied: variable weight 100–900 with optical sizes, upright and italic. It replaces Geist, Geist Mono, the system fonts and monospace in the pages, the watch, the charts, the launch screen and the team brief image. IBM Plex Sans Arabic still draws the Arabic. · **اعتماد خط Inter بالكامل.**

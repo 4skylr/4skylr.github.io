@@ -3,11 +3,11 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=98";
-import { BARCODES } from "../data/barcodes.js?v=98";
-import { mountGauges } from "./indicators.js?v=98";
-import { renderScanCard } from "./scan-view.js?v=98";
-import { readEdits, writeEdits } from "../data/expiry-edits.js?v=98";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=99";
+import { BARCODES } from "../data/barcodes.js?v=99";
+import { mountGauges } from "./indicators.js?v=99";
+import { renderScanCard } from "./scan-view.js?v=99";
+import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=99";
 
 const UNLOCK = "noir-edit-until";
 const LIB = {
@@ -52,13 +52,7 @@ export function idFromCode(raw) {
   return m ? m[1] : s;
 }
 
-function rowsFor(id) {
-  const over = edits();
-  return EXPIRY_SHEET.rows.filter(r => r.productId === id).map(r => {
-    const o = over[String(r.row)] || {};
-    return { ...r, batches: r.batches.map(b => ({ ...b, qty: o[`q${b.n}`] ?? b.qty, date: o[`d${b.n}`] ?? b.date })) };
-  });
-}
+const rowsFor = id => expiryRows(id);
 function fmtDate(v) {
   if (!v) return "—";
   if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) {
@@ -136,20 +130,22 @@ export async function downloadSheet() {
   const wb = new window.ExcelJS.Workbook();
   await wb.xlsx.load(await res.arrayBuffer());
   const ws = wb.getWorksheet(EXPIRY_SHEET.sheet) || wb.worksheets[0];
-  const all = edits();
-  EXPIRY_SHEET.rows.forEach(r => {
-    const o = all[String(r.row)]; if (!o) return;
-    r.batches.forEach(b => {
-      if (o[`q${b.n}`] != null && o[`q${b.n}`] !== "") {
-        const raw = o[`q${b.n}`];
-        const num = Number(String(raw).replace(/g$/i, ""));
-        ws.getCell(r.row, b.qtyCol).value = Number.isFinite(num) && String(raw).trim() !== "" && !/[a-z]/i.test(String(raw)) ? num : raw;
-      }
-      if (o[`d${b.n}`]) {
-        const v = o[`d${b.n}`];
-        ws.getCell(r.row, b.dateCol).value = /^\d{4}-\d{2}-\d{2}/.test(v) ? new Date(v.slice(0, 10) + "T00:00:00") : v;
-      }
-    });
+  // the sheet with every saved change: counts from the watch, edits on the card, imports (groups 1–5, emptied groups, added rows)
+  const put = (row, b) => {
+    const raw = b.qty, num = Number(String(raw ?? "").replace(/g$/i, ""));
+    if (raw === 0 && b.date === "") { ws.getCell(row, b.qtyCol).value = null; ws.getCell(row, b.dateCol).value = null; return; }
+    if (raw != null && raw !== "") ws.getCell(row, b.qtyCol).value = Number.isFinite(num) && !/[a-z]/i.test(String(raw)) ? num : raw;
+    // Excel dates carry no time zone: write midnight UTC, or the sheet shows the day before in Riyadh
+    if (b.date) ws.getCell(row, b.dateCol).value = /^\d{4}-\d{2}-\d{2}/.test(b.date) ? new Date(b.date.slice(0, 10) + "T00:00:00Z") : b.date;
+  };
+  const all = edits(), rows = expiryRows(null, all);
+  let last = Math.max(...EXPIRY_SHEET.rows.map(r => r.row)), sr = Math.max(...EXPIRY_SHEET.rows.map(r => Number(r.sr) || 0));
+  rows.forEach(r => {
+    if (r.added) {
+      last++; sr++;
+      ws.getCell(last, 2).value = sr; ws.getCell(last, 3).value = r.name; ws.getCell(last, 4).value = r.location;
+      r.batches.forEach(b => put(last, b));
+    } else if (all[String(r.row)]) r.batches.forEach(b => put(r.row, b));
   });
   const buf = await wb.xlsx.writeBuffer();
   const a = document.createElement("a");
@@ -194,12 +190,12 @@ async function writeOff(p, batch) {
 export async function printBarcodes() { location.hash = "labels"; }
 
 // Camera scanner for the printed labels (QR with the product link, Code 128 "NC-<id>"). The labels themselves are unchanged.
-// Reads with the phone's own BarcodeDetector when it has one, else zxing-cpp (Sec-ant/zxing-wasm, already vendored for
-// petty cash), else the older ZXing JS reader. Frames are read a few times a second; the first hit closes the camera.
+// Reads with the phone's own BarcodeDetector when it has one, else zxing-cpp (Sec-ant/zxing-wasm, vendor/zxing-reader.mjs),
+// else the older ZXing JS reader. Frames are read a few times a second; the first hit closes the camera.
 let scanner = null;
-const ZXW = "../../petty/vendor/zxing-reader.mjs";
+const ZXW = "../../vendor/zxing-reader.mjs";
 let zxwP = null;
-const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZXingModule({ overrides: { locateFile: (f, prefix) => f.endsWith(".wasm") ? new URL("../../petty/vendor/zxing_reader.wasm", import.meta.url).href : prefix + f } }); return m; });
+const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZXingModule({ overrides: { locateFile: (f, prefix) => f.endsWith(".wasm") ? new URL("../../vendor/zxing_reader.wasm", import.meta.url).href : prefix + f } }); return m; });
 export async function openScanner(helpers, onId) {
   H = helpers; scanner?.stop(); // a second open never leaves the first camera running
   const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar";

@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=98";
-import { SEED_PRODUCTS, SEED_VERSION } from "../data/seed-data.js?v=98";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=99";
+import { SEED_PRODUCTS, SEED_VERSION } from "../data/seed-data.js?v=99";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -328,3 +328,19 @@ export async function uploadFile(path, blob, contentType) {
   catch (e) { console.warn("File upload failed:", path, e.message); return null; }
 }
 export async function deleteLocalDoc(name, id) { const all = lsCol(name); delete all[id]; lsColWrite(name, all); }
+
+// Petty cash was removed from the site (v99) together with everything it saved: its Firestore collections, its files in
+// Storage (petty/…) and this browser's copies. Runs once per device; returns true when nothing is left to delete here.
+export async function purgePetty() {
+  const COLS = ["petty", "pettyCfg", "pettyXlsx", "pettyImg"];
+  COLS.forEach(n => { try { localStorage.removeItem(LS_COL(n)); } catch {} });
+  try { indexedDB.deleteDatabase("noir-petty"); } catch {}
+  if (!(await remote())) return false;
+  let ok = true;
+  for (const n of COLS) {
+    try { const snap = await fb.fs.getDocs(fb.fs.collection(fb.db, n)); for (const d of snap.docs) { try { await fb.fs.deleteDoc(d.ref); } catch { ok = false; } } } catch { ok = false; }
+  }
+  const sweep = async ref => { const r = await fb.st.listAll(ref); for (const f of r.items) { try { await fb.st.deleteObject(f); } catch { ok = false; } } for (const p of r.prefixes) await sweep(p); };
+  try { await sweep(fb.st.ref(fb.storage, "petty")); } catch { ok = false; }
+  return ok;
+}

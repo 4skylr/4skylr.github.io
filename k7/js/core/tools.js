@@ -105,7 +105,7 @@ export function openFinder(H) {
 
 // Guided tour (kamranahmedse/driver.js), shown once and again from the ? button
 const TOUR = {
-  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, product profit, Unaizah, halls, nightly reports, safety, petty cash and links. Settings is the gear at the top."],
+  en: [["#nav", "Navigation", "Every section lives in this dock: overview, stock, count, yield, ledger, budget, product profit, Unaizah, halls, nightly reports, safety and links. Settings is the gear at the top."],
     ["#clock", "Clock", "24-hour time with the ISO week and the week as a film strip."],
     ["#bell-btn", "Stock alerts", "How many items need action today across the three locations, with the transfer list behind it."],
     ["#qf-btn", "Quick find", "Search any product, page or action (start a count, log a safety check, upload a report). Typos and Arabic names work. Shortcut: Ctrl K."],
@@ -114,7 +114,7 @@ const TOUR = {
     ["#net", "Sync", "Shows whether you are live on Firebase or working in this browser."]],
   ar: [["#clock", "الساعة", "الوقت بنظام 24 ساعة مع رقم الأسبوع وأيامه."],
     ["#bell-btn", "تنبيهات المخزون", "كم صنف يحتاج إجراء اليوم بالمواقع الثلاثة، ووراه قائمة النقل."],
-    ["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، الربحية، عنيزة، القاعات، التقارير الليلية، السلامة، بيتي كاش، والروابط. الإعدادات من الترس فوق."],
+    ["#nav", "التنقل", "كل الأقسام هنا: النظرة، الستوك، الجرد، التحليل، السجل، الميزانية، الربحية، عنيزة، القاعات، التقارير الليلية، السلامة، والروابط. الإعدادات من الترس فوق."],
     ["#qf-btn", "بحث سريع", "ابحث عن أي منتج أو صفحة أو إجراء (ابدأ جرد، سجّل فحص سلامة، ارفع تقرير)، حتى لو فيه غلط إملائي. الاختصار Ctrl K."],
     ["#dash-reorder", "قائمة الطلب", "كل شي نفد أو قارب، مع الكمية والتكلفة المقترحة للطلب."],
     ["#lang-btn", "اللغة", "حوّل الموقع كامل بين العربي والإنجليزي."],

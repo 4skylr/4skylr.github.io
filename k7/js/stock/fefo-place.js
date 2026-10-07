@@ -3,8 +3,7 @@
 //   items sold by the piece (cans, bags, cups):  Concession → Mini Store → Store
 //   group items sold by weight/volume (kg, L):   Concession = Mini Store (one front tier) → Store
 // A group is flagged when it expires at least a week sooner than a group that sits further forward.
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=98";
-import { readEdits } from "../data/expiry-edits.js?v=98";
+import { expiryRows } from "../data/expiry-edits.js?v=99";
 
 const GAP = 7; // days; smaller gaps are the same delivery
 export const isBulk = p => p && (p.unit === "kg" || p.unit === "ltr");
@@ -12,7 +11,6 @@ const TIER_PCS = { refuel: 0, mini: 1, stores: 2 };
 export const tierOf = (p, loc) => isBulk(p) ? (loc === "stores" ? 1 : 0) : (TIER_PCS[loc] ?? 3);
 export const FRONT = ["refuel", "mini", "stores"]; // display order: Concession, Mini Store, Store
 
-const edits = readEdits;
 export function asDate(v) {
   if (!v) return null;
   const s = String(v);
@@ -25,11 +23,9 @@ const num = v => { const s = String(v ?? "").trim().toLowerCase(), n = parseFloa
 
 // every dated group of a product, with its location
 export function groupsOf(p) {
-  const over = edits();
-  return EXPIRY_SHEET.rows.filter(r => r.productId === p.id).flatMap(r => {
-    const o = over[String(r.row)] || {};
+  return expiryRows(p.id).flatMap(r => {
     return r.batches.map(b => {
-      const date = o[`d${b.n}`] ?? b.date, qty = o[`q${b.n}`] ?? b.qty, at = asDate(date);
+      const date = b.date, qty = b.qty, at = asDate(date);
       return { n: b.n, row: r.row, loc: r.loc, location: r.location, qty: num(qty), date, at, left: daysTo(at) };
     });
   }).filter(g => g.at && !isNaN(g.at) && g.qty > 0);

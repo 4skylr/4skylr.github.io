@@ -4,8 +4,9 @@
 //   sizes   = the other sizes of the same product (tap one to flip the card to it),
 //   rating  = how much it sold since the start of the year (stars rank it against the other products).
 // The main button opens the product; the small one opens its barcode card. No "buy".
-import { soldOf, moveOf } from "../data/sales-data.js?v=98";
-import { likesFor, likedByMe, quickLike, loadLikes } from "../core/likes.js?v=98";
+import { soldOf, moveOf } from "../data/sales-data.js?v=99";
+import { likesFor, likedByMe, quickLike, loadLikes } from "../core/likes.js?v=99";
+import { servingOf } from "../finance/serving.js?v=99";
 
 const SIZE = /\s*(\d+(?:\.\d+)?)\s*(oz|ml|g|gm|kg|l)\b\.?|\s*\b(big|small|large|medium|regular)\b|\s*(\d)-comp\b/i;
 const LOC_COL = { refuel: "#ffd426", mini: "#144076", stores: "#00b9ff" };
@@ -32,17 +33,31 @@ function stars(p, products) {
 }
 const star = on => `<i class="${on ? "on" : ""}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .6l2.1 5.1 5.5.4-4.2 3.6 1.3 5.4L8 12.2l-4.7 2.9 1.3-5.4L.4 6.1l5.5-.4z"/></svg></i>`;
 
+// on the photo: one full serving — its cost (every ingredient of the recipe), and the profit on the net price, flavour by flavour
+const fmt = n => (Math.round(n * 100) / 100).toFixed(Number.isInteger(n) ? 0 : 2);
+function econHtml(sv, ar, i) {
+  const T = (e, a) => (ar ? a : e);
+  if (!sv) return "";
+  if (sv.kind === "part") return sv.uses ? `<div class="pk-econ is-part"><small>${T("In", "يدخل في")}</small><b class="data">${sv.uses}</b><small>${T(sv.uses === 1 ? "menu recipe" : "menu recipes", "وصفة")}</small></div>` : "";
+  const o = sv.options[i % sv.options.length], many = sv.options.length > 1;
+  return `<div class="pk-econ" data-i="${i % sv.options.length}">
+    ${many ? `<button type="button" class="pk-flav" data-flav aria-label="${T("Next flavour", "النكهة التالية")}">${ar ? o.label.ar : o.label.en}<i aria-hidden="true">›</i></button>` : `<span class="pk-flav">${ar ? o.label.ar : o.label.en}</span>`}
+    <span class="pk-e"><small>${T("Cost", "التكلفة")}</small><b class="data">${o.cost.toFixed(2)}</b></span>
+    <span class="pk-e is-profit"><small>${T("Profit", "الربح")}</small><b class="data">${o.profit.toFixed(2)}</b><em class="data">${Math.round(o.margin * 100)}%</em></span></div>`;
+}
 export function pcardHtml(p, H) {
   const ar = H.lang === "ar", T = (e, a) => (ar ? a : e), esc = H.esc, P = H.data().products;
   const unit = esc(H.UNITS[p.unit] || p.unit || ""), total = H.total(p), sizes = familyOf(p, P), mv = moveOf(p.id);
   const sold = soldOf(p.id) || 0, st = mv?.shared ? 0 : stars(p, P), L = likesFor(p.id).length, mine = likedByMe(p.id);
   const locs = H.LOCATIONS.map(l => ({ l, n: Number(p.stock?.[l.id]) || 0 })).filter(x => x.n > 0);
   const name = ar ? (H.namesAr?.[p.id] || p.name) : p.name;
-  const rate = Number(p.rate) || 0;
+  const sv = servingOf(p);
   return `<article class="pcard${total ? "" : " is-out"}" data-edit="${esc(p.id)}" data-key="${esc(p.id)}" dir="${ar ? "rtl" : "ltr"}">
     <div class="pk-image">${H.pic(p, "pk-img")}
-      ${rate ? `<span class="pk-price data" dir="ltr">${rate.toFixed(2)}<small> SR/${unit}</small></span>` : ""}
-      ${total ? "" : `<span class="pk-out">${T("Out", "نفد")}</span>`}
+      ${econHtml(sv, ar, 0)}
+      ${sv?.kind === "serving" ? `<span class="pk-price data" title="${T("Menu price, VAT included", "سعر المنيو شامل الضريبة")}"><small>${T("Sells", "البيع")} </small>${fmt(sv.price)}<small> ${T("SR", "ر.س")}</small></span>`
+        : sv?.cost ? `<span class="pk-price data" title="${T("What one stock unit costs", "تكلفة وحدة المخزون")}"><small>${T("Cost", "التكلفة")} </small>${sv.cost.toFixed(2)}<small> ${T("SR", "ر.س")}/${esc(H.UNITS[sv.unit] || sv.unit || unit)}</small></span>` : ""}
+      ${total && !p.outOfStock ? "" : `<span class="pk-out">${p.outOfStock ? T("Out of stock", "نفد من المخزون") : T("Out", "نفد")}</span>`}
     </div>
     <button type="button" class="pk-fav${mine ? " on" : ""}" data-like="${esc(p.id)}" aria-pressed="${mine}" aria-label="${T("Like", "إعجاب")}" title="${L ? T(`${L} like${L > 1 ? "s" : ""}`, `${L} إعجاب`) : T("Like", "إعجاب")}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.3-9.2C1.5 8 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.6 0 5.7 3.5 4.5 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/></svg>${L ? `<b class="data">${L}</b>` : ""}</button>
@@ -74,6 +89,10 @@ export function wirePcards(root, H) {
   loadLikes().then(() => root.querySelectorAll(".pk-fav").forEach(b => { const id = b.dataset.like, n = likesFor(id).length, mine = likedByMe(id);
     b.classList.toggle("on", mine); b.setAttribute("aria-pressed", String(mine)); const c = b.querySelector("b"); if (n) { if (c) c.textContent = n; else b.insertAdjacentHTML("beforeend", `<b class="data">${n}</b>`); } })).catch(() => {});
   root.addEventListener("click", async e => {
+    const flav = e.target.closest("[data-flav]");
+    if (flav) { e.stopPropagation(); const box = flav.closest(".pk-econ"), card = flav.closest(".pcard"), x = H.data().products.find(q => q.id === card?.dataset.edit);
+      if (box && x) { const t = document.createElement("template"); t.innerHTML = econHtml(servingOf(x), H.lang === "ar", Number(box.dataset.i) + 1).trim(); box.replaceWith(t.content.firstElementChild); }
+      return; }
     const sz = e.target.closest(".pk-size"); const like = e.target.closest(".pk-fav"); const code = e.target.closest(".pk-code"); const dot = e.target.closest(".pk-color");
     if (sz) { e.stopPropagation(); const inp = sz.querySelector("input"); const x = H.data().products.find(q => q.id === inp.dataset.size); const card = sz.closest(".pcard");
       if (x && card && card.dataset.edit !== x.id) { const t = document.createElement("template"); t.innerHTML = pcardHtml(x, H).trim(); const n = t.content.firstElementChild; n.dataset.key = card.dataset.key; n._html = card._html; card.replaceWith(n); n.classList.add("pk-swap"); }

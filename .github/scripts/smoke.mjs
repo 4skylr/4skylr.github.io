@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(process.argv[2] || ".");
-const ROUTES = ["dashboard", "products", "count", "yield", "history", "finance", "profit", "unaizah", "halls", "nightly", "safety", "petty", "links", "settings", "alerts"];
+const ROUTES = ["dashboard", "products", "count", "yield", "history", "finance", "profit", "unaizah", "halls", "nightly", "safety", "links", "settings", "alerts"];
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml",
   ".png": "image/png", ".webp": "image/webp", ".jpg": "image/jpeg", ".woff2": "font/woff2", ".wasm": "application/wasm", ".webmanifest": "application/manifest+json", ".xlsx": "application/octet-stream" };
 const server = http.createServer((req, res) => {

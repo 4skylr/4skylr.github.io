@@ -5,18 +5,18 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=98";
-import { RECIPES } from "../data/recipes-data.js?v=98";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=98";
-import { placement } from "./fefo-place.js?v=98";
-import { usageOf } from "./consumption.js?v=98";
-import { mountLikes } from "../core/likes.js?v=98";
-import { watchHtml, mountWatch } from "./watch.js?v=98";
-import { readEdits, writeEdits } from "../data/expiry-edits.js?v=98";
+import { AR, LOC_AR } from "../core/names-ar.js?v=99";
+import { RECIPES } from "../data/recipes-data.js?v=99";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=99";
+import { placement } from "./fefo-place.js?v=99";
+import { usageOf } from "./consumption.js?v=99";
+import { mountLikes } from "../core/likes.js?v=99";
+import { watchHtml, mountWatch } from "./watch.js?v=99";
+import { readEdits, writeEdits } from "../data/expiry-edits.js?v=99";
+import { noDate, startMission, loadCounts, openRecount, locLabel } from "./watch-count.js?v=99";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
-const noDate = p => p.category === "packaging" || p.category === "other" || /^(cups-|lids-|tub-|slush-glass|cotton-candy-tub|dip-cup|hotdog-tray|nachos-tray|napkin|straw|stirrer|co2)/.test(p.id);
 
 // every group gets its own signature colour
 const GROUP_HUES = ["#5b7bff", "#dce6ff", "#6ccbff", "#ffb547", "#3ed69e", "#ff8a5c"];
@@ -197,15 +197,39 @@ export async function renderScanCard(root, p, ctx) {
     </section>` : "";
   const RS = 15, RC = 2 * Math.PI * RS;
 
-  const watchData = { ar: lang === "ar", H, products, gname, locName, groups: dated, next: next || dated[0] || null, recipes: hits, locs: locRows, total, unit,
+  const watchData = { ar: lang === "ar", H, p, products, gname, locName, groups: dated, next: next || dated[0] || null, recipes: hits, locs: locRows, total, unit,
     sold: soldOf(p.id) || 0, perDay: (soldOf(p.id) || 0) / SALES_DAYS, code: p.code || p.sku || p.id,
     shot: `<div class="pc-shot">${H.pic(p, "pic")}<small class="pc-age" data-age="${H.esc(localStorage.getItem("noir-sync-at") || p.updatedAt || "")}"></small></div>` };
+  const localIso = d => d && !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : "";
+  // the count mission (watch-count.js): a recount waiting for this product runs only the places it names
+  let recount = null;
+  const mission = (disp, again) => startMission(disp, { p, H, ar: lang === "ar", name: lang === "ar" ? (AR[p.id] || p.name) : p.name, prev: recount, only: again?.recount || recount?.recount,
+    groupsAt: loc => dated.filter(b => b.loc === loc).map(b => ({ qty: b.qty, date: /^\d{4}-\d{2}-\d{2}/.test(String(b.date)) ? String(b.date).slice(0, 10) : localIso(asDate(b.date)) })),
+    onDone: (rec, now) => { recount = rec.status === "recount" ? rec : null; paintRecount(); if (now && recount) mission(disp, recount); } });
+  const paintRecount = () => {
+    const bar = root.querySelector(".nw-bar"); if (!bar) return;
+    bar.querySelector(".nw-due")?.remove();
+    const b = bar.querySelector(".nw-start b"); if (b) b.textContent = recount ? (lang === "ar" ? "أعد الجرد" : "Recount") : (lang === "ar" ? "ابدأ الجرد" : "Start count");
+    bar.classList.toggle("is-due", !!recount);
+    if (recount) bar.insertAdjacentHTML("afterbegin", `<p class="nw-due">${lang === "ar" ? "مطلوب إعادة جرد" : "Recount needed"} · ${recount.recount.map(l => H.esc(locLabel(l, lang === "ar"))).join(lang === "ar" ? "، " : ", ")}</p>`);
+  };
+  const showRecount = () => loadCounts().then(list => { recount = openRecount(list, p.id); paintRecount(); }).catch(() => {});
+  // the barcode page holds still: the watch is the only thing that moves
+  const lockPage = () => {
+    document.documentElement.classList.add("nw-lock");
+    const sh = root.querySelector(".nw-page .nw-shell"); if (!sh) return;
+    const fit = () => { if (!sh.isConnected) return removeEventListener("resize", fit); sh.style.zoom = 1;
+      const z = Math.min(1, (innerHeight - 16) / (sh.offsetHeight || 760), (innerWidth - 24) / 340); sh.style.zoom = z.toFixed(3); };
+    fit(); addEventListener("resize", fit);
+  };
   // opened from a label scan: the watch alone, nothing else on the page
   if (document.body.classList.contains("card-only")) {
     document.body.classList.add("watch-only");
     root.innerHTML = `<div class="nw-page">${watchHtml({ ...watchData, name: lang === "ar" ? (AR[p.id] || p.name) : p.name })}</div>`;
-    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=98").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
-      onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); } });
+    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=99").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
+      onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); }, onCount: mission });
+    lockPage();
+    showRecount();
     return;
   }
   root.innerHTML = `<article class="phone-card pass shield ${mood} w-${worst}" dir="${lang === "ar" ? "rtl" : "ltr"}">
@@ -284,10 +308,12 @@ export async function renderScanCard(root, p, ctx) {
   </article>`;
 
   mountGauges(root);
-  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=98").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}) });
+  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=99").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
+    onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); }, onCount: mission });
+  showRecount();
   // the recipe deck (and the theater behind it) loads the first time the Recipe sheet opens
   const fillRecipes = () => { const slot = root.querySelector("#sheet-recipe .rt-slot"); if (!slot || slot.dataset.done) return; slot.dataset.done = "1";
-    import("./recipe-theater.js?v=98").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
+    import("./recipe-theater.js?v=99").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
   const age = root.querySelector(".pc-age");
   if (age && age.dataset.age) age.textContent = ago(age.dataset.age, lang === "ar") || age.dataset.age.slice(0, 16).replace("T", " ");
 

@@ -74,3 +74,21 @@ pk-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)
 .pk-code { display: grid; place-content: center; width: 50px; }
 .pk-code svg { width: 16px; height: 16px; }
 @media (prefers-reduced-motion: reduce) { .pcard, .pcard:hover { transition: none; transform: none; } .pk-fav.pop svg, .pcard.pk-swap { animation: none; } }
+
+/* cost and profit of one full serving, on the photo (flavour by flavour) */
+.pk-econ { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 2; display: grid; gap: 3px; padding: 7px 9px 8px; min-width: 76px; border-radius: 14px;
+  background: rgba(255, 255, 255, .86); -webkit-backdrop-filter: blur(10px) saturate(1.5); backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .1), 0 0 0 .5px rgba(0, 0, 0, .06); color: #1c1c1e; font-size: .62rem; line-height: 1.15; animation: pk-econ .3s ease; }
+@keyframes pk-econ { from { opacity: 0; transform: translateY(-4px); } }
+.pk-flav { display: inline-flex; align-items: center; gap: 4px; justify-self: start; border: 0; padding: 2px 8px; border-radius: 999px; background: #1c1c1e; color: #fff;
+  font: 700 .62rem/1.4 var(--f-text); cursor: pointer; }
+.pk-flav i { font-style: normal; font-size: .8rem; line-height: 1; }
+span.pk-flav { cursor: default; }
+.pk-e { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.pk-e small, .pk-econ.is-part small { color: #6b6b70; font-weight: 600; }
+.pk-e b { font-size: .78rem; font-weight: 800; }
+.pk-e.is-profit b { color: #1c7a33; }
+.pk-e em { font-style: normal; font-weight: 700; color: #1c7a33; font-size: .58rem; }
+.pk-econ.is-part { min-width: 0; grid-auto-flow: column; align-items: baseline; gap: 4px; padding: 5px 9px; }
+.pk-econ.is-part b { font-size: .8rem; }
+.pk-out { top: auto; bottom: .6rem; }

@@ -2,27 +2,19 @@
 // Cost of a serving = Σ recipe qty ÷ recipe-units-per-stock-unit × cost of one stock unit. The stock-unit cost comes from
 // the price list (case price ÷ what the case holds); materials the list does not sell fall back to the system's rate.
 // Profit = menu price net of 15% VAT − serving cost. Group items (one price, several flavours) are costed per option.
-import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=98";
-import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=98";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=98";
-import { wire } from "../stock/recipe-theater.js?v=98";
-import { unitCost, recipeCost, RM, LIST } from "./costing.js?v=98";
+import { PRICE_LIST, PRICE_LIST_DATE, SUPPLIER } from "../data/price-list.js?v=99";
+import { MENU, COMBOS, GROUPS, VAT } from "../data/menu-data.js?v=99";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=99";
+import { wire } from "../stock/recipe-theater.js?v=99";
+import { unitCost, recipeCost, RM, LIST } from "./costing.js?v=99";
+import { optionLabel } from "./serving.js?v=99";
 export { unitCost, recipeCost };
 
 const low = s => String(s || "").toLowerCase();
 // what one option of a group item is: its flavour, and the ingredients that make it different
-const FLAVOUR_AR = { salted: "مملح", cheese: "جبن", caramel: "كراميل", "pizza savory": "بيتزا", coke: "كوكاكولا", "coke zero": "كوكاكولا زيرو", fanta: "فانتا",
-  sprite: "سبرايت", strawberry: "فراولة", "blue raspberry": "توت أزرق", pomegranate: "رمان", chicken: "دجاج", beef: "لحم", malt: "شعير", raspberry: "توت",
-  pineapple: "أناناس", peach: "خوخ", pom: "رمان", blue: "أزرق", pink: "وردي" };
 const KEY_RM = { "corn butterfly": ["Butterfly corn", "ذرة بترفلاي"], "corn mushroom": ["Mushroom corn", "ذرة ماشروم"], "popcorn oil": ["Oil", "زيت"], salt: ["Salt", "ملح"],
   caramel: ["Caramel", "كراميل"], "cheese masala": ["Cheese", "جبن"], "pizza savory mix": ["Pizza mix", "خلطة بيتزا"], "chicken frankfurt": ["Chicken", "دجاج"],
   "beef frankfurt": ["Beef", "لحم"], "blue raspberry flossine": ["Blue floss", "سكر أزرق"], "vanilla pink flossine": ["Pink floss", "سكر وردي"] };
-function optionLabel(name) {
-  const s = name.replace(/\b(Regular|Medium|Large|Xtra Large|Family)\b( Tub)?/gi, "").replace(/\bPopcorn\b/gi, "").replace(/-?\s*\d+\s*oz\b/gi, "")
-    .replace(/^SLUSH\s*-\s*/i, "").replace(/^HOT DOG\s*/i, "").replace(/^BARBICAN\s*/i, "").replace(/\s+-\s*$/, "").replace(/\s{2,}/g, " ").trim();
-  const en = s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) || name;
-  return { en, ar: FLAVOUR_AR[s.toLowerCase()] || en };
-}
 const chipsOf = rc => rc.lines.map(l => KEY_RM[low(l.rm)]).filter(Boolean);
 
 function itemOf(m) {

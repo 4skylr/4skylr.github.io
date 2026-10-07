@@ -1,10 +1,10 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
-import { isOpen, unlock } from "../core/lock.js?v=98";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=98";
-import { REPORT_NAMES } from "../core/report-names.js?v=98";
-import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=98";
-import { readEdits, mergeEdits } from "../data/expiry-edits.js?v=98";
+import { isOpen, unlock } from "../core/lock.js?v=99";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=99";
+import { REPORT_NAMES } from "../core/report-names.js?v=99";
+import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=99";
+import { mergeEdits, expiryRows } from "../data/expiry-edits.js?v=99";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFWORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
@@ -71,10 +71,7 @@ export async function parseStockPdf(file, products) {
   return found;
 }
 
-function rowsFor(id) {
-  const over = readEdits();
-  return EXPIRY_SHEET.rows.filter(r => r.productId === id).map(r => ({ ...r, batches: r.batches.map(b => ({ ...b, qty: over[String(r.row)]?.["q" + b.n] ?? b.qty, date: over[String(r.row)]?.["d" + b.n] ?? b.date })) }));
-}
+const rowsFor = id => expiryRows(id);
 export function reviewGaps(products) {
   return products.map(p => {
     const rows = rowsFor(p.id);

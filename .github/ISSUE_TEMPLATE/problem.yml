@@ -6,7 +6,7 @@ body:
     id: page
     attributes:
       label: Page · الصفحة
-      options: [Overview, Stock, Count, Yield, Ledger, Budget, Profit, Unaizah, Halls, Nightly, Safety, Petty cash, Links, Settings, Alerts, Product card (barcode)]
+      options: [Overview, Stock, Count, Yield, Ledger, Budget, Profit, Unaizah, Halls, Nightly, Safety, Links, Settings, Alerts, Product card (barcode)]
     validations:
       required: true
   - type: textarea
