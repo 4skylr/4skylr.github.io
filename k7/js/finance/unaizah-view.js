@@ -4,7 +4,7 @@
 //   indicators  github.com/anandanand84/technicalindicators  (SMA · Bollinger · RSI · MACD)
 //   counters    github.com/inorganik/countUp.js
 // Vendored copies of the npm releases live in vendor/ so the board works offline.
-import { isOpen, unlock, lock } from "../core/lock.js?v=97";
+import { isOpen, unlock, lock } from "../core/lock.js?v=98";
 const CDN = {
   echarts: "vendor/echarts.min.js",
   ta: "vendor/technicalindicators.min.js",
@@ -121,8 +121,8 @@ function dispose() {
   charts.forEach(c => c.dispose()); charts = []; observer?.disconnect();
 }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
-const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontFamily: "Geist, system-ui", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 // ── period filter ───────────────────────────────────────────────────
 function window_(days, period) {
@@ -220,7 +220,7 @@ export async function renderUnaizah(root, H = {}) {
       load(CDN.echarts), load(CDN.ta), load(CDN.countup)
     ]);
     // DCS months uploaded from Settings sit on top of the built ledger
-    if (dcsUps.length) data = (await import("./fin-dcs.js?v=97")).mergeLedger(data, dcsUps);
+    if (dcsUps.length) data = (await import("./fin-dcs.js?v=98")).mergeLedger(data, dcsUps);
     rdr = [rdrBase, ...rdrUps].filter(Boolean).sort((a, b) => (b.savedAt || "").localeCompare(a.savedAt || ""))[0] || null;
   } catch (e) {
     root.innerHTML = `<div class="uz-error">${ar ? "تعذر تحميل بيانات عنيزة." : "Could not load the Unaizah ledger."} <small>${esc(e.message)}</small></div>`;
@@ -321,9 +321,9 @@ export async function renderUnaizah(root, H = {}) {
   };
   observer = new ResizeObserver(() => charts.forEach(c => c.resize()));
   observer.observe(root);
-  import("./fin-analyst.js?v=97").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
+  import("./fin-analyst.js?v=98").then(m => m.ledgerReport($("#uz-analyst"), days, { ar }))
     .catch(e => console.warn("Analyst report unavailable", e));
-  import("./fin-audit.js?v=97").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
+  import("./fin-audit.js?v=98").then(m => m.renderRdrAudit($("#uz-rdr"), { rdr, days, ar, echarts: window.echarts }))
     .catch(e => console.warn("Cash office audit unavailable", e));
 
   let view = { rows: [], prev: [] };
@@ -449,7 +449,7 @@ export async function renderUnaizah(root, H = {}) {
       visualMap: { min: 0, max: Math.round(max * .8), show: true, orient: "horizontal", left: "center", bottom: 0, itemHeight: 140, itemWidth: 10, textStyle: { color: "#808a9d", fontSize: 10 }, formatter: v => compact(v),
         inRange: { color: ["#161227", "#1d2a4a", "#4c6bff", "#dce6ff", "#6ccbff"] } },
       calendar: ys.map((y, i) => ({ top: 24 + i * h, left: 34, right: 8, cellSize: ["auto", 13], range: y, itemStyle: { color: "rgba(255,255,255,.025)", borderColor: "#000000", borderWidth: 3 },
-        splitLine: { show: false }, yearLabel: { color: "#a3adbf", fontFamily: "Geist, sans-serif", fontSize: 11, position: ar ? "right" : "left", margin: 26 },
+        splitLine: { show: false }, yearLabel: { color: "#a3adbf", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 11, position: ar ? "right" : "left", margin: 26 },
         dayLabel: { color: "#808a9d", fontSize: 9, firstDay: 0, nameMap: ar ? ["ح", "ن", "ث", "ر", "خ", "ج", "س"] : ["S", "M", "T", "W", "T", "F", "S"] },
         monthLabel: { color: "#808a9d", fontSize: 10, nameMap: ar ? ["ينا", "فبر", "مار", "أبر", "ماي", "يون", "يول", "أغس", "سبت", "أكت", "نوف", "ديس"] : "EN" } })),
       series: ys.map((y, i) => ({ type: "heatmap", coordinateSystem: "calendar", calendarIndex: i, data: rows.filter(r => r.date.startsWith(y)).map(r => [r.date, r.total]) }))
@@ -464,7 +464,7 @@ export async function renderUnaizah(root, H = {}) {
     el.flow.setOption({
       tooltip: { ...TIP, trigger: "item", valueFormatter: v => `${fmt(v)} ${t.sar}` },
       series: [{ type: "sankey", left: 4, right: 70, top: 10, bottom: 10, nodeWidth: 10, nodeGap: 10, draggable: false, emphasis: { focus: "adjacency" },
-        label: { color: "#edf1f8", fontSize: 11, fontFamily: "Geist, system-ui", formatter: p => (p.value / (view.total || 1) > .004 ? p.name : "") },
+        label: { color: "#edf1f8", fontSize: 11, fontFamily: "Inter, Plex Arabic, sans-serif", formatter: p => (p.value / (view.total || 1) > .004 ? p.name : "") },
         lineStyle: { color: "gradient", opacity: .35, curveness: .5 },
         data: [...vals.map(([k]) => ({ name: L(k), itemStyle: { color: TENDERS[k].color } })), ...groups.map(g => ({ name: G(g), itemStyle: { color: GROUPS[g].color } })), { name: t.rail, itemStyle: { color: "#5b7bff" } }],
         links: [...vals.map(([k, v]) => ({ source: L(k), target: G(TENDERS[k].group), value: Math.round(v) })),
@@ -596,7 +596,7 @@ export async function renderUnaizah(root, H = {}) {
     host.innerHTML = `<div class="uz-h"><div><h3>${A.title}</h3><p>${A.rule}</p></div><button type="button" class="uz-btn" id="uz-audit-lock">${A.lock}</button></div>
       <div class="uz-audit-grid">${groups.map(g => `<div class="uz-aud uz-aud-${g.k}" tabindex="0" aria-label="${A[g.k]}"><header><b>${A[g.k]}</b><span class="data">${g.list.length} · ${money2(g.list.reduce((s, i) => s + Math.abs(i.amt), 0))}</span></header>
         ${g.list.slice(0, 40).map(i => `<div class="uz-aud-row"><span class="data">${i.day}</span><b class="data ${i.amt < 0 ? "neg" : "pos"}">${i.amt > 0 ? "+" : ""}${money2(i.amt)}</b><em>${esc(i.why)}${i.who ? ` · ${esc(i.who)}` : ""}</em></div>`).join("") || `<p class="uz-empty">${A.none}</p>`}</div>`).join("")}</div>`;
-    import("./fin-analyst.js?v=97").then(m => {
+    import("./fin-analyst.js?v=98").then(m => {
       const cz = m.cashierAudit(view.rows).filter(c => c.short >= 50);
       if (!cz.length || !host.isConnected) return;
       host.insertAdjacentHTML("beforeend", `<div class="uz-aud-cashiers"><h4>${A.cashier}</h4>${cz.map(c => `<span class="uz-aud-chip uz-aud-${cls(c.short)}"><b>${esc(c.user)}</b> <i class="data">${money2(c.short)}</i> · ${c.shifts} ${A.shifts} · ${A[cls(c.short)]}</span>`).join("")}</div>`);

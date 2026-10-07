@@ -10,70 +10,41 @@
 <script>
 (function () { try { var t = localStorage.getItem("noir-theme"); if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.setAttribute("data-theme", t); } catch (e) { document.documentElement.setAttribute("data-theme", "light"); } })();
 </script>
-<link rel="stylesheet" href="css/style.css?v=97">
-<link rel="stylesheet" href="css/fonts.css?v=97">
-<link rel="stylesheet" href="css/indicators.css?v=97">
-<link rel="stylesheet" href="css/scan-card.css?v=97">
-<link rel="stylesheet" href="css/scan-pass.css?v=97">
-<link rel="stylesheet" href="css/brand.css?v=97">
-<link rel="stylesheet" href="css/theme.css?v=97">
-<link rel="stylesheet" href="css/logo.css?v=97">
-<link rel="stylesheet" href="css/apple.css?v=97">
-<link rel="stylesheet" href="css/recipe-theater.css?v=97" data-rt-css>
-<link rel="stylesheet" href="css/watch.css?v=97">
+<link rel="stylesheet" href="css/style.css?v=98">
+<link rel="stylesheet" href="css/fonts.css?v=98">
+<link rel="stylesheet" href="css/indicators.css?v=98">
+<link rel="stylesheet" href="css/scan-card.css?v=98">
+<link rel="stylesheet" href="css/scan-pass.css?v=98">
+<link rel="stylesheet" href="css/brand.css?v=98">
+<link rel="stylesheet" href="css/theme.css?v=98">
+<link rel="stylesheet" href="css/logo.css?v=98">
+<link rel="stylesheet" href="css/apple.css?v=98">
+<link rel="stylesheet" href="css/recipe-theater.css?v=98" data-rt-css>
+<link rel="stylesheet" href="css/watch.css?v=98">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
-/* Web3 cinema curtain — inline so it paints before anything else loads */
-#curtain{position:fixed;inset:0;z-index:999;pointer-events:none;overflow:hidden;--v1:#3a0b45;--v2:#5b7bff;--v3:#c13bd0}
-#curtain .cv{position:absolute;top:0;bottom:0;width:51%;pointer-events:auto;
- background:
-  linear-gradient(180deg,rgba(0,0,0,.35),transparent 18%,transparent 82%,rgba(0,0,0,.55)),
-  repeating-linear-gradient(90deg,var(--v1) 0,var(--v2) 3.2%,var(--v3) 4.6%,var(--v2) 6.2%,var(--v1) 9.6%);
- box-shadow:inset 0 0 120px rgba(0,0,0,.65);transition:transform 1.25s cubic-bezier(.7,0,.2,1),filter 1.25s;will-change:transform}
-#curtain .cv.l{left:0;transform-origin:0 0;border-right:2px solid #6ccbff;box-shadow:inset 0 0 120px rgba(0,0,0,.65),6px 0 30px rgba(108,203,255,.55)}
-#curtain .cv.r{right:0;transform-origin:100% 0;border-left:2px solid #dce6ff;box-shadow:inset 0 0 120px rgba(0,0,0,.65),-6px 0 30px rgba(220,230,255,.55)}
-#curtain .cv::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.08) 45%,transparent 60%);background-size:300% 100%;animation:cv-sheen 3.2s linear infinite}
-@keyframes cv-sheen{to{background-position:-300% 0}}
-#curtain .val{position:absolute;left:0;right:0;top:0;height:64px;z-index:2;pointer-events:auto;
- background:linear-gradient(180deg,#24062c,#4a0f58 70%,#2a0832);border-bottom:2px solid rgba(255,181,71,.7);
- box-shadow:0 10px 40px rgba(0,0,0,.6);transition:transform 1s cubic-bezier(.7,0,.2,1) .25s;
- -webkit-mask:radial-gradient(26px 18px at 26px 100%,transparent 98%,#000) 0 0/52px 100% repeat-x;mask:radial-gradient(26px 18px at 26px 100%,transparent 98%,#000) 0 0/52px 100% repeat-x}
-#curtain .bulbs{position:absolute;left:0;right:0;top:12px;height:10px;z-index:3;
- background:radial-gradient(circle,#ffe7a3 0 3px,rgba(255,181,71,.35) 4px,transparent 6px) 0 0/22px 10px repeat-x;animation:bulbs .5s steps(2) infinite;transition:opacity .4s}
-@keyframes bulbs{50%{filter:brightness(.45)}}
-#curtain .hud{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;z-index:4;text-align:center;color:#fbf7ff;font-family:"Inter Var",system-ui,sans-serif;transition:opacity .45s,transform .6s}
-#curtain .logo{font-weight:900;font-size:clamp(46px,14vw,92px);letter-spacing:-.05em;line-height:1;
- background:linear-gradient(90deg,#5b7bff,#dce6ff,#ffb547,#6ccbff,#5b7bff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
- animation:holo 2.4s linear infinite;filter:drop-shadow(0 0 22px rgba(220,230,255,.55))}
-@keyframes holo{to{background-position:-300% 0}}
-#curtain .now{font:600 11px/1.4 "JetBrains Mono Web",ui-monospace,monospace;letter-spacing:.32em;text-transform:uppercase;color:#ffe7a3}
-#curtain .feat{font-weight:800;font-size:clamp(18px,5vw,26px);max-width:84vw}
-#curtain .load{width:min(240px,60vw);height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
-#curtain .load i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#6ccbff,#dce6ff);border-radius:inherit;animation:load 1.1s ease-in-out infinite}
-@keyframes load{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
-#curtain .hash{font:400 10px "JetBrains Mono Web",ui-monospace,monospace;color:rgba(255,255,255,.45);letter-spacing:.08em}
-#curtain.open .cv.l{transform:translateX(-102%) skewY(-4deg);filter:brightness(.6)}
-#curtain.open .cv.r{transform:translateX(102%) skewY(4deg);filter:brightness(.6)}
-#curtain.open .val{transform:translateY(-110%)}
-#curtain.open .bulbs{opacity:0}
-#curtain.open .hud{opacity:0;transform:scale(1.15)}
+/* Launch screen: the plain page background, the logo, a thin progress line; inline so it paints before anything else loads */
+#curtain{position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:var(--page,#f2f2f7);transition:opacity .45s ease}
+#curtain .hud{display:grid;justify-items:center;gap:14px;text-align:center;color:var(--ink,#000);font-family:Inter,"Plex Arabic",sans-serif;transition:transform .45s ease}
+#curtain .now{font:600 13px/1.4 Inter,"Plex Arabic",sans-serif;color:var(--muted,#5f5f64)}
+#curtain .feat{font-weight:700;font-size:clamp(18px,5vw,24px);letter-spacing:-.02em;max-width:84vw}
+#curtain .load{width:min(200px,50vw);height:4px;border-radius:2px;background:var(--fill-3,rgba(118,118,128,.12));overflow:hidden}
+#curtain .load i{display:block;height:100%;width:40%;border-radius:inherit;background:var(--sys-blue,#007aff);animation:cur-load 1.1s ease-in-out infinite}
+@keyframes cur-load{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+#curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:scale(1.04)}
 #curtain.gone{display:none}
-#curtain.quick{background:#000;transition:opacity .4s}#curtain.quick .cv,#curtain.quick .val,#curtain.quick .bulbs,#curtain.quick .now,#curtain.quick .feat,#curtain.quick .hash{display:none}
-#curtain.quick.open{opacity:0}#curtain.quick.open .hud{transform:none;opacity:1}
-@media (prefers-reduced-motion:reduce){#curtain .cv,#curtain .val,#curtain .hud{transition-duration:.01s}}
+#curtain.quick .now,#curtain.quick .feat{display:none}
+@media (prefers-reduced-motion:reduce){#curtain,#curtain .hud{transition-duration:.01s}#curtain .load i{animation:none}}
 </style>
 </head>
 <body class="card-only">
 <div id="curtain" aria-hidden="true">
-  <div class="cv l"></div><div class="cv r"></div>
-  <div class="val"></div><div class="bulbs"></div>
   <div class="hud">
     <span class="now" id="cur-now">Now showing</span>
     <span class="nlogo" style="--s:1.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span>
     <span class="feat" id="cur-feat">Concession Stock</span>
     <span class="load"><i></i></span>
-    <span class="hash" id="cur-hash">0x0000…</span>
   </div>
 </div>
 <script>
@@ -85,14 +56,12 @@
     document.getElementById("cur-now").textContent = ar ? "تم المسح · يعرض الآن" : "Scanned · now showing";
     document.getElementById("cur-feat").textContent = q.replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
   }
-  var h = document.getElementById("cur-hash"), hex = "0123456789abcdef";
-  var spin = setInterval(function () { var s = "0x"; for (var i = 0; i < 16; i++) s += hex[Math.random() * 16 | 0]; h.textContent = s; }, 70);
   function open() {
     if (done) return; done = true;
     var wait = Math.max(0, 1200 - (Date.now() - t0)); // long enough to see the logo
     setTimeout(function () {
-      clearInterval(spin); c.classList.add("open");
-      setTimeout(function () { c.classList.add("gone"); }, c.classList.contains("quick") ? 450 : 1400);
+      c.classList.add("open");
+      setTimeout(function () { c.classList.add("gone"); }, 450);
     }, wait);
   }
   window.NoirCurtain = { open: open };
@@ -102,7 +71,6 @@
   c.addEventListener("click", open);
 })();
 </script>
-<div class="aura" aria-hidden="true"><i></i><i></i><i></i></div>
 
 
 

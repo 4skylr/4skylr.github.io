@@ -16,7 +16,7 @@ const pct = (n, d = 1) => `${((Number(n) || 0) * 100).toFixed(d)}%`;
 const sgn = (n, d = 1) => `${n >= 0 ? "+" : "−"}${pct(Math.abs(n), d)}`;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#7c8599", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#7c8599", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
 const TIP = { backgroundColor: "rgba(8,11,16,.95)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.45)" };
 const LEG = { top: 0, itemGap: 16, icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle: { color: "#a3adbf", fontSize: 11 } };
 
@@ -202,7 +202,7 @@ export async function budgetReport(host, rows, net, ctx) {
     tooltip: { ...TIP, trigger: "axis" }, legend: { ...LEG, data: [t.weekly, t.trendL, t.proj] },
     grid: { left: 8, right: 12, top: 34, bottom: 8, containLabel: true },
     xAxis: { type: "category", data: labels, ...AXIS }, yAxis: { type: "value", ...AXIS, axisLabel: { ...AXIS.axisLabel, formatter: compact } },
-    graphic: [{ type: "text", right: 16, top: 30, style: { text: `R² ${r2.toFixed(2)} · ${reg.m >= 0 ? "+" : ""}${compact(reg.m)}/wk`, fill: "#7c8599", font: "11px Geist Mono, monospace" } }],
+    graphic: [{ type: "text", right: 16, top: 30, style: { text: `R² ${r2.toFixed(2)} · ${reg.m >= 0 ? "+" : ""}${compact(reg.m)}/wk`, fill: "#7c8599", font: "11px Inter, Plex Arabic, sans-serif" } }],
     series: [
       { name: t.weekly, type: "bar", data: weeks.map(w => Math.round(w.a)), itemStyle: { color: "rgba(91,123,255,.55)", borderRadius: [4, 4, 0, 0] }, barMaxWidth: 12 },
       { name: t.trendL, type: "line", data: labels.map((_, i) => i >= start && i < weeks.length ? Math.round(line(i)) : null), symbol: "none", lineStyle: { color: "#ffb547", width: 2 } },

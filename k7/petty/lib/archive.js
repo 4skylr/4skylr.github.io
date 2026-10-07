@@ -15,7 +15,6 @@ const tx = async (store, mode, fn) => { const d = await db(); return new Promise
 export const idbPut = (store, key, val) => tx(store, "readwrite", s => s.put(val, key)).catch(() => null);
 export const idbGet = (store, key) => tx(store, "readonly", s => s.get(key)).catch(() => null);
 export const idbDel = (store, key) => tx(store, "readwrite", s => s.delete(key)).catch(() => null);
-export const idbKeys = store => tx(store, "readonly", s => s.getAllKeys()).catch(() => []);
 
 const extOf = (name, type) => (name.match(/\.(\w{2,5})$/)?.[1] || (type === "application/pdf" ? "pdf" : type?.split("/")[1] || "bin")).toLowerCase();
 
@@ -37,7 +36,6 @@ export async function imageOf(H, id) {
   if (r?.data) { idbPut("img", id, r.data); return r.data; }
   return null;
 }
-export async function fileOf(id) { return idbGet("file", id); }
 export async function removeInvoice(H, id) {
   await Promise.all([idbDel("img", id), idbDel("file", id), H.deleteRemote?.("pettyImg", id), H.deleteRemote?.("petty", id), H.deleteLocalDoc?.("petty", id)]);
 }

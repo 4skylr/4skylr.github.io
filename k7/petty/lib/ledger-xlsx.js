@@ -1,7 +1,7 @@
 // One month of petty cash → the Petty Cash workbook, in the same look as the branch's own file.
 // The template (template/Petty_Cash_Template.xlsx) holds the styles, column widths and sheet setup;
 // rows, formulas, hyperlinks and the invoice images are written here as XML (fflate, github.com/101arrowz/fflate).
-import { unzipSync, zipSync, strToU8, strFromU8 } from "../vendor/fflate.mjs";
+import { unzipSync, zipSync, strToU8, strFromU8 } from "../../vendor/fflate.mjs";
 import { CATEGORIES } from "./knowledge.js";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");

@@ -1,7 +1,8 @@
 // Auditoriums — the four halls seat by seat, with how often each seat was booked.
 //   Seat data: "User Transaction Log - Payment Type wise" (parsed by halls-parse.js with mozilla/pdf.js)
 //   Pinch and zoom: @panzoom/panzoom (timmywil/panzoom) · Charts: ECharts (apache/echarts)
-import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=97";
+import { HALLS, seatsOf, typeCount } from "./halls-data.js?v=98";
+import { loadEcharts } from "../core/chart-theme.js?v=98";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "halls";
@@ -258,20 +259,16 @@ function charts(host, all) {
     });
   });
 }
-const charts_ = new Set();
 function chart(ec, el, opt) {
   if (!el) return;
   const c = ec.init(el, null, { renderer: "canvas" }); c.setOption({ animationDuration: 700, textStyle: { fontFamily: "inherit" }, ...opt });
-  charts_.add(c); new ResizeObserver(() => c.resize()).observe(el);
+  new ResizeObserver(() => { if (!c.isDisposed()) c.resize(); }).observe(el);
 }
-function echarts() {
-  if (window.echarts) return Promise.resolve(window.echarts);
-  return new Promise(res => { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => res(window.echarts); s.onerror = () => res(null); document.head.append(s); });
-}
+const echarts = () => loadEcharts().catch(() => null);
 
 // ── upload (Settings) ────────────────────────────────────────
 export async function uploadSeatReport(file, H, onProgress) {
-  const { parseTxLog } = await import("./halls-parse.js?v=97");
+  const { parseTxLog } = await import("./halls-parse.js?v=98");
   const d = await parseTxLog(file, onProgress);
   await H.putDoc(COL, "seats", d);
   await H.log?.("report", `Seat report · ${d.tickets} tickets · ${d.from} → ${d.to}`);

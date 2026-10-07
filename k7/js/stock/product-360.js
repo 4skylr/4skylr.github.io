@@ -1,14 +1,15 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
 // price and margin, sales / usage, cover and reorder, recipes, sales-space advice and the stock history from reports.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=97";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=97";
-import { usageOf } from "./consumption.js?v=97";
-import { MENU, VAT } from "../data/menu-data.js?v=97";
-import { RECIPES } from "../data/recipes-data.js?v=97";
-import { salesSpace } from "./sales-space.js?v=97";
-import { historyOf } from "./stock-history.js?v=97";
-import { deck, wire } from "./recipe-theater.js?v=97";
+import { placement, isBulk } from "./fefo-place.js?v=98";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=98";
+import { usageOf } from "./consumption.js?v=98";
+import { MENU, VAT } from "../data/menu-data.js?v=98";
+import { RECIPES } from "../data/recipes-data.js?v=98";
+import { salesSpace } from "./sales-space.js?v=98";
+import { historyOf } from "./stock-history.js?v=98";
+import { deck, wire } from "./recipe-theater.js?v=98";
+import { loadEcharts } from "../core/chart-theme.js?v=98";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -111,8 +112,8 @@ export function open360(p, H) {
       c.setOption({ series: [{ type: "gauge", min: 0, max: 365, startAngle: 210, endAngle: -30, radius: "100%", progress: { show: true, width: 8, roundCap: true },
         axisLine: { lineStyle: { width: 8, color: [[1, "rgba(255,255,255,.08)"]] } }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false }, pointer: { show: false },
         itemStyle: { color: st === "now" ? "#ff5468" : st === "soon" ? "#ffb547" : st === "over" ? "#6ccbff" : "#3ed69e" },
-        detail: { valueAnimation: true, offsetCenter: [0, "8%"], fontSize: 18, color: "#fff", fontFamily: "Geist Mono, monospace", formatter: () => cover > 999 ? "999+" : String(Math.round(cover)) },
+        detail: { valueAnimation: true, offsetCenter: [0, "8%"], fontSize: 18, color: "#fff", fontFamily: "Inter, Plex Arabic, sans-serif", formatter: () => cover > 999 ? "999+" : String(Math.round(cover)) },
         data: [{ value: v }] }] }); };
-    if (window.echarts) go(window.echarts); else { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => go(window.echarts); document.head.append(s); }
+    loadEcharts().then(go).catch(() => {});
   }
 }

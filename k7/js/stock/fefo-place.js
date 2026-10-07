@@ -3,7 +3,8 @@
 //   items sold by the piece (cans, bags, cups):  Concession → Mini Store → Store
 //   group items sold by weight/volume (kg, L):   Concession = Mini Store (one front tier) → Store
 // A group is flagged when it expires at least a week sooner than a group that sits further forward.
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=97";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=98";
+import { readEdits } from "../data/expiry-edits.js?v=98";
 
 const GAP = 7; // days; smaller gaps are the same delivery
 export const isBulk = p => p && (p.unit === "kg" || p.unit === "ltr");
@@ -11,7 +12,7 @@ const TIER_PCS = { refuel: 0, mini: 1, stores: 2 };
 export const tierOf = (p, loc) => isBulk(p) ? (loc === "stores" ? 1 : 0) : (TIER_PCS[loc] ?? 3);
 export const FRONT = ["refuel", "mini", "stores"]; // display order: Concession, Mini Store, Store
 
-function edits() { try { return JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}"); } catch { return {}; } }
+const edits = readEdits;
 export function asDate(v) {
   if (!v) return null;
   const s = String(v);
@@ -19,7 +20,7 @@ export function asDate(v) {
   if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) { const [d, m, y] = s.split("/"); return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}T00:00:00`); }
   return null;
 }
-const daysTo = d => d ? Math.round((d - new Date()) / 86400000) : null;
+const daysTo = d => { if (!d) return null; const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((d - t) / 86400000); };
 const num = v => { const s = String(v ?? "").trim().toLowerCase(), n = parseFloat(s); if (!Number.isFinite(n)) return 0; return s.endsWith("g") && !s.endsWith("kg") ? n / 1000 : n; };
 
 // every dated group of a product, with its location

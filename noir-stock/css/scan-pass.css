@@ -49,11 +49,6 @@ body.card-only { background: var(--surface-2); }
   background: linear-gradient(90deg, transparent, var(--ice) 20%, #fff 50%, var(--ice) 80%, transparent);
   box-shadow: 0 0 18px 4px rgba(var(--ice-rgb), .7), 0 0 40px 10px rgba(var(--ice-rgb), .25);
 }
-.pass-corners i { position: absolute; width: 22px; height: 22px; border: 2.5px solid var(--ice); pointer-events: none; filter: drop-shadow(0 0 6px var(--ice)); }
-.pass-corners i:nth-child(1) { top: -6px; left: -6px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
-.pass-corners i:nth-child(2) { top: -6px; right: -6px; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
-.pass-corners i:nth-child(3) { bottom: -6px; left: -6px; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
-.pass-corners i:nth-child(4) { bottom: -6px; right: -6px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
 
 .pass-name { margin: 16px 0 0 !important; font-size: 30px !important; font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
   background: linear-gradient(180deg, #fff 30%, var(--ink-soft)); -webkit-background-clip: text; background-clip: text; color: transparent; transform: translateZ(26px); }
@@ -76,7 +71,6 @@ body.card-only { background: var(--surface-2); }
 
 .pass-foot { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12.5px; }
 .pass-foot p { margin: 0 !important; color: var(--soft) !important; }
-.odo-xs { font-family: var(--f-data); color: var(--ink-hi); }
 
 /* odometer minimal theme tweaks */
 .pass .odometer.odometer-theme-minimal .odometer-digit .odometer-digit-inner { overflow: hidden; }
@@ -100,7 +94,6 @@ body.card-only { background: var(--surface-2); }
   background-image: linear-gradient(color-mix(in srgb, var(--g) 18%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--g) 18%, transparent) 1px, transparent 1px);
   background-size: 22px 22px; mask-image: radial-gradient(80% 70% at 30% 40%, var(--surface-0), transparent 75%);
 }
-@keyframes grid-drift { to { background-position: 22px 44px; } }
 .s-safe { --beat: 3.2s; } .s-watch { --beat: 2.2s; } .s-soon { --beat: 1.3s; } .s-crit { --beat: .6s; } .s-exp { --beat: 1s; }
 
 .cd-top { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -242,12 +235,6 @@ body.card-only { background: var(--surface-2); }
 /* ── Recipes: glass cards ─────────────────────────────────── */
 .pass .rx h2 { display: flex; align-items: center; gap: 8px; }
 .pass .rx h2 i { font-style: normal; font-family: var(--f-data); font-size: 11px; padding: 2px 8px; border-radius: 99px; background: rgba(var(--tint), .1); }
-.pass-foot .pc-use { flex-basis: 100%; display: grid; justify-items: center; gap: 6px; }
-.pass-foot .pc-use p b { color: var(--ink-hi); font-family: var(--f-data); font-size: 15px; }
-.pc-use-parts { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.pc-use-parts span { display: grid; justify-items: center; padding: 5px 10px; border-radius: 12px; background: rgba(var(--tint), .06); border: 1px solid rgba(var(--tint), .1); font-size: 11px; }
-.pc-use-parts i { font-style: normal; color: var(--dim); font-size: 10.5px; } .pc-use-parts b { font-family: var(--f-data); color: var(--ink-hi); font-weight: 600; }
-.pass-foot .pc-use small { font-size: 10.5px; color: var(--dim); text-align: center; max-width: 320px; }
 
 /* ── Consumption panel (web3) ── */
 .pass-foot .cx { flex-basis: 100%; position: relative; display: grid; gap: 12px; padding: 16px; border-radius: 22px; text-align: start; overflow: hidden;

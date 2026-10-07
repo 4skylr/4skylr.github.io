@@ -4,7 +4,7 @@
    is spent in one place: the timecode clock. Everything else is black panels,
    steel hairlines, and colour only where it means something:
      tungsten = act soon · signal = critical · mint = fine · ice = interactive
-   Type: Geist / Geist Mono (vercel/geist-font) + IBM Plex Sans Arabic (IBM/plex).
+   Type: Inter (rsms/inter) + IBM Plex Sans Arabic (IBM/plex), see fonts.css.
    ════════════════════════════════════════════════════════════ */
 :root {
   --void: #000000;
@@ -45,14 +45,13 @@ body::after {
   content: ""; position: fixed; inset: 0 0 auto; height: 70vh; z-index: -1; pointer-events: none;
   background: radial-gradient(42% 60% at 50% -12%, rgba(var(--glow), .085), transparent 70%);
 }
-.aura, .grain { display: none !important; }
 ::selection { background: rgba(var(--ice-rgb), .3); color: var(--ink-hi); }
 :focus-visible { outline: 2px solid var(--ice); outline-offset: 2px; }
 * { scrollbar-width: thin; scrollbar-color: #232b3a transparent; }
 
 /* ── Type ── */
 .data { font-family: var(--f-text); font-variant-numeric: tabular-nums slashed-zero; letter-spacing: -0.01em; }
-code, kbd, .mono { font-family: var(--f-data); }
+code, kbd { font-family: var(--f-data); }
 .voice { font-family: inherit; font-style: normal; font-weight: inherit; letter-spacing: inherit; }
 .kicker { display: none; }
 .title-row { margin-bottom: 26px; align-items: center; }
@@ -134,10 +133,6 @@ code, kbd, .mono { font-family: var(--f-data); }
 /* ── Status colour is meaning: keep the rest monochrome ── */
 .bell sup { background: var(--amber); }
 .bell.ring sup { background: var(--bad); }
-.dash-alerts { border-radius: 16px; background: var(--plate); }
-.dash-alerts.hot { background: linear-gradient(90deg, rgba(var(--bad-rgb), .12), transparent 55%), var(--plate); }
-.dash-alerts.warm { background: linear-gradient(90deg, rgba(var(--amber-rgb), .1), transparent 55%), var(--plate); }
-.da-list em { border-radius: 7px; }
 .al-hero { border-radius: 20px; background: radial-gradient(70% 120% at 100% 0%, rgba(var(--glow), .07), transparent 60%), var(--plate); }
 .al-k { border-radius: 12px; background: var(--surface-1); }
 
@@ -147,19 +142,14 @@ code, kbd, .mono { font-family: var(--f-data); }
 
 /* former serif "voice" spots: same family now, weight carries the hierarchy */
 .vault h3, .gate b, .draft b { font-weight: 600; letter-spacing: -0.025em; }
-.rank .n, .token-cat, .pop-flavor, .level em, .token-foot .val small { font-weight: 500; }
+.rank .n, .pop-flavor, .level em { font-weight: 500; }
 .ic-lock, .ic-pin { display: inline-block; vertical-align: -2px; color: var(--muted); }
 
 /* ── Labels: sentence case in the text face. Small caps-and-mono labels were template chrome. ── */
-.pass .pc-en, .cd-title, .cd-state, .cd-days small, .lane h2, .rx-cat,
-.token-state, .ledger th, .fl label, .stub .sys span, .stub .dv span, .hud .stats span, .pill, .level span,
-.sheet .yield-panel h2, .qf-list h6, .ml-h, .ml-board > header b, .p3-cat, .p3-sec h3, .p3-sp-where small, .p3-sp-act small,
-.nr-mail h4, .hl-k, .hl-panel h3, .rq-sec small, .al-card header h3, .uz-loading, .uz-error, .uz-vault > p, .uz-kpis p,
-.uz-grid th.gridjs-th, .uz-int-stats p, .uz-cash-kpis p, .ra-h, .fx-hero-side p, .fx-ring-label small, .fx-node-stats dt,
-.fx-table th, .an-score span, .risk span, .pc-h h3 {
+.pass .pc-en, .cd-title, .cd-state, .cd-days small, .lane h2, .ledger th, .fl label, .stub .sys span, .stub .dv span, .hud .stats span, .pill, .level span, .sheet .yield-panel h2, .qf-list h6, .ml-h, .ml-board > header b, .p3-cat, .p3-sec h3, .p3-sp-where small, .p3-sp-act small, .nr-mail h4, .hl-k, .hl-panel h3, .rq-sec small, .al-card header h3, .uz-loading, .uz-error, .uz-vault > p, .uz-kpis p, .uz-int-stats p, .uz-cash-kpis p, .ra-h, .fx-hero-side p, .fx-ring-label small, .fx-node-stats dt, .fx-table th, .an-score span, .risk span, .pc-h h3 {
   text-transform: none; letter-spacing: 0; font-family: var(--f-text);
 }
-.uz-kpis p, .uz-vault > p, .uz-int-stats p, .uz-cash-kpis p, .fx-node-stats dt, .ledger th, .fx-table th, .uz-grid th.gridjs-th, .hl-k, .ml-h { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.uz-kpis p, .uz-vault > p, .uz-int-stats p, .uz-cash-kpis p, .fx-node-stats dt, .ledger th, .fx-table th, .hl-k, .ml-h { font-size: 12.5px; font-weight: 500; color: var(--muted); }
 
 /* ── Menu Lab / Stock Lab boards: the category hue tints the panel, it does not flood it ── */
 .ml-board, .sl-board { border-radius: 18px; border: 1px solid color-mix(in srgb, var(--bh, var(--chain)) 28%, rgba(var(--hair), .16));

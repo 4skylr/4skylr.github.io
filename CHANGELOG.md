@@ -1,5 +1,30 @@
 # Changelog
 
+## v98 · 2026-10-07 · Inter everywhere, clean-up and fixes
+
+- **Inter is the site's only Latin font**, from the Inter 4 files supplied: variable weight 100–900 with optical sizes, upright and italic. It replaces Geist, Geist Mono, the system fonts and monospace in the pages, the watch, the charts, the launch screen and the team brief image. IBM Plex Sans Arabic still draws the Arabic. · **اعتماد خط Inter بالكامل.**
+- **Fixed:**
+  - The edit-PIN dialog closed on any tap, so a count could not be committed. It now stays open, shows "Wrong pin", and Escape cancels it cleanly.
+  - If Firebase refused the live connection, every save waited forever. The app now falls back to local mode.
+  - The Excel expiry import turned real dates into unreadable text, and it wiped a row's second group. Dates are read correctly and rows are merged.
+  - A sales PDF gave a product with no SKU a made-up figure.
+  - "Days left" flipped at noon. It now counts whole days from midnight.
+  - The transfer checklist reset at 03:00 instead of midnight.
+  - An empty PIN box could save an expiry group.
+  - Typing in a field (a new link, a PIN) was wiped when another device synced. The page now waits until you leave the field.
+  - Charts left in memory after you leave a page are now disposed, and ECharts loads once instead of once per page.
+  - Petty-cash files added while others were still being read could stay waiting forever.
+  - Invoice image addresses are escaped. The settings intro removes its listeners when it closes, and it only vibrates after a tap.
+  - Opening the scanner again stops the earlier camera.
+- **Removed what the site did not use:**
+  - Libraries: Day.js, decimal.js, idb-keyval, a second copy of fflate, and the Geist fonts.
+  - An unused IndexedDB copy of expiry edits, dead product-card code, and unused functions (including an old hard-coded PIN).
+  - The old shutter launch screen and background glow markup.
+  - 135 CSS rules for classes nothing uses, including the grid.js styles.
+  - A stray root theme.css.
+  - From the barcode page: the copies of ECharts, Fuse, anime.js, confetti and Odometer it never loads.
+- The barcodes, QR codes, labels and their links are unchanged; all 71 open the watch.
+
 ## v97 · 2026-10-07 · Apple-style design
 
 - **The whole site follows Apple's Human Interface Guidelines and iOS UI kit** (developer.apple.com/design/resources), with no Apple logo or artwork. · **تصميم الموقع كامل بأسلوب أبل.**

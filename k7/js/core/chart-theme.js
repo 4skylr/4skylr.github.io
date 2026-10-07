@@ -38,11 +38,16 @@ function walk(o, depth = 0) {
   }
   return o;
 }
+// every chart made, so the ones whose element has left the page (a re-render, another page) are disposed
+const live = new Set();
+function sweep() { for (const c of live) { const el = c.getDom?.(); if (!el || !el.isConnected) { live.delete(c); try { if (!c.isDisposed()) c.dispose(); } catch {} } } }
 function patch(ec) {
   if (!ec || ec.__toned || typeof ec.init !== "function") return;
   const init = ec.init;
   ec.init = function (...a) {
+    sweep();
     const chart = init.apply(this, a), set = chart.setOption;
+    live.add(chart);
     chart.setOption = function (opt, ...rest) { return set.call(this, walk(opt), ...rest); };
     return chart;
   };
@@ -53,4 +58,11 @@ if (!Object.getOwnPropertyDescriptor(window, "echarts")?.set) {
   let ref = window.echarts;
   Object.defineProperty(window, "echarts", { configurable: true, get: () => ref, set: v => { ref = v; queueMicrotask(() => patch(ref)); } });
   if (ref) patch(ref);
+}
+
+// one shared loader for vendor/echarts.min.js (apache/echarts): the script is added once, every page waits on the same promise
+let ecP = null;
+export function loadEcharts() {
+  if (window.echarts?.init) return Promise.resolve(window.echarts);
+  return ecP ??= new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => res(window.echarts); s.onerror = () => { ecP = null; rej(new Error("echarts")); }; document.head.append(s); });
 }

@@ -2,7 +2,6 @@
 // Intervals follow the usual NFPA cadence: NFPA 10 (extinguishers), NFPA 25 (sprinklers, hose),
 // NFPA 72 (detection & alarm), NFPA 101 (exits & emergency lighting). Civil Defense / contractor schedules override.
 // every = days between checks · who = "staff" (building team) or "tech" (licensed contractor) · info = no log, shown as a reminder
-export const SAFETY_SOURCE = "info.ods";
 export const SYSTEMS = {
   suppression: { en: "Fire suppression", ar: "إطفاء الحريق", tone: "signal" },
   detection: { en: "Detection & alarm", ar: "الكشف والإنذار", tone: "tungsten" },

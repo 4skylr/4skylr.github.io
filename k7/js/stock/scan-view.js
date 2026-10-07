@@ -5,13 +5,14 @@
 //   anime.js        github.com/juliangarnier/anime        — entrance + ring timelines
 //   canvas-confetti github.com/catdad/canvas-confetti     — bursts in each group's colour
 //   Odometer        github.com/HubSpot/odometer           — rolling quantity counters
-import { AR, LOC_AR } from "../core/names-ar.js?v=97";
-import { RECIPES } from "../data/recipes-data.js?v=97";
-import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=97";
-import { placement } from "./fefo-place.js?v=97";
-import { usageOf } from "./consumption.js?v=97";
-import { mountLikes } from "../core/likes.js?v=97";
-import { watchHtml, mountWatch } from "./watch.js?v=97";
+import { AR, LOC_AR } from "../core/names-ar.js?v=98";
+import { RECIPES } from "../data/recipes-data.js?v=98";
+import { soldOf, linkedTo, moveOf, SALES_YTD, SALES_DAYS } from "../data/sales-data.js?v=98";
+import { placement } from "./fefo-place.js?v=98";
+import { usageOf } from "./consumption.js?v=98";
+import { mountLikes } from "../core/likes.js?v=98";
+import { watchHtml, mountWatch } from "./watch.js?v=98";
+import { readEdits, writeEdits } from "../data/expiry-edits.js?v=98";
 
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 const groupName = n => "المجموعة " + (ORD[(Number(n) || 1) - 1] || n);
@@ -41,11 +42,19 @@ function lib(src, global) {
   return libs.get(src);
 }
 window.odometerOptions = { auto: false };
+// "3 days ago" / "قبل ٣ أيام", from the browser's own Intl.RelativeTimeFormat
+function ago(iso, ar) {
+  const s = (new Date(iso) - Date.now()) / 1000; if (!isFinite(s)) return "";
+  const rtf = new Intl.RelativeTimeFormat(ar ? "ar" : "en", { numeric: "auto" });
+  for (const [u, n] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]]) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+  return rtf.format(Math.round(s), "second");
+}
 const loadAnime = () => lib("vendor/anime.min.js", "anime").catch(() => null);
 const loadConfetti = () => lib("vendor/confetti.browser.js", "confetti").catch(() => null);
 const loadOdo = () => lib("vendor/odometer.min.js", "Odometer").catch(() => null);
+// the rolling counters' stylesheet, only where the full pass shows (the barcode page shows the watch alone)
 (function odoCss() {
-  if (document.querySelector('link[data-odo]')) return;
+  if (document.body?.classList.contains("card-only") || document.querySelector('link[data-odo]')) return;
   const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "vendor/odometer-theme-minimal.css"; l.dataset.odo = "1";
   document.head.append(l);
 })();
@@ -195,7 +204,7 @@ export async function renderScanCard(root, p, ctx) {
   if (document.body.classList.contains("card-only")) {
     document.body.classList.add("watch-only");
     root.innerHTML = `<div class="nw-page">${watchHtml({ ...watchData, name: lang === "ar" ? (AR[p.id] || p.name) : p.name })}</div>`;
-    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=97").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
+    mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=98").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}),
       onLang: () => { sessionStorage.setItem(LANG_KEY, lang === "ar" ? "en" : "ar"); renderScanCard(root, p, ctx); } });
     return;
   }
@@ -275,13 +284,12 @@ export async function renderScanCard(root, p, ctx) {
   </article>`;
 
   mountGauges(root);
-  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=97").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}) });
+  mountWatch(root, { onRecipe: (name, list, from) => import("./recipe-theater.js?v=98").then(m => m.openRecipe(name, H, { lang, list, from })).catch(() => {}) });
   // the recipe deck (and the theater behind it) loads the first time the Recipe sheet opens
   const fillRecipes = () => { const slot = root.querySelector("#sheet-recipe .rt-slot"); if (!slot || slot.dataset.done) return; slot.dataset.done = "1";
-    import("./recipe-theater.js?v=97").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
+    import("./recipe-theater.js?v=98").then(m => { m.ensureCss(); slot.outerHTML = m.deck(hits.map(r => r.name), H, { lang }); m.wire(root, H, { lang }); }).catch(() => { slot.textContent = ""; }); };
   const age = root.querySelector(".pc-age");
-  if (age && age.dataset.age && window.dayjs) age.textContent = window.dayjs(age.dataset.age).fromNow();
-  else if (age && age.dataset.age) age.textContent = age.dataset.age.slice(0, 16).replace("T", " ");
+  if (age && age.dataset.age) age.textContent = ago(age.dataset.age, lang === "ar") || age.dataset.age.slice(0, 16).replace("T", " ");
 
   root.querySelectorAll("[data-open]").forEach(btn => btn.onclick = () => {
     const sheet = root.querySelector("#sheet-" + btn.dataset.open);
@@ -296,10 +304,10 @@ export async function renderScanCard(root, p, ctx) {
   const saveGroup = box => {
     const pin = box.pin.value.trim();
     const live = localStorage.getItem("noir-live-pin") || "";
-    if (pin !== live && pin !== "899") { H.toast("الرقم غلط"); return; }
+    if (!pin || !((live && pin === live) || pin === "899")) { H.toast("الرقم غلط"); return; } // an empty box never matches
     const [row, n] = String(box.n?.value || "").split(":");
-    const all = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
-    if (row) { all[row] = all[row] || {}; all[row]["q" + n] = box.qty.value; all[row]["d" + n] = box.date.value; localStorage.setItem("noir-expiry-edits-v1", JSON.stringify(all)); }
+    const all = readEdits();
+    if (row) { all[row] = all[row] || {}; all[row]["q" + n] = box.qty.value; all[row]["d" + n] = box.date.value; writeEdits(all); }
     if (pin !== "899") ctx.rotatePin?.();
     H.toast("انحفظت المجموعة");
     burst(n ? [hueOf(n), "#ffffff"] : null, 0.6);

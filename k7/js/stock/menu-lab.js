@@ -1,9 +1,10 @@
 // Menu Lab — the price boards joined to recipe costs, sales and stock.
 //   Menu engineering (Kasavana & Smith): popularity × contribution margin → Stars / Plowhorses / Puzzles / Dogs
 //   Charts: apache/echarts (vendored)
-import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=97";
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=97";
-import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=97";
+import { MENU, COMBOS, GROUPS, VAT, PROMOS } from "../data/menu-data.js?v=98";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=98";
+import { SALES_YTD, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=98";
+import { loadEcharts } from "../core/chart-theme.js?v=98";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {
@@ -167,7 +168,7 @@ export function renderMenuLab(host, H) {
       const c = ec.init(el); charts.push(c);
       const ink = "#d3dae6", grid = "rgba(255,255,255,.07)", maxP = Math.max(...A.items.map(i => i.profit), 1);
       c.setOption({
-        textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink },
+        textStyle: { fontFamily: "Inter, Plex Arabic, sans-serif", color: ink },
         grid: { left: 52, right: 20, top: 20, bottom: 46 },
         tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" },
           formatter: p => { const i = p.data.i; return `<b>${esc(name(i))}</b><br>${L.q[i.q]} · ${pct(i.share)}<br>${L.margin}: ${m2(i.margin)} SAR<br>${L.sold}: ${n0(i.units)}`; } },
@@ -176,9 +177,8 @@ export function renderMenuLab(host, H) {
         series: [{ type: "scatter", data: A.items.map(i => ({ value: [i.share, +i.margin.toFixed(2)], i, symbolSize: 10 + 34 * Math.sqrt(Math.max(i.profit, 0) / maxP),
           itemStyle: { color: QCOL[i.q], opacity: .85, borderColor: "#06090e" }, label: { show: i.profit > maxP * .12, formatter: name(i), position: "top", color: "#fff", fontSize: 10 } })) }]
       });
-      new ResizeObserver(() => c.resize()).observe(el);
+      new ResizeObserver(() => { if (!c.isDisposed()) c.resize(); }).observe(el);
     };
-    if (window.echarts) go(window.echarts);
-    else { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => go(window.echarts); document.head.append(s); }
+    loadEcharts().then(go).catch(() => {});
   }
 }

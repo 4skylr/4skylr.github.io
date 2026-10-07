@@ -1668,5 +1668,4 @@ export const EXPIRY_SHEET = {
   }
  ]
 };
-export const EDIT_PIN = "847291";
 export const PIN_HOURS = 3;

@@ -34,7 +34,7 @@ const S = { entries: [], month: null, queue: [], H: null, host: null, float: 478
 
 export async function renderPetty(host, H) {
   S.host = host; S.H = H;
-  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=97", import.meta.url).href; document.head.append(l); }
+  if (!document.getElementById("petty-css")) { const l = document.createElement("link"); l.id = "petty-css"; l.rel = "stylesheet"; l.href = new URL("./petty.css?v=98", import.meta.url).href; document.head.append(l); }
   if (!unlocked()) return lockScreen(host);
   touch();
   host.innerHTML = `<div class="pc"><p class="pc-empty">…</p></div>`;
@@ -173,8 +173,8 @@ let running = false;
 async function pump() {
   if (running) return; running = true;
   const mem = learn(S.entries);
-  for (const q of S.queue) {
-    if (q.stage !== "wait") continue;
+  // look the queue up again each round: Skip / Save / remove replace S.queue, and files added meanwhile must still be read
+  for (let q; (q = S.queue.find(x => x.stage === "wait"));) {
     try {
       reader.onOcr = p => { q.pct = p; paintQueue(); };
       q.res = await readInvoice(q.file, { mem, stage: s => { q.stage = s; paintQueue(); } });
@@ -191,7 +191,7 @@ function paintQueue() {
   el.innerHTML = S.queue.map(q => {
     const at = STAGES.indexOf(q.stage);
     return `<div class="pc-q s-${q.stage}" data-q="${q.id}">
-      <span class="pc-q-ic">${q.res?.image ? `<img src="${q.res.image}" alt="">` : `<i></i>`}</span>
+      <span class="pc-q-ic">${q.res?.image ? `<img src="${esc(q.res.image)}" alt="">` : `<i></i>`}</span>
       <span class="pc-q-t"><b>${esc(q.file.name)}</b>
         <span class="pc-steps">${STAGES.map((s, i) => `<i class="${q.stage === "done" || (at > i) ? "done" : at === i ? "now" : ""}">${STAGE_NAME[s][AR() ? 1 : 0]}${s === "ocr" && at === i && q.pct ? ` ${Math.round(q.pct * 100)}%` : ""}</i>`).join("")}</span>
         ${q.stage === "error" ? `<em class="neg">${esc(q.err)}</em>` : q.stage === "done" ? `<em>${q.res.qr ? T("QR found · exact", "لقى QR · دقيق") : q.res.source === "text" ? T("Read from the PDF text", "انقرأ من نص الـPDF") : T("Read by OCR · please check", "قراءة ضوئية · راجعها")} · ${(q.res.ms / 1000).toFixed(1)}s</em>` : ""}</span>
@@ -221,7 +221,7 @@ function openForm(d, ctx) {
   const chip = k => { const s = d.src?.[k]; if (!s) return ""; const c = d.conf?.[k] ?? 1; return `<i class="pc-src s-${s} ${c < 0.5 ? "low" : ""}">${SRC[s]?.[AR() ? 1 : 0] || s}</i>`; };
   const fld = (k, label, type = "text", extra = "") => `<label class="pc-f ${d.conf?.[k] != null && d.conf[k] < 0.5 ? "low" : ""}"><span>${label}${chip(k)}</span><input name="${k}" type="${type}" value="${esc(d[k] ?? "")}" ${extra}></label>`;
   m.innerHTML = `<div class="pc-review" role="dialog" aria-modal="true">
-    <div class="pc-rv-img">${ctx.image ? `<img src="${ctx.image}" alt="invoice">` : `<p class="pc-empty">${T("No image archived", "ما فيه صورة مؤرشفة")}</p>`}
+    <div class="pc-rv-img">${ctx.image ? `<img src="${esc(ctx.image)}" alt="invoice">` : `<p class="pc-empty">${T("No image archived", "ما فيه صورة مؤرشفة")}</p>`}
       ${ctx.existing && d.fileUrl ? `<a class="pc-btn ghost" href="${esc(d.fileUrl)}" target="_blank" rel="noopener">${T("Original file", "الملف الأصلي")} ↗</a>` : ""}</div>
     <form class="pc-rv-form" id="pc-form">
       <header><h3>${ctx.existing ? T("Edit invoice", "تعديل فاتورة") : T("Check and save", "راجع واحفظ")}</h3>
@@ -331,7 +331,7 @@ async function downloadArchived(a) {
 async function importWorkbook(file) {
   if (!file) return;
   try {
-    const { unzipSync, strFromU8 } = await import("./vendor/fflate.mjs");
+    const { unzipSync, strFromU8 } = await import("../vendor/fflate.mjs");
     const z = unzipSync(new Uint8Array(await file.arrayBuffer())), x = p => z[p] ? strFromU8(z[p]) : "";
     const ss = [...x("xl/sharedStrings.xml").matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => [...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(t => t[1]).join("").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"'));
     const sh = x("xl/worksheets/sheet1.xml"), rows = {};

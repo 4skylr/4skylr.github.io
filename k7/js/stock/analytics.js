@@ -2,8 +2,8 @@
 // Libraries (loaded on demand from jsDelivr):
 //   Apache ECharts — github.com/apache/echarts  (charts)
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=97";
-import { wire } from "./recipe-theater.js?v=97";
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=98";
+import { wire } from "./recipe-theater.js?v=98";
 const LANG = () => ((sessionStorage.getItem("noir-lang") || "en") === "ar" ? "ar" : "en");
 
 const ECHARTS_URL = "vendor/echarts.min.js";
@@ -218,7 +218,7 @@ async function renderCharts() {
   if (!popEl || !bnEl) return;
   const css = getComputedStyle(document.documentElement);
   const ink2 = css.getPropertyValue("--ink-2").trim() || "#a3adbf", muted = css.getPropertyValue("--muted").trim() || "#808a9d", line = "rgba(150,170,210,.12)";
-  const font = "Geist Mono, ui-monospace, monospace";
+  const font = "Inter, Plex Arabic, sans-serif";
   const base = { backgroundColor: "transparent", textStyle: { fontFamily: font, color: ink2 }, animationDuration: 1100, animationEasing: "cubicOut" };
   const tip = { backgroundColor: "rgba(8,11,17,.95)", borderColor: "rgba(160,180,220,.3)", textStyle: { color: "#edf1f8", fontFamily: font, fontSize: 11 } };
 

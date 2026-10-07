@@ -1,11 +1,12 @@
 // Stock analysis — the "Analysis" view on the Stock page.
 //   ECharts            github.com/apache/echarts                (Pareto, treemap, location mix)
 // Usage rates come from Sales RM Consumed (1 Jan → 1 Oct 2026); linked items (lids, straws) follow their source.
-import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=97";
-import { placement, isBulk } from "./fefo-place.js?v=97";
-import { usageOf } from "./consumption.js?v=97";
-import { salesSpace } from "./sales-space.js?v=97";
-import { AR as NAME_AR } from "../core/names-ar.js?v=97";
+import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO } from "../data/sales-data.js?v=98";
+import { placement, isBulk } from "./fefo-place.js?v=98";
+import { usageOf } from "./consumption.js?v=98";
+import { salesSpace } from "./sales-space.js?v=98";
+import { AR as NAME_AR } from "../core/names-ar.js?v=98";
+import { loadEcharts } from "../core/chart-theme.js?v=98";
 
 const LEAD = 7, SAFETY = 7;
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
@@ -40,10 +41,7 @@ const CAT_AR = { syrups: "شراب BIB", drinks: "مشروبات ومياه", sn
 const ORD = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة"];
 
 let charts = [];
-function loadECharts() {
-  if (window.echarts) return Promise.resolve(window.echarts);
-  return new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => res(window.echarts); s.onerror = rej; document.head.append(s); });
-}
+const loadECharts = loadEcharts;
 
 export function analyse(H) {
   const P = H.data().products, total = H.total;
@@ -131,8 +129,8 @@ export function renderIntel(host, H) {
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); draw(e.target.id); } }), { rootMargin: "200px" });
   host.querySelectorAll(".si-chart").forEach(el => io.observe(el));
   const ink = "#d3dae6", grid = "rgba(255,255,255,.07)";
-  const base = { textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" } } };
-  const mk = (id, opt) => loadECharts().then(ec => { const el = document.getElementById(id); if (!el) return; const c = ec.init(el, null, { renderer: "canvas" }); c.setOption({ ...base, ...opt }); charts.push(c); new ResizeObserver(() => c.resize()).observe(el); }).catch(() => {});
+  const base = { textStyle: { fontFamily: "Inter, Plex Arabic, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" } } };
+  const mk = (id, opt) => loadECharts().then(ec => { const el = document.getElementById(id); if (!el) return; const c = ec.init(el, null, { renderer: "canvas" }); c.setOption({ ...base, ...opt }); charts.push(c); new ResizeObserver(() => { if (!c.isDisposed()) c.resize(); }).observe(el); }).catch(() => {});
   function draw(id) {
     if (id === "si-pareto") {
       const top = A.byVal.slice(0, 25), col = { A: "#5b7bff", B: "#6ccbff", C: "#6b5a80" };

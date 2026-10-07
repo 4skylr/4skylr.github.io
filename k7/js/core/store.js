@@ -1,6 +1,6 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
-import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=97";
-import { SEED_PRODUCTS, SEED_VERSION } from "../data/seed-data.js?v=97";
+import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=98";
+import { SEED_PRODUCTS, SEED_VERSION } from "../data/seed-data.js?v=98";
 
 const LS_KEY = "noir-inventory:v2";
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
@@ -156,14 +156,15 @@ async function initFirebase() {
   const storage = st.getStorage(app);
   fb = { db, storage, fs, st };
 
-  const live = (name, key, order) => new Promise(resolve => {
+  // a listener that is refused (rules, network) rejects, so the app falls back to local mode instead of waiting forever
+  const live = (name, key, order) => new Promise((resolve, reject) => {
     let firstLoad = true;
     fs.onSnapshot(fs.query(fs.collection(db, name), ...(order ? [fs.orderBy(order, "desc"), fs.limit(200)] : [])), snap => {
       mem[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       fbCacheWrite();
       emit();
       if (firstLoad) { firstLoad = false; resolve(); }
-    });
+    }, err => { if (firstLoad) { firstLoad = false; reject(err); } else console.warn("Live updates stopped for " + name, err); });
   });
   // listeners first so data arrives as early as possible; the one-off seed check runs alongside
   const seedCheck = (async () => {
@@ -230,48 +231,6 @@ export async function saveProduct(p, { silent = false } = {}) {
   return doc;
 }
 
-export async function deleteProduct(id) {
-  const p = mem.products.find(x => x.id === id);
-  if (await remote()) {
-    await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.products, id));
-    if (p?.imagePath) { try { await fb.st.deleteObject(fb.st.ref(fb.storage, p.imagePath)); } catch {} }
-  } else {
-    mem.products = mem.products.filter(x => x.id !== id);
-    lsWrite(); emit();
-  }
-  await log("delete", `Deleted ${p?.name || id}`);
-}
-
-// compress to a 512px square WebP, then upload
-export async function uploadImage(productId, file) {
-  const blob = await compressImage(file, 512);
-  if (await remote()) {
-    const path = `products/${productId}-${Date.now()}.webp`;
-    const r = fb.st.ref(fb.storage, path);
-    await fb.st.uploadBytes(r, blob, { contentType: "image/webp" });
-    return { url: await fb.st.getDownloadURL(r), path };
-  }
-  return { url: await blobToDataURL(blob), path: "" };
-}
-
-function compressImage(file, size) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas"); c.width = c.height = size;
-      const ctx = c.getContext("2d");
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, size, size);
-      const s = Math.min(size / img.width, size / img.height);
-      const w = img.width * s, h = img.height * s;
-      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-      c.toBlob(b => b ? resolve(b) : reject(new Error("Could not compress the image")), "image/webp", 0.85);
-      URL.revokeObjectURL(img.src);
-    };
-    img.onerror = () => reject(new Error("That file is not a readable image"));
-    img.src = URL.createObjectURL(file);
-  });
-}
-const blobToDataURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
 
 // ── Count sessions ──────────────────────────────
 export async function saveSession(s) {

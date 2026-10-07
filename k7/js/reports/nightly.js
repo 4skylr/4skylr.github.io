@@ -2,7 +2,8 @@
 // a full financial analysis of every day on file, and the morning Team Brief card.
 //   pdf.js (mozilla/pdf.js) reads the PDF · fflate (101arrowz/fflate) writes the workbook
 //   ECharts (apache/echarts) charts · html-to-image (bubkoo/html-to-image) renders the brief
-import { parsePerformancePdf } from "./nightly-parse.js?v=97";
+import { parsePerformancePdf } from "./nightly-parse.js?v=98";
+import { loadEcharts } from "../core/chart-theme.js?v=98";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "nightly";
@@ -116,14 +117,14 @@ function paint(H) {
   };
   host.querySelector("#nr-xlsx").onclick = async () => {
     try {
-      const { buildWorkbook } = await import("./nightly-xlsx.js?v=97");
+      const { buildWorkbook } = await import("./nightly-xlsx.js?v=98");
       const blob = await buildWorkbook(D);
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = `NC Performance Unaizah ${isoOf(new Date())}.xlsx`; document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000); H.toast(L.built);
     } catch (err) { console.error(err); H.toast(err.message, true); }
   };
-  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=97").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
+  host.querySelector("#nr-brief").onclick = () => import("./nightly-brief.js?v=98").then(m => m.openBrief(sel, D, H)).catch(err => { console.error(err); H.toast(err.message, true); });
   drawCharts(D, L, ar);
 }
 
@@ -227,11 +228,11 @@ function drawCharts(D, L, ar) {
   const io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; io.unobserve(e.target); draw(e.target.id); }), { rootMargin: "300px" });
   els.forEach(el => io.observe(el));
   const ink = "#d3dae6", grid = "rgba(255,255,255,.07)";
-  const base = { textStyle: { fontFamily: "Geist, system-ui, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" }, trigger: "axis" },
+  const base = { textStyle: { fontFamily: "Inter, Plex Arabic, sans-serif", color: ink }, tooltip: { backgroundColor: "#0a0e15", borderColor: "#2b3446", textStyle: { color: "#edf1f8" }, trigger: "axis" },
     legend: { top: 0, textStyle: { color: ink } }, grid: { left: 54, right: 20, top: 36, bottom: 40 } };
   const ax = { axisLabel: { color: ink }, axisLine: { lineStyle: { color: grid } }, splitLine: { lineStyle: { color: grid } } };
-  const ec = () => window.echarts ? Promise.resolve(window.echarts) : new Promise((res, rej) => { const s = document.createElement("script"); s.src = "vendor/echarts.min.js"; s.onload = () => res(window.echarts); s.onerror = rej; document.head.append(s); });
-  const mk = (id, opt) => ec().then(E => { const el = document.getElementById(id); if (!el) return; const c = E.init(el); c.setOption({ ...base, ...opt }); charts.push(c); new ResizeObserver(() => c.resize()).observe(el); });
+  const ec = loadEcharts;
+  const mk = (id, opt) => ec().then(E => { const el = document.getElementById(id); if (!el) return; const c = E.init(el); c.setOption({ ...base, ...opt }); charts.push(c); new ResizeObserver(() => { if (!c.isDisposed()) c.resize(); }).observe(el); });
   const mn = k => (ar ? MON_AR : MON_EN)[Number(k.slice(5)) - 1];
   function draw(id) {
     if (id === "nr-ch-daily") {
@@ -270,4 +271,4 @@ function drawCharts(D, L, ar) {
   }
 }
 
-export { days as nightlyDays, agg, enrich };
+export { agg, enrich };

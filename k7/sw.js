@@ -3,8 +3,8 @@
    - Pages and JSON: network first, cache as fallback.
    - Versioned CDN files (Firebase SDK, fonts): cache first.
    - Firestore / auth traffic is never touched, so live sync is not slowed or broken. */
-const CACHE = "noir-stock-v97";
-const CORE = ["./", "./index.html", "./css/style.css", "./css/fonts.css", "./css/scan-pass.css", "./css/theme.css", "./css/apple.css", "./vendor/fonts/Inter-Variable.woff2", "./vendor/dayjs.min.js"];
+const CACHE = "noir-stock-v98";
+const CORE = ["./", "./index.html", "./css/style.css?v=98", "./css/fonts.css?v=98", "./css/indicators.css?v=98", "./css/scan-card.css?v=98", "./css/scan-pass.css?v=98", "./css/brand.css?v=98", "./css/unaizah.css?v=98", "./css/finance.css?v=98", "./css/analyst.css?v=98", "./css/theme.css?v=98", "./css/logo.css?v=98", "./css/apple.css?v=98", "./css/product-card.css?v=98", "./css/recipe-theater.css?v=98", "./css/watch.css?v=98", "./vendor/fonts/Inter-Variable.woff2", "./vendor/fonts/plex-arabic-400.woff2", "./vendor/fonts/plex-arabic-600.woff2"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdn\.jsdelivr\.net\/(gh|npm)\/)/;
 
 self.addEventListener("install", e => {

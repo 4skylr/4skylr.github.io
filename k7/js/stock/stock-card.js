@@ -3,20 +3,17 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=97";
-import { BARCODES } from "../data/barcodes.js?v=97";
-import { mountGauges } from "./indicators.js?v=97";
-import { saveEdits as saveEditsDb } from "../finance/ledger-store.js?v=97";
-import { renderScanCard } from "./scan-view.js?v=97";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=98";
+import { BARCODES } from "../data/barcodes.js?v=98";
+import { mountGauges } from "./indicators.js?v=98";
+import { renderScanCard } from "./scan-view.js?v=98";
+import { readEdits, writeEdits } from "../data/expiry-edits.js?v=98";
 
-const KEY = "noir-expiry-edits-v1";
 const UNLOCK = "noir-edit-until";
 const LIB = {
   bar: "vendor/jsbarcode.all.min.js",
   zxingLib: "vendor/zxing-library.js",
   zxing: "vendor/zxing-browser.js",
-  dayjs: "vendor/dayjs.min.js",
-  relative: "vendor/relativeTime.js",
   pdf: "vendor/pdf-lib.min.js",
   xlsx: "https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"
 };
@@ -29,8 +26,7 @@ const loadScript = src => loading.get(src) || loading.set(src, new Promise((res,
 })).get(src);
 
 let H = null;
-const edits = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; } };
-const saveEdits = e => localStorage.setItem(KEY, JSON.stringify(e));
+const edits = readEdits, saveEdits = writeEdits;
 export function livePin() {
   let pin = localStorage.getItem("noir-live-pin");
   if (!pin) { pin = String(Math.floor(100000 + Math.random() * 900000)); localStorage.setItem("noir-live-pin", pin); }
@@ -80,21 +76,28 @@ function asDate(v) {
 function daysLeft(v) {
   const dt = asDate(v);
   if (!dt || isNaN(dt)) return null;
-  return Math.round((dt - new Date()) / 86400000);
+  const today = new Date(); today.setHours(0, 0, 0, 0); // whole days from today, so the count does not flip at noon
+  return Math.round((dt - today) / 86400000);
 }
 export function requirePin() {
   if (pinUnlocked()) return Promise.resolve(true);
   return new Promise(resolve => {
     const root = document.getElementById("modal-root");
-    root.innerHTML = `<div class="modal-back" data-close><div class="sheet" role="dialog" aria-modal="true">
+    root.innerHTML = `<div class="veil"><div class="sheet narrow" role="dialog" aria-modal="true">
       <h2>Edit <span class="voice">lock</span></h2>
       <p class="lede">A pin opens edits for ${PIN_HOURS} hours. Scanning a barcode never changes stock.</p>
       <form id="pin-form" class="form"><div class="fields"><div class="fl full"><label for="pin">Secret pin</label>
         <input class="input data" id="pin" inputmode="numeric" autocomplete="off" placeholder="6 digits"></div></div>
         <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn hot" type="submit">Unlock</button></div></form>
     </div></div>`;
-    const close = ok => { root.innerHTML = ""; resolve(ok); };
-    root.querySelectorAll("[data-close]").forEach(n => n.onclick = e => { if (e.target === n || n.hasAttribute("data-close")) close(false); });
+    let done = false;
+    const close = ok => { if (done) return; done = true; obs.disconnect(); root.innerHTML = ""; resolve(ok); };
+    // Cancel, a tap on the dimmed page, or the sheet being closed some other way (Escape) all mean "no"
+    const veil = root.querySelector(".veil");
+    veil.onclick = e => { if (e.target === veil || e.target.closest("[data-close]")) close(false); };
+    const obs = new MutationObserver(() => { if (!root.contains(veil)) { done = true; obs.disconnect(); resolve(false); } });
+    obs.observe(root, { childList: true });
+    setTimeout(() => root.querySelector("#pin")?.focus(), 40);
     root.querySelector("#pin-form").onsubmit = e => {
       e.preventDefault();
       if (root.querySelector("#pin").value.trim() !== livePin()) { const n=root.querySelector(".lede"); if(n) n.textContent="Wrong pin."; return; }
@@ -111,54 +114,8 @@ export function openProductCard(p, helpers) {
   const host = document.createElement("div");
   H.openModal("", "wide");
   const sheet = document.querySelector("#modal-root .sheet");
-  if (sheet) { sheet.innerHTML = ""; sheet.append(host); renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff }); return; }
-
-  const rows = rowsFor(p.id);
-  const locRows = H.LOCATIONS.map(l => {
-    const n = Number(p.stock?.[l.id]) || 0;
-    const sheet = rows.find(r => r.loc === l.id);
-    return { l, n, sheet };
-  });
-  const soon = rows.flatMap(r => r.batches.map(b => ({ ...b, location: r.location, left: daysLeft(b.date) }))).filter(b => b.left != null && b.left <= 45);
-  const html = `<div class="card-top">${H.pic(p, "pic")}<div>
-      <p class="kicker">${H.esc(p.sku || "")}</p><h2>${H.esc(p.name)}</h2>
-      <p class="lede">${H.qty(H.total(p))} ${H.esc(H.UNITS[p.unit] || "")} across all warehouses · phone QR</p>
-      <img class="scan-qr" alt="" id="card-qr">
-    </div></div>
-    <section class="yield-panel"><div class="slab-h"><h2>On hand</h2><span class="tag">does not rename the product</span></div>
-      <div class="uses">${locRows.map(x => `<div class="use"><span class="u-name">${H.esc(x.l.name)}</span><span class="u-per">${x.sheet ? H.esc(x.sheet.location) : ""}</span><b class="data">${H.qty(x.n)}</b></div>`).join("")}
-      <div class="use"><span class="u-name">All warehouses</span><span class="u-per">total</span><b class="data">${H.qty(H.total(p))}</b></div></div></section>
-    <section class="yield-panel"><div class="slab-h"><h2>Expiry batches</h2><span class="tag">${soon.length ? soon.length + " inside 45 days" : "from the September sheet"}</span></div>
-      ${rows.length ? rows.map(r => `<p class="note" style="margin:10px 0 4px">${H.esc(r.location)} · row ${r.sr}</p><div class="uses">${r.batches.map(b => {
-        return `<div class="use"><span class="u-name">Batch ${b.n}</span><span class="u-per data">${H.esc(fmtDate(b.date))}<i data-exp="${H.esc(asDate(b.date)?.toISOString() || "")}"></i></span><b class="data">${H.esc(b.qty ?? "—")}</b></div>`;
-      }).join("") || `<p class="note">No batch on file.</p>`}</div>`).join("") : `<p class="note">This item is not on the September expiry sheet.</p>`}
-      ${pinUnlocked() ? `<div class="form-actions" style="margin-top:12px"><button class="btn sm" id="edit-exp" type="button">Edit batches</button></div>` : `<p class="note">Batch edits need the pin. Unlock lasts ${PIN_HOURS} hours.</p><button class="btn sm" id="unlock" type="button">Unlock edits</button>`}
-    </section>
-    <div class="form-actions"><button class="btn ghost" data-close type="button">Close</button><button class="btn" id="print-one" type="button">Print this barcode</button></div>`;
-  H.openModal(html, "wide");
-  const mark = savedMark(p.id); const img = document.getElementById("card-qr"); if (img) img.src = mark.qr;
-  document.getElementById("print-one")?.addEventListener("click", () => { location.hash = "labels"; });
-  document.getElementById("unlock")?.addEventListener("click", async () => { if (await requirePin()) openProductCard(p, H); });
-  document.getElementById("edit-exp")?.addEventListener("click", () => editBatches(p));
-}
-
-function editBatches(p) {
-  const rows = rowsFor(p.id);
-  const fields = rows.flatMap(r => r.batches.map(b => `<div class="fl"><label>Batch ${b.n} qty · ${H.esc(r.location)}</label><input class="input data" data-row="${r.row}" data-k="q${b.n}" value="${H.esc(b.qty ?? "")}"></div>
-    <div class="fl"><label>Batch ${b.n} expiry</label><input class="input data" data-row="${r.row}" data-k="d${b.n}" value="${H.esc(b.date ?? "")}" placeholder="2027-04-19"></div>`)).join("");
-  H.openModal(`<h2>Batches · ${H.esc(p.name)}</h2><p class="lede">Saved into the September sheet and included in the next Excel download.</p>
-    <form id="bf" class="form"><div class="fields">${fields || `<p class="note">No batches to edit.</p>`}</div>
-    <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn hot" type="submit">Save to sheet</button></div></form>`, "wide");
-  document.getElementById("bf")?.addEventListener("submit", e => {
-    e.preventDefault();
-    const all = edits();
-    document.querySelectorAll("#bf [data-row]").forEach(inp => {
-      const row = inp.dataset.row; all[row] = all[row] || {}; all[row][inp.dataset.k] = inp.value.trim();
-    });
-    saveEdits(all);
-    rotatePin(); H.toast("انحفظ وتغير الرقم السري");
-    openProductCard(p, H);
-  });
+  sheet.innerHTML = ""; sheet.append(host);
+  renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff });
 }
 
 export async function applyCountToSheet(locationId, counts) {
@@ -220,7 +177,6 @@ export async function mountLabelSheet(root, products, helpers) {
 }
 export async function mountProductPage(root, p, helpers) {
   H = helpers;
-  await loadScript("vendor/decimal.min.js").catch(() => {});
   renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff, requirePin, rotatePin });
 }
 
@@ -232,7 +188,6 @@ async function writeOff(p, batch) {
   all[String(row.row)] = all[String(row.row)] || {};
   all[String(row.row)][`q${batch.n}`] = 0;
   saveEdits(all);
-  await saveEditsDb(all);
   H.toast("Batch written off · Excel download includes it");
   mountProductPage(document.getElementById("scan-root") || document.getElementById("view"), p, H);
 }
@@ -246,7 +201,7 @@ const ZXW = "../../petty/vendor/zxing-reader.mjs";
 let zxwP = null;
 const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZXingModule({ overrides: { locateFile: (f, prefix) => f.endsWith(".wasm") ? new URL("../../petty/vendor/zxing_reader.wasm", import.meta.url).href : prefix + f } }); return m; });
 export async function openScanner(helpers, onId) {
-  H = helpers;
+  H = helpers; scanner?.stop(); // a second open never leaves the first camera running
   const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar";
   H.openModal(`<h2>${ar ? "امسح" : "Scan"} <span class="voice">${ar ? "الملصق" : "a label"}</span></h2><p class="lede">${ar ? "وجّه الكاميرا على الباركود أو الـ QR. تنفتح بطاقة المنتج مباشرة." : "Point the camera at the barcode or QR. The product opens straight away."}</p>
     <div style="position:relative"><video id="zx" style="width:100%;border-radius:16px;background:#000;display:block" playsinline muted autoplay></video>

@@ -64,7 +64,7 @@ let observer = null;
 let renderId = 0;
 function dispose() { charts.forEach(c => c.dispose()); charts = []; observer?.disconnect(); }
 
-const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Geist Mono, monospace", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
+const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
 const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
 
 const weekNo = label => parseInt(label.match(/\d+/)?.[0] || "0", 10);
@@ -293,11 +293,11 @@ export async function renderFinance(root) {
     mk($("#fx-share")).setOption({
       tooltip: { ...TIP, valueFormatter: v => `${fmt(v)} ${t.sar}` },
       series: [{ type: "pie", radius: ["48%", "78%"], center: ["50%", "52%"], padAngle: 2, itemStyle: { borderRadius: 8, borderColor: "#000000", borderWidth: 2 },
-        label: { color: "#edf1f8", fontSize: 11, formatter: p => `${p.name}\n{b|${p.percent.toFixed(1)}%}`, rich: { b: { color: "#a3adbf", fontFamily: "Geist Mono, monospace", fontSize: 10, padding: [3, 0, 0, 0] } } },
+        label: { color: "#edf1f8", fontSize: 11, formatter: p => `${p.name}\n{b|${p.percent.toFixed(1)}%}`, rich: { b: { color: "#a3adbf", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10, padding: [3, 0, 0, 0] } } },
         labelLine: { lineStyle: { color: "rgba(150,170,210,.35)" } },
         data: rows.map(b => ({ name: name(b.id), value: Math.round(b.ytdRevActual), itemStyle: { color: BRANCH[b.id]?.color } })) }],
-      graphic: [{ type: "text", left: "center", top: "46%", style: { text: compact(net.actual), fill: "#edf1f8", font: "600 18px Geist Mono, monospace", textAlign: "center" } },
-                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#808a9d", font: "11px sans-serif", textAlign: "center" } }]
+      graphic: [{ type: "text", left: "center", top: "46%", style: { text: compact(net.actual), fill: "#edf1f8", font: "600 18px Inter, Plex Arabic, sans-serif", textAlign: "center" } },
+                { type: "text", left: "center", top: "55%", style: { text: t.sar, fill: "#808a9d", font: "11px Inter, sans-serif", textAlign: "center" } }]
     });
 
     // matrix
@@ -401,6 +401,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=97").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
+  import("./fin-analyst.js?v=98").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

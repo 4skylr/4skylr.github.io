@@ -126,24 +126,7 @@
 .uz-acc.lo { color: var(--bad); background: rgba(var(--bad-rgb), .1); }
 
 /* ── block explorer (Grid.js) ── */
-.uz-grid .gridjs-container { color: var(--ink); padding: 0; }
-.uz-grid .gridjs-wrapper { border-radius: 16px; border: 1px solid var(--edge); box-shadow: none; background: transparent; }
-.uz-grid .gridjs-head { padding: 0 0 12px; }
-.uz-grid .gridjs-search-input { background: rgba(var(--shade), .3); border: 1px solid var(--edge); color: var(--ink); border-radius: 12px; font-family: var(--f-data); font-size: 12px; width: min(320px, 100%); }
-.uz-grid .gridjs-search-input:focus { border-color: var(--magenta); box-shadow: 0 0 0 3px rgba(var(--glow), .2); }
-.uz-grid table.gridjs-table { background: transparent; font-size: 12.5px; }
-.uz-grid th.gridjs-th { background: rgba(var(--chain-rgb), .08); color: var(--ink-2); border: 0; border-bottom: 1px solid var(--edge); font-family: var(--f-data); font-size: 10.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; padding: 12px 14px; white-space: nowrap; }
-.uz-grid th.gridjs-th-sort:hover, .uz-grid th.gridjs-th-sort:focus { background: rgba(var(--chain-rgb), .14); }
-.uz-grid td.gridjs-td { background: transparent; border: 0; border-bottom: 1px solid rgba(var(--hair), .06); color: var(--ink-2); padding: 11px 14px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.uz-grid tr.gridjs-tr:hover td.gridjs-td { background: rgba(var(--glow), .05); color: var(--ink); }
 .uz-grid td b { color: var(--ink); font-weight: 600; }
-.uz-grid .gridjs-footer { background: transparent; border: 0; box-shadow: none; padding: 12px 0 0; }
-.uz-grid .gridjs-summary { color: var(--muted); font-size: 12px; }
-.uz-grid .gridjs-pagination .gridjs-pages button { background: rgba(var(--tint), .03); border: 1px solid var(--edge); color: var(--ink-2); }
-.uz-grid .gridjs-pagination .gridjs-pages button:hover { background: rgba(var(--chain-rgb), .15); color: var(--ink); }
-.uz-grid .gridjs-pagination .gridjs-pages button.gridjs-currentPage { background: var(--beam); color: #0a0e15; font-weight: 700; border-color: transparent; }
-.uz-grid button.gridjs-sort { filter: invert(1) opacity(.5); }
-.uz-grid .gridjs-th-content { overflow: visible; }
 .uz-blk { color: var(--violet); }
 .uz-hash { color: var(--cyan); }
 .uz-pill { font-size: 10.5px; padding: 3px 9px; border-radius: 99px; font-family: var(--f-data); }
@@ -185,8 +168,6 @@
 @media (prefers-reduced-motion: reduce) { .uz * { animation: none !important; transition: none !important; } }
 
 /* Grid.js mermaid theme paints rows white — keep them on glass */
-.uz-grid .gridjs-tbody, .uz-grid .gridjs-thead, .uz-grid tr.gridjs-tr, .uz-grid .gridjs-table { background: transparent !important; }
-.uz-grid .gridjs-wrapper { overflow-x: auto; }
 
 /* ── cash & deposits ── */
 .uz-cash-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
@@ -194,8 +175,6 @@
 .uz-cash-kpis p { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .uz-cash-kpis b { display: block; font-size: 17px; margin-top: 6px; font-weight: 600; }
 .uz-cash-table td b { color: var(--cyan); }
-.uz-cash-flags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.uz-cash-flags p { width: 100%; font-size: 12px; color: var(--ink-2); }
 @media (max-width: 760px) { .uz-cash-kpis { grid-template-columns: 1fr 1fr; } }
 
 /* ── block explorer table ── */

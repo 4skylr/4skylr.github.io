@@ -3,7 +3,7 @@
 // Flashes are kept slow (no fast full-screen strobing) and reduced-motion gets a calm version.
 
 const CSS = `
-#skylr{position:fixed;inset:0;z-index:2000;background:#000;color:#ff2a3d;overflow:hidden;font-family:Geist Mono,ui-monospace,monospace;cursor:pointer;
+#skylr{position:fixed;inset:0;z-index:2000;background:#000;color:#ff2a3d;overflow:hidden;font-family:Inter,"Plex Arabic",sans-serif;cursor:pointer;
   animation:sk-shake .38s infinite steps(2)}
 #skylr.calm{animation:none}
 #skylr canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.85}
@@ -92,7 +92,7 @@ export function playSkylr() {
     <button type="button" class="sk-skip">${ar ? "تخطي" : "skip"}</button>`;
   document.body.append(el);
   const stopSound = sound();
-  try { navigator.vibrate?.([80, 60, 80, 400, 200, 60, 200]); } catch {}
+  try { if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.([80, 60, 80, 400, 200, 60, 200]); } catch {}
 
   // rain of glyphs
   const cv = el.querySelector("canvas"), cx = cv.getContext("2d");
@@ -135,15 +135,17 @@ export function playSkylr() {
   at(1200, () => el.querySelector(".sk-skip").classList.add("on"));
 
   return new Promise(resolve => {
-    let ready = false; at(1200, () => { ready = true; });
+    let ready = false, closed = false; at(1200, () => { ready = true; });
     const close = () => {
-      if (!ready) return;
+      if (!ready || closed) return; closed = true;
+      removeEventListener("keydown", key); removeEventListener("resize", fit);
       alive = false; cancelAnimationFrame(raf); timers.forEach(clearTimeout); stopSound();
       el.style.transition = "opacity .45s"; el.style.opacity = "0";
       setTimeout(() => { el.remove(); resolve(); }, 460);
     };
     el.addEventListener("click", close);
-    addEventListener("keydown", function k(e) { if (e.key === "Escape" || e.key === "Enter") { ready = true; close(); removeEventListener("keydown", k); } });
+    const key = e => { if (e.key === "Escape" || e.key === "Enter") { ready = true; close(); } };
+    addEventListener("keydown", key);
     addEventListener("resize", fit);
   });
 }

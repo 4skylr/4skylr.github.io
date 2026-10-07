@@ -1,9 +1,10 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
-import { isOpen, unlock } from "../core/lock.js?v=97";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=97";
-import { REPORT_NAMES } from "../core/report-names.js?v=97";
-import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=97";
+import { isOpen, unlock } from "../core/lock.js?v=98";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=98";
+import { REPORT_NAMES } from "../core/report-names.js?v=98";
+import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=98";
+import { readEdits, mergeEdits } from "../data/expiry-edits.js?v=98";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFWORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
@@ -71,7 +72,7 @@ export async function parseStockPdf(file, products) {
 }
 
 function rowsFor(id) {
-  const over = JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}");
+  const over = readEdits();
   return EXPIRY_SHEET.rows.filter(r => r.productId === id).map(r => ({ ...r, batches: r.batches.map(b => ({ ...b, qty: over[String(r.row)]?.["q" + b.n] ?? b.qty, date: over[String(r.row)]?.["d" + b.n] ?? b.date })) }));
 }
 export function reviewGaps(products) {
@@ -111,9 +112,11 @@ export async function importExpiry(file, loadExcel) {
     edits[String(hit.row)] = edits[String(hit.row)] || {};
     const qty = row.getCell(4).value, date = row.getCell(5).value;
     if (qty != null && qty !== "") edits[String(hit.row)].q1 = qty;
-    if (date) edits[String(hit.row)].d1 = String(date).slice(0, 10);
+    // ExcelJS gives real dates as Date objects (midnight UTC); text dates pass through as they are
+    if (date instanceof Date && !isNaN(date)) edits[String(hit.row)].d1 = date.toISOString().slice(0, 10);
+    else if (date) edits[String(hit.row)].d1 = String(date?.result ?? date?.text ?? date).slice(0, 10);
   });
-  localStorage.setItem("noir-expiry-edits-v1", JSON.stringify({ ...JSON.parse(localStorage.getItem("noir-expiry-edits-v1") || "{}"), ...edits }));
+  mergeEdits(edits);
   return Object.keys(edits).length;
 }
 export function renderAdmin(root, H) {

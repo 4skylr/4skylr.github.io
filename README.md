@@ -56,7 +56,6 @@ Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an i
 [Odometer](https://github.com/HubSpot/odometer) ·
 [anime.js](https://github.com/juliangarnier/anime) ·
 [fflate](https://github.com/101arrowz/fflate) ·
-[idb-keyval](https://github.com/jakearchibald/idb-keyval) ·
 [Inter](https://github.com/rsms/inter) ·
 [IBM Plex](https://github.com/IBM/plex) ·
 product photos upscaled with [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) and cut out with [rembg](https://github.com/danielgatis/rembg).

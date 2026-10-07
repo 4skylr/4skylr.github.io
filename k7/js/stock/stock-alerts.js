@@ -2,9 +2,9 @@
 // and what to do: move (Store → Mini Store → Concession), leave it, order, or sell a dated group first.
 //   Concession = ready to sell · Mini Store = next refill · Store = reserve.
 //   Group items sold by weight/volume (kg, L) treat Concession + Mini Store as one front.
-import { moveOf, dailyUse, SALES_DAYS } from "../data/sales-data.js?v=97";
-import { usageOf } from "./consumption.js?v=97";
-import { placement, isBulk } from "./fefo-place.js?v=97";
+import { moveOf, dailyUse, SALES_DAYS } from "../data/sales-data.js?v=98";
+import { usageOf } from "./consumption.js?v=98";
+import { placement, isBulk } from "./fefo-place.js?v=98";
 
 // days of sales each location should hold
 export const RULES = { frontMin: 3, frontFill: 5, miniMin: 7, miniFill: 14, lead: 7, safety: 7, orderDays: 30, overDays: 180 };
@@ -97,11 +97,14 @@ export function stockAlerts(products) {
 }
 
 // ── view ─────────────────────────────────────────────────────
-const state = { filter: "act", done: {} };
-const DONE_KEY = () => "noir-transfer-done:" + new Date().toISOString().slice(0, 10);
-try { state.done = JSON.parse(localStorage.getItem(DONE_KEY()) || "{}"); } catch {}
+const state = { filter: "act", done: {}, day: "" };
+// today's ticks, keyed by the local date (a new day starts at midnight here, not at 03:00 UTC)
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const DONE_KEY = () => "noir-transfer-done:" + today();
+function loadDone() { if (state.day === today()) return; state.day = today(); try { state.done = JSON.parse(localStorage.getItem(DONE_KEY()) || "{}") || {}; } catch { state.done = {}; } }
 
 export function renderAlerts(host, H) {
+  loadDone();
   const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar", T = (en, a) => ar ? a : en;
   const loc = k => LOC[k][ar ? 1 : 0], esc = H.esc, q = H.qty, unit = p => esc(H.UNITS[p.unit] || p.unit || "");
   const name = p => esc((ar ? H.namesAr?.[p.id] : null) || p.name);

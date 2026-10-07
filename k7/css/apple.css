@@ -1,26 +1,22 @@
 /* ═══════════════════════════════════════════════════════════
    67 Stock — Apple-style theme, built from Apple's Human Interface Guidelines and the iOS UI kit
    (developer.apple.com/design/resources). No Apple logo, no Apple artwork, no SF font files are shipped:
-     · Type: the device's own system font (-apple-system → SF Pro / SF Arabic on iPhone, iPad and Mac);
-       other devices fall back to Inter (rsms/inter, OFL) and IBM Plex Sans Arabic (OFL), which sit closest to it.
+     · Type: Inter on every device (css/fonts.css), with IBM Plex Sans Arabic for Arabic.
      · Colour: the iOS system colours (systemBlue, systemGreen …), the grouped backgrounds and the label greys,
        in Light and Dark. Text uses the "increased contrast" variants where the plain one is too faint to read.
      · Materials: Liquid Glass for bars and floating controls; flat cards on the grouped background.
      · Icons: Ionicons in the iOS style (js/core/icons.js), filled when selected.
    Loaded last; it owns the look. White = data-theme="light", Night = data-theme="dark".
    ═══════════════════════════════════════════════════════════ */
-@font-face { font-family: "Inter"; src: url("../vendor/fonts/Inter-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-
 /* ── Light ── */
 :root, :root[data-theme="light"] {
   color-scheme: light;
-  --f-sys: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Arabic", "Inter", "Plex Arabic", "Segoe UI", Roboto, system-ui, sans-serif;
-  --f-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Arabic", "Inter", "Plex Arabic", "Segoe UI", Roboto, system-ui, sans-serif;
-  --f-text: var(--f-sys);
-  --f-voice: var(--f-sys);
-  --f-data: var(--f-sys);
-  --f-mono: ui-monospace, "SF Mono", Menlo, "Geist Mono", monospace;
+  --f-sys: "Inter", "Plex Arabic", sans-serif;
+  --f-display: "Inter", "Plex Arabic", sans-serif;
+  --f-text: "Inter", "Plex Arabic", sans-serif;
+  --f-voice: "Inter", "Plex Arabic", sans-serif;
+  --f-data: "Inter", "Plex Arabic", sans-serif;
+  --f-mono: "Inter", "Plex Arabic", sans-serif;
 
   /* iOS system colours (fills) and their readable text versions */
   --sys-blue: #007aff; --sys-green: #34c759; --sys-red: #ff3b30; --sys-orange: #ff9500; --sys-yellow: #ffcc00;
@@ -115,14 +111,14 @@
 
 /* ── Page ── */
 html, body { background: var(--page); color: var(--ink); }
-body { font-family: var(--f-text); font-feature-settings: normal; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-body::before, body::after, .aura { display: none !important; }
+body { font-family: var(--f-text); font-optical-sizing: auto; font-feature-settings: normal; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+body::before, body::after { display: none !important; }
 ::selection { background: rgba(var(--tint-rgb), .25); color: inherit; }
 :focus-visible { outline: 3px solid rgba(var(--tint-rgb), .55); outline-offset: 2px; }
 * { scrollbar-color: var(--fill-1) transparent; scrollbar-width: thin; -webkit-tap-highlight-color: transparent; }
 a { color: var(--tint-c); }
 .data { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
-code, kbd, .mono { font-family: var(--f-mono); }
+code, kbd { font-family: var(--f-mono); }
 
 /* ── Type (iOS text styles) ── */
 .kicker { font-family: var(--f-text); font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted); }
@@ -135,12 +131,11 @@ code, kbd, .mono { font-family: var(--f-mono); }
 .voice { font-family: var(--f-text); }
 
 /* ── Cards: flat white (or #1C1C1E) blocks on the grouped background ── */
-.slab, .hero, .token, .dash-alerts, .al-hero, .vault, .brief-card, .lk-card, .uz-card, .uz-hero, .fx-node, .fx-hero, .ml-board, .sl-board,
-.p360, .sc-stage, .si-card, .an-card, .rq-card, .sf-card, .pf-item, .mrow, .use, .rw, .pop-cell, .stub, .al-card, .nr-card, .hl-panel {
+.slab, .hero, .token, .al-hero, .vault, .lk-card, .uz-card, .uz-hero, .fx-node, .fx-hero, .ml-board, .sl-board, .p360, .sc-stage, .si-card, .an-card, .rq-card, .sf-card, .pf-item, .mrow, .use, .rw, .pop-cell, .stub, .al-card, .hl-panel {
   background: var(--card); border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .slab, .hero, .al-hero, .ml-board, .sl-board, .uz-hero, .fx-hero { border-radius: var(--r); }
-.token, .lk-card, .uz-card, .pf-item, .al-card, .brief-card { border-radius: 22px; }
+.token, .lk-card, .uz-card, .pf-item, .al-card { border-radius: 22px; }
 .hero { background: var(--card); }
 .slab::before, .slab::after, .hero::before, .hero::after { box-shadow: none; }
 
@@ -309,8 +304,6 @@ td, th { border-color: var(--line) !important; }
 :root[data-theme="light"] .fx-status.s-risk { color: #b80012; }
 
 /* ── Status colours keep their meaning ── */
-.dash-alerts.hot { background: linear-gradient(90deg, rgba(var(--bad-rgb), .1), transparent 55%), var(--card); }
-.dash-alerts.warm { background: linear-gradient(90deg, rgba(var(--amber-rgb), .1), transparent 55%), var(--card); }
 .al-arrow b { color: #fff; background: var(--tint-fill); }
 :root[data-theme="light"] .lv-warn .al-lv { color: #8a3100; }
 

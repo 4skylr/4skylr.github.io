@@ -23,8 +23,7 @@ await esbuild.build({
 fs.writeFileSync(path.join(out, "index.html"), fs.readFileSync(path.join(here, "index.html"), "utf8").replace(/__V__/g, V));
 const copy = (rel) => { const s = path.join(site, rel), d = path.join(out, rel); fs.mkdirSync(path.dirname(d), { recursive: true }); fs.cpSync(s, d, { recursive: true }); };
 ["css/style.css", "css/fonts.css", "css/indicators.css", "css/scan-card.css", "css/scan-pass.css", "css/brand.css", "css/theme.css", "css/recipe-theater.css", "css/watch.css", "css/logo.css", "css/apple.css"].forEach(copy);
-["vendor/jsbarcode.all.min.js", "vendor/decimal.min.js", "vendor/anime.min.js", "vendor/confetti.browser.js", "vendor/odometer.min.js", "vendor/odometer-theme-minimal.css",
- "vendor/dayjs.min.js", "vendor/relativeTime.js", "vendor/echarts.min.js", "vendor/fuse.min.mjs", "vendor/fonts", "vendor/gsap", "assets/cutouts"].forEach(copy);
+["vendor/jsbarcode.all.min.js", "vendor/fonts", "vendor/gsap", "assets/cutouts"].forEach(copy);
 ["assets/products", "assets/combos", "assets/icons", "assets/pay"].forEach(copy);
 // retire the full app's service worker on devices that installed it here
 fs.writeFileSync(path.join(out, "sw.js"), `self.addEventListener("install", () => self.skipWaiting());
