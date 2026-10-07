@@ -4,12 +4,12 @@
 //     what the stock can make and which ingredient runs out first, cost per serving and its split, calories,
 //     and a planner: pick a number of serves and see what each ingredient needs against what is on hand.
 // Motion: GSAP + Draggable + InertiaPlugin (github.com/greensock/GSAP, vendored). Without them everything still works.
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=99";
-import { KCAL, recipeKcal } from "../data/nutrition.js?v=99";
-import { recipeCost } from "../finance/costing.js?v=99";
-import { MENU, COMBOS, VAT } from "../data/menu-data.js?v=99";
-import { AR as NAMES_AR } from "../core/names-ar.js?v=99";
-import { CAT, prettyName, titleCase } from "./recipe-names.js?v=99";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=100";
+import { KCAL, recipeKcal } from "../data/nutrition.js?v=100";
+import { recipeCost } from "../finance/costing.js?v=100";
+import { MENU, COMBOS, VAT } from "../data/menu-data.js?v=100";
+import { AR as NAMES_AR } from "../core/names-ar.js?v=100";
+import { CAT, prettyName, titleCase } from "./recipe-names.js?v=100";
 export { CAT, prettyName };
 
 const low = s => String(s ?? "").toLowerCase();
@@ -102,7 +102,7 @@ export function wire(root, H, opts = {}) {
 let cssDone = false;
 export function ensureCss() {
   if (cssDone || document.querySelector("link[data-rt-css]")) { cssDone = true; return; }
-  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "css/recipe-theater.css?v=99"; l.dataset.rtCss = "1"; document.head.append(l); cssDone = true;
+  const l = document.createElement("link"); l.rel = "stylesheet"; l.href = "css/recipe-theater.css?v=100"; l.dataset.rtCss = "1"; document.head.append(l); cssDone = true;
 }
 const LIBS = ["vendor/gsap/gsap.min.js", "vendor/gsap/Draggable.min.js", "vendor/gsap/InertiaPlugin.min.js"];
 let libP = null;

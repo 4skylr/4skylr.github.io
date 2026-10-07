@@ -3,8 +3,8 @@
 // the recipe for each size says what goes in it. Consumption = Σ size sold × recipe amount.
 // When a size has several flavours (caramel / cheese / salted / pizza) the report can't tell them apart, so the
 // figure is the average across flavours, with the low–high range shown; one recipe per size means an exact figure.
-import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=99";
-import { SALES_YTD } from "../data/sales-data.js?v=99";
+import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=100";
+import { SALES_YTD } from "../data/sales-data.js?v=100";
 
 const CARRIERS = ["tub-46", "tub-64", "tub-85", "tub-130", "nachos-tray-3", "nachos-tray-4", "hotdog-tray", "slush-glass-12", "slush-glass-16", "cotton-candy-tub"];
 const BASE_CATS = new Set(["popcorn", "nachos", "hotdog", "floss", "slush", "mocktail"]);

@@ -1,0 +1,13 @@
+/* Loading (after Cobp's loader on Uiverse.io): three rings turning in 3D, "Loading..." under them.
+   The rings take the text colour, so they read on White and on Night. */
+.loader { position: relative; width: 64px; height: 64px; border-radius: 50%; perspective: 800px; color: var(--ink, #1c1c1e); margin: 48px auto 72px; }
+.loader .load-inner { position: absolute; box-sizing: border-box; width: 100%; height: 100%; border-radius: 50%; }
+.loader .load-one { left: 0; top: 0; border-bottom: 3px solid currentColor; animation: load-rotate-one 1s linear infinite; }
+.loader .load-two { right: 0; top: 0; border-right: 3px solid currentColor; animation: load-rotate-two 1s linear infinite; }
+.loader .load-three { right: 0; bottom: 0; border-top: 3px solid currentColor; animation: load-rotate-three 1s linear infinite; }
+.loader .text { position: absolute; top: calc(100% + 18px); left: 50%; transform: translateX(-50%); white-space: nowrap; font: 600 13px/1 var(--f-text, sans-serif); letter-spacing: .04em; color: var(--muted, #6b6b70); }
+@keyframes load-rotate-one { 0% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(0deg); } 100% { transform: rotateX(35deg) rotateY(-45deg) rotateZ(360deg); } }
+@keyframes load-rotate-two { 0% { transform: rotateX(50deg) rotateY(10deg) rotateZ(0deg); } 100% { transform: rotateX(50deg) rotateY(10deg) rotateZ(360deg); } }
+@keyframes load-rotate-three { 0% { transform: rotateX(35deg) rotateY(55deg) rotateZ(0deg); } 100% { transform: rotateX(35deg) rotateY(55deg) rotateZ(360deg); } }
+.loader-page { min-height: 40vh; display: grid; place-items: center; }
+@media (prefers-reduced-motion: reduce) { .loader .load-inner { animation-duration: 3s; } }

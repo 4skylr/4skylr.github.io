@@ -45,3 +45,8 @@ export const ICON = {
  "share": ["<path d=\"M336 192h40a40 40 0 0140 40v192a40 40 0 01-40 40H136a40 40 0 01-40-40V232a40 40 0 0140-40h40M336 128l-80-80-80 80M256 321V48\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"32\"/>", "<path d=\"M376 176H272v145a16 16 0 01-32 0V176H136a56.06 56.06 0 00-56 56v192a56.06 56.06 0 0056 56h240a56.06 56.06 0 0056-56V232a56.06 56.06 0 00-56-56zM272 86.63l52.69 52.68a16 16 0 0022.62-22.62l-80-80a16 16 0 00-22.62 0l-80 80a16 16 0 0022.62 22.62L240 86.63V176h32z\"/>"],
 };
 export const icon = (n, cls = "") => { const d = ICON[n] || ["", ""]; return `<svg class="lu ion ${cls}" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><g class="i-o">${d[0]}</g><g class="i-f">${d[1]}</g></svg>`; };
+
+// the dock keys (css/dock.css): the filled symbol is engraved in the key; the outline traces over it in light
+const traced = svg => svg.replace(/<(path|circle|rect|line|polyline|polygon|ellipse)\b/g, '<$1 pathLength="100"');
+export const keySymbol = n => { const d = ICON[n] || ["", ""];
+  return `<svg class="dk-sym" viewBox="0 0 512 512" aria-hidden="true"><g class="dk-symbol" fill="currentColor">${d[1]}</g><g class="dk-path-glow">${traced(d[0])}</g><g class="dk-path">${traced(d[0])}</g></svg>`; };

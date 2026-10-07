@@ -1,5 +1,17 @@
 # Changelog
 
+## v100 · 2026-10-07 · Loader, branch cards, dock keys
+
+- **One loading mark everywhere**, after Cobp's loader on Uiverse.io: three rings turning in 3D with "Loading..." / "جاري التحميل..." under them. It shows on the launch screen, on the barcode page and on every page change while a page loads its code. · **علامة التحميل الجديدة.**
+- **Branch cards:** on Budget, each branch is a card after Cobp's card on Uiverse.io, ordered by sales since 1 January.
+  - **The card:** a white ticket with a dark glow turning behind it. It tilts toward whichever of its nine corners the pointer is over.
+  - **On it:** rank, code, name, status, share of the network, sales with a hit bar, then target, gap, last week, forecast and revenue per admission.
+  - Tap a card to open that branch.
+- **The dock is a row of hardware keys**, after marcelodolza's button on Uiverse.io, with the same shape, motion and colours.
+  - **Each key:** a dark bevelled face with the page's symbol engraved in it.
+  - **The page you are on:** its key is lit with the blue glow and LED, and its symbol is traced in light when you arrive.
+  - **Pressing:** a key squeezes like the original.
+
 ## v99 · 2026-10-07 · Count from the watch, cost on the photo
 
 - **Count from the product watch.** Under the watch, a **Start count** button walks the counter through the places that hold the product, in order: Store, then Mini Store, then Concession. Places with no stock are skipped. · **الجرد من الساعة.**

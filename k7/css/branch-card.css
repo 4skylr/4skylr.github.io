@@ -1,0 +1,66 @@
+/* Branch cards on the Budget page, after Cobp's card on Uiverse.io: a white ticket with a dark glow turning behind it,
+   tilting toward whichever of its nine corners the pointer is over. Ordered by sales since 1 January. */
+.bc-row { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 20px 34px 26px; margin: 0 -8px 18px; scrollbar-width: none; }
+.bc-row::-webkit-scrollbar { display: none; }
+.bc-wrap { position: relative; perspective: 1500px; flex: none; width: 280px; height: 380px; scroll-snap-align: center; }
+.bc-wrap:hover .bc-card::before { opacity: 0; animation-play-state: paused; }
+.bc-a { position: absolute; width: 115px; height: 130px; z-index: 19; cursor: pointer; }
+.bc-tl { top: -10px; left: -30px; } .bc-t { top: -10px; left: 85px; } .bc-tr { top: -10px; left: 200px; }
+.bc-l { top: 120px; left: -30px; } .bc-c { top: 120px; left: 85px; } .bc-r { top: 120px; left: 200px; }
+.bc-bl { top: 250px; left: -30px; } .bc-b { top: 250px; left: 85px; } .bc-br { top: 250px; left: 200px; }
+.bc-tl:hover ~ .bc-card { transform: rotateX(-20deg) rotateY(20deg); }
+.bc-tl:hover ~ .bc-card .bc-light { box-shadow: inset 32px 32px 120px 5px rgba(255, 255, 255, .5), inset -32px -32px 120px 5px rgba(0, 0, 0, .5); }
+.bc-t:hover ~ .bc-card { transform: rotateX(-20deg); }
+.bc-t:hover ~ .bc-card .bc-light { box-shadow: inset 0 32px 120px rgba(255, 255, 255, .5), inset 0 -32px 120px rgba(0, 0, 0, .5); }
+.bc-tr:hover ~ .bc-card { transform: rotateX(-20deg) rotateY(-20deg); }
+.bc-tr:hover ~ .bc-card .bc-light { box-shadow: inset -32px 32px 120px 5px rgba(255, 255, 255, .5), inset 32px -32px 120px 5px rgba(0, 0, 0, .5); }
+.bc-l:hover ~ .bc-card { transform: rotateY(20deg); }
+.bc-l:hover ~ .bc-card .bc-light { box-shadow: inset 32px 0 120px rgba(255, 255, 255, .5), inset -32px 0 120px rgba(0, 0, 0, .25); }
+.bc-c:hover ~ .bc-card { transform: scale(1.05); }
+.bc-c:hover ~ .bc-card .bc-light { box-shadow: inset 0 0 120px rgba(255, 255, 255, .5), inset 0 0 120px rgba(0, 0, 0, .25); }
+.bc-r:hover ~ .bc-card { transform: rotateY(-20deg); }
+.bc-r:hover ~ .bc-card .bc-light { box-shadow: inset -32px 0 120px rgba(255, 255, 255, .5), inset 32px 0 120px rgba(0, 0, 0, .25); }
+.bc-bl:hover ~ .bc-card { transform: rotateX(20deg) rotateY(20deg); }
+.bc-bl:hover ~ .bc-card .bc-light { box-shadow: inset -32px 0 120px 5px rgba(255, 255, 255, 1); }
+.bc-b:hover ~ .bc-card { transform: rotateX(20deg); }
+.bc-b:hover ~ .bc-card .bc-light { box-shadow: inset 0 0 120px 5px rgba(255, 255, 255, 1); }
+.bc-br:hover ~ .bc-card { transform: rotateX(20deg) rotateY(-20deg); }
+.bc-br:hover ~ .bc-card .bc-light { box-shadow: inset 32px 0 120px 5px rgba(255, 255, 255, 1); }
+
+.bc-card { position: relative; height: 380px; width: 280px; display: flex; flex-direction: column; justify-content: flex-end; padding: 1rem; box-sizing: border-box;
+  color: #3e3e3e; background-color: #ffffff; box-shadow: 0 12px 12px rgba(0, 0, 0, .1); border: 0; border-radius: 1rem; transform: scale(.9);
+  transition: all .6s cubic-bezier(.175, .885, .32, 1.25); overflow: hidden; z-index: 10; text-align: start; font: inherit; cursor: pointer; }
+.bc-card:hover, .bc-card:focus-visible { transform: scale(1); }
+.bc-card::before, .bc-card::after { content: ""; position: absolute; z-index: -1; transition: all .5s ease; }
+.bc-card::before { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 400px; background-color: #141414; filter: blur(50px); animation: bc-shadow 10s linear infinite; }
+.bc-card::after { inset: 1.5px; background-color: rgba(232, 232, 232, .9); border-radius: 1rem; }
+.bc-light { position: absolute; inset: 0; transition: all .6s cubic-bezier(.175, .885, .32, 1.275); pointer-events: none; }
+@keyframes bc-shadow { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+.bc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: auto; padding: .25rem .5rem; }
+.bc-rank { font-size: 34px; font-weight: 800; letter-spacing: -.03em; color: #141414; }
+.bc-code { padding: .3rem .6rem; border-radius: 8px; background: #141414; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.bc-role { display: flex; align-items: center; padding: 0 .5rem; font-size: 20px; font-weight: 600; gap: .4rem; color: #141414; }
+.bc-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px rgba(0, 0, 0, .06); flex: none; }
+.bc-event { display: flex; padding: .35rem .5rem .1rem; }
+.bc-info { width: 100%; font-size: 11px; color: #6b6b6b; }
+.bc-info .fx-status { margin: 0; font-size: 10px; padding: 2px 7px; }
+.bc-user { display: flex; flex-direction: column; padding: .5rem; }
+.bc-alias { font-size: 12px; color: #6b6b6b; }
+.bc-name { font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: #141414; }
+.bc-name small { font-size: 12px; font-weight: 600; color: #6b6b6b; }
+.bc-bar { display: block; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .08); margin-top: 6px; overflow: hidden; }
+.bc-bar i { display: block; height: 100%; border-radius: inherit; background: #141414; }
+.bc-sep { display: block; width: 100%; border-top: 2px dashed #c4c4c4; margin: .5rem 0; }
+.bc-flex { display: flex; width: 100%; }
+.bc-col { display: flex; width: 100%; flex-direction: column; font-size: 10px; padding: 0 .5rem; color: #6b6b6b; }
+.bc-pos { padding: .25rem 0; }
+.bc-col b { font-size: 14px; color: #141414; }
+.bc-col b.pos { color: #1c7a33; } .bc-col b.neg { color: #b80012; }
+@media (hover: none) { .bc-a { pointer-events: none; } .bc-card:active { transform: scale(.97); } }
+@media (prefers-reduced-motion: reduce) { .bc-card::before { animation: none; } .bc-card, .bc-light { transition: none; } }
+/* the card is always white: its status pills keep their light-theme colours in Night too */
+.bc-card .fx-status.s-ahead { color: #1c7a33; background: rgba(52, 199, 89, .16); }
+.bc-card .fx-status.s-track { color: #0060c0; background: rgba(0, 122, 255, .12); }
+.bc-card .fx-status.s-behind { color: #8a3100; background: rgba(255, 149, 0, .16); }
+.bc-card .fx-status.s-risk { color: #b80012; background: rgba(255, 59, 48, .14); }

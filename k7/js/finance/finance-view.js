@@ -215,22 +215,38 @@ export async function renderFinance(root) {
   function paintAll() {
     $("#fx-hero-body").innerHTML = heroHtml({ label: t.ytd, actual: net.actual, target: net.target, year: net.year, hit: net.hit, forecast: net.forecast, need: net.need, left: net.left, adm: net.adm, admT: net.admT, timeUsed });
     count(net.actual);
-    const ranked = rows.slice().sort((a, b) => b.hit - a.hit);
+    // every branch is a card (after Cobp's card on Uiverse.io), ordered by sales so far this year; the nine corners tilt it
+    const ranked = rows.slice().sort((a, b) => b.ytdRevActual - a.ytdRevActual);
+    const zones = ["tl", "t", "tr", "l", "c", "r", "bl", "b", "br"];
+    const T2 = (en, a) => (ar ? a : en);
     $("#fx-body").innerHTML = `
-      <div class="fx-nodes">${ranked.map((b, i) => {
+      <div class="bc-row" role="list">${ranked.map((b, i) => {
         const c = BRANCH[b.id]?.color || "#5b7bff";
         const lw = b.last ? b.last.a / (b.last.t || 1) : 0;
-        return `<button type="button" class="fx-node" data-b="${b.id}" style="--c:${c}" aria-label="${t.open}: ${name(b.id)}">
-          <div class="fx-node-top"><span class="fx-rank data">#${i + 1}</span><span class="fx-code data">${BRANCH[b.id]?.code || b.id}</span><span class="fx-status s-${b.status}">${t.status[b.status]}</span></div>
-          <div class="fx-node-mid">${ring(b.hit, c)}<div class="fx-ring-label"><b class="data">${pct(b.hit, 0)}</b><small>${t.hit}</small></div>
-            <div class="fx-node-id"><h4>${name(b.id)}</h4><b class="data">${compact(b.ytdRevActual)}</b><small class="data">/ ${compact(b.ytdRevTarget)}</small></div></div>
-          <dl class="fx-node-stats">
-            <div><dt>${b.gap > 0 ? t.gap : t.ahead}</dt><dd class="data ${b.gap > 0 ? "neg" : "pos"}">${compact(Math.abs(b.gap))}</dd></div>
-            <div><dt>${t.lastWeek}</dt><dd class="data ${lw >= 1 ? "pos" : "neg"}">${pct(lw, 0)}</dd></div>
-            <div><dt>${t.forecast}</dt><dd class="data">${pct(b.forecast / b.yearRev, 0)}</dd></div>
-            <div><dt>${t.atp}</dt><dd class="data">${b.atp.toFixed(1)}</dd></div>
-          </dl>
-        </button>`;
+        const share = net.actual ? b.ytdRevActual / net.actual : 0;
+        return `<div class="bc-wrap" role="listitem" data-b="${b.id}" style="--c:${c}">
+          ${zones.map(z => `<span class="bc-a bc-${z}" data-b="${b.id}" aria-hidden="true"></span>`).join("")}
+          <button type="button" class="bc-card" data-b="${b.id}" aria-label="${t.open}: ${name(b.id)}">
+            <span class="bc-light" aria-hidden="true"></span>
+            <span class="bc-top"><span class="bc-rank data">#${i + 1}</span><span class="bc-code data">${BRANCH[b.id]?.code || b.id}</span></span>
+            <span class="bc-role"><i class="bc-dot" aria-hidden="true"></i>${name(b.id)}</span>
+            <span class="bc-event"><span class="bc-info"><span class="fx-status s-${b.status}">${t.status[b.status]}</span> · ${T2("share of network", "حصة من الشبكة")} <b class="data">${pct(share, 0)}</b></span></span>
+            <span class="bc-user"><span class="bc-alias">${T2("Sales since 1 January", "المبيعات من بداية السنة")}</span><span class="bc-name data">${compact(b.ytdRevActual)} <small>${T2("SAR", "ر.س")}</small></span>
+              <span class="bc-bar" aria-hidden="true"><i style="width:${Math.min(100, b.hit * 100).toFixed(1)}%"></i></span></span>
+            <span class="bc-sep" aria-hidden="true"></span>
+            <span class="bc-flex">
+              <span class="bc-col"><span class="bc-pos">${t.hit}</span><b class="data">${pct(b.hit, 0)}</b></span>
+              <span class="bc-col"><span class="bc-pos">${T2("Target", "الهدف")}</span><b class="data">${compact(b.ytdRevTarget)}</b></span>
+              <span class="bc-col"><span class="bc-pos">${b.gap > 0 ? t.gap : t.ahead}</span><b class="data ${b.gap > 0 ? "neg" : "pos"}">${compact(Math.abs(b.gap))}</b></span>
+            </span>
+            <span class="bc-sep" aria-hidden="true"></span>
+            <span class="bc-flex">
+              <span class="bc-col"><span class="bc-pos">${t.lastWeek}</span><b class="data ${lw >= 1 ? "pos" : "neg"}">${pct(lw, 0)}</b></span>
+              <span class="bc-col"><span class="bc-pos">${t.forecast}</span><b class="data">${pct(b.forecast / b.yearRev, 0)}</b></span>
+              <span class="bc-col"><span class="bc-pos">${t.atp}</span><b class="data">${b.atp.toFixed(1)}</b></span>
+            </span>
+          </button>
+        </div>`;
       }).join("")}</div>
 
       <section class="uz-card"><div class="uz-h"><div><h3>${t.burn}</h3><p>${t.burnSub}</p></div></div><div class="uz-chart xl" id="fx-burn"></div></section>
@@ -327,7 +343,7 @@ export async function renderFinance(root) {
       ]
     });
 
-    root.querySelectorAll(".fx-node, .fx-table tbody tr").forEach(el => { el.onclick = () => select(el.dataset.b); });
+    root.querySelectorAll(".bc-card, .bc-a, .fx-node, .fx-table tbody tr").forEach(el => { el.onclick = () => select(el.dataset.b); });
   }
 
   // ── single branch ──
@@ -401,6 +417,6 @@ export async function renderFinance(root) {
   }
   $("#fx-chips").onclick = e => { const b = e.target.closest("button"); if (b) select(b.dataset.b); };
   select(pick);
-  import("./fin-analyst.js?v=99").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
+  import("./fin-analyst.js?v=100").then(m => m.budgetReport($("#fx-analyst"), rows, net, { ar, name, color: id => BRANCH[id]?.color || "#5b7bff" }))
     .catch(e => console.warn("Analyst report unavailable", e));
 }

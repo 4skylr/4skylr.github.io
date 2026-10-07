@@ -10,17 +10,18 @@
 <script>
 (function () { try { var t = localStorage.getItem("noir-theme"); if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; document.documentElement.setAttribute("data-theme", t); } catch (e) { document.documentElement.setAttribute("data-theme", "light"); } })();
 </script>
-<link rel="stylesheet" href="css/style.css?v=99">
-<link rel="stylesheet" href="css/fonts.css?v=99">
-<link rel="stylesheet" href="css/indicators.css?v=99">
-<link rel="stylesheet" href="css/scan-card.css?v=99">
-<link rel="stylesheet" href="css/scan-pass.css?v=99">
-<link rel="stylesheet" href="css/brand.css?v=99">
-<link rel="stylesheet" href="css/theme.css?v=99">
-<link rel="stylesheet" href="css/logo.css?v=99">
-<link rel="stylesheet" href="css/apple.css?v=99">
-<link rel="stylesheet" href="css/recipe-theater.css?v=99" data-rt-css>
-<link rel="stylesheet" href="css/watch.css?v=99">
+<link rel="stylesheet" href="css/style.css?v=100">
+<link rel="stylesheet" href="css/fonts.css?v=100">
+<link rel="stylesheet" href="css/indicators.css?v=100">
+<link rel="stylesheet" href="css/scan-card.css?v=100">
+<link rel="stylesheet" href="css/scan-pass.css?v=100">
+<link rel="stylesheet" href="css/brand.css?v=100">
+<link rel="stylesheet" href="css/theme.css?v=100">
+<link rel="stylesheet" href="css/logo.css?v=100">
+<link rel="stylesheet" href="css/apple.css?v=100">
+<link rel="stylesheet" href="css/recipe-theater.css?v=100" data-rt-css>
+<link rel="stylesheet" href="css/watch.css?v=100">
+<link rel="stylesheet" href="css/loader.css?v=100">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
@@ -29,13 +30,11 @@
 #curtain .hud{display:grid;justify-items:center;gap:14px;text-align:center;color:var(--ink,#000);font-family:Inter,"Plex Arabic",sans-serif;transition:transform .45s ease}
 #curtain .now{font:600 13px/1.4 Inter,"Plex Arabic",sans-serif;color:var(--muted,#5f5f64)}
 #curtain .feat{font-weight:700;font-size:clamp(18px,5vw,24px);letter-spacing:-.02em;max-width:84vw}
-#curtain .load{width:min(200px,50vw);height:4px;border-radius:2px;background:var(--fill-3,rgba(118,118,128,.12));overflow:hidden}
-#curtain .load i{display:block;height:100%;width:40%;border-radius:inherit;background:var(--sys-blue,#007aff);animation:cur-load 1.1s ease-in-out infinite}
-@keyframes cur-load{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+#curtain .loader{margin:4px auto 34px}
 #curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:scale(1.04)}
 #curtain.gone{display:none}
 #curtain.quick .now,#curtain.quick .feat{display:none}
-@media (prefers-reduced-motion:reduce){#curtain,#curtain .hud{transition-duration:.01s}#curtain .load i{animation:none}}
+@media (prefers-reduced-motion:reduce){#curtain,#curtain .hud{transition-duration:.01s}}
 </style>
 </head>
 <body class="card-only">
@@ -44,7 +43,7 @@
     <span class="now" id="cur-now">Now showing</span>
     <span class="nlogo" style="--s:1.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span>
     <span class="feat" id="cur-feat">Concession Stock</span>
-    <span class="load"><i></i></span>
+    <div class="loader" aria-hidden="true"><div class="load-inner load-one"></div><div class="load-inner load-two"></div><div class="load-inner load-three"></div><span class="text" id="cur-load">جاري التحميل...</span></div>
   </div>
 </div>
 <script>
@@ -52,6 +51,7 @@
   var c = document.getElementById("curtain"), t0 = Date.now(), done = false;
   var q = new URLSearchParams(location.search).get("p") || (location.hash.indexOf("#p/") === 0 ? location.hash.slice(3) : "");
   var ar = (sessionStorage.getItem("noir-card-lang") || "ar") !== "en";
+  if (!ar) { var ld = document.getElementById("cur-load"); if (ld) ld.textContent = "Loading..."; }
   if (q) {
     document.getElementById("cur-now").textContent = ar ? "تم المسح · يعرض الآن" : "Scanned · now showing";
     document.getElementById("cur-feat").textContent = q.replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
@@ -89,6 +89,6 @@
 <div class="toasts" id="toasts" role="status"></div>
 
 <script>window.CARD_DOOR = true;</script>
-<script type="module" src="app.js?v=131272"></script>
+<script type="module" src="app.js?v=680768"></script>
 </body>
 </html>
