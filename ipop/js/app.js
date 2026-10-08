@@ -72,7 +72,7 @@ const CARD_DOOR = !!window.CARD_DOOR;
 const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "46";
+const ASSET_V = "107";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
