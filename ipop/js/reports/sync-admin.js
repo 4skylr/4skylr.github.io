@@ -4,7 +4,7 @@ import { isOpen, unlock } from "../core/lock.js?v=106";
 import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
 import { REPORT_NAMES } from "../core/report-names.js?v=106";
 import { livePin, setLivePin, requirePin, pinUnlocked, downloadSheet } from "../stock/stock-card.js?v=106";
-import { reviewHtml, loadCounts, cachedCounts, updateRow, recountRow, counterName } from "../stock/watch-count.js?v=106";
+import { reviewHtml, loadCounts, cachedCounts, updateRow, recountRow, counterName } from "../stock/watch-count.js?v=112";
 import { mergeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";

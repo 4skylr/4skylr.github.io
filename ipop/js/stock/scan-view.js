@@ -4,7 +4,7 @@
 // "Send report to admin" turns them "submitted". Nothing here writes a product's stock.
 import { BARCODES } from "../data/barcodes.js?v=106";
 import { watchHtml, mountWatch, recipeFor } from "./watch.js?v=106";
-import { noDate, startMission, loadCounts, openRecount, locLabel, ORDER, counterName, myPending, sendReport } from "./watch-count.js?v=106";
+import { noDate, startMission, loadCounts, openRecount, locLabel, ORDER, counterName, myPending, sendReport, deviceLabel } from "./watch-count.js?v=112";
 
 const localIso = d => d && !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` : "";
 
@@ -40,6 +40,9 @@ export async function renderScanCard(root, p, ctx) {
     if (recount) bar.insertAdjacentHTML("afterbegin", `<p class="nw-due">Admin asked for a recount · ${recount.recount.map(l => H.esc(locLabel(l))).join(", ")}</p>`);
     const send = bar.querySelector("[data-send]"), mine = myPending(list || [], counterName());
     if (send) { send.hidden = !mine.length; send.querySelector("em").textContent = mine.length ? String(mine.length) : ""; }
+    let tag = bar.querySelector(".nw-device");
+    if (!tag) { tag = document.createElement("p"); tag.className = "nw-due nw-device"; bar.append(tag); }
+    tag.textContent = `This phone · ${deviceLabel()}`;
   };
   const refresh = force => loadCounts(force).then(list => { recount = openRecount(list, p.id); paintBar(list); }).catch(() => paintBar([]));
   const mission = disp => startMission(disp, { p, H, prev: recount, only: recount?.recount,

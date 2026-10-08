@@ -59,7 +59,7 @@
 <link rel="modulepreload" href="js/data/nutrition.js?v=106">
 <link rel="modulepreload" href="js/data/sales-data.js?v=106">
 <link rel="modulepreload" href="js/core/chart-theme.js?v=106">
-<link rel="modulepreload" href="js/stock/watch-count.js?v=106">
+<link rel="modulepreload" href="js/stock/watch-count.js?v=112">
 <link rel="modulepreload" href="js/data/expiry-data.js?v=106">
 <link rel="modulepreload" href="js/data/expiry-edits.js?v=106">
 <link rel="modulepreload" href="js/stock/product-card.js?v=106">
@@ -113,8 +113,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-110")) {
-    localStorage.setItem("noir-bust-110", "1");
+  if (!localStorage.getItem("noir-bust-112")) {
+    localStorage.setItem("noir-bust-112", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }

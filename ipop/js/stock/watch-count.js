@@ -34,7 +34,17 @@ export async function loadCounts(force) { if (!cache || force) cache = await sto
 export const cachedCounts = () => cache || store.localDocs(COL);
 const keep = rec => { if (cache) cache = [...cache.filter(x => x.id !== rec.id), rec]; return rec; };
 export const counterName = () => { try { return localStorage.getItem("noir-counter") || ""; } catch { return ""; } };
-export const myPending = (list, by) => by ? list.filter(r => r.status === "pending" && r.by === by) : [];
+// one id per phone, stable across counts; the label is the name they type
+export function deviceId() {
+  try {
+    let id = localStorage.getItem("noir-device");
+    if (!id) { id = `ph-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`; localStorage.setItem("noir-device", id); }
+    return id;
+  } catch { return "ph-local"; }
+}
+export const deviceLabel = () => { try { return localStorage.getItem("noir-device-name") || counterName() || "This phone"; } catch { return "This phone"; } };
+const mine = (r, by) => r.status === "pending" && (r.deviceId ? r.deviceId === deviceId() : r.by === by);
+export const myPending = (list, by) => (by || deviceId()) ? list.filter(r => mine(r, by)) : [];
 export const openRecount = (list, pid) => list.filter(r => r.pid === pid && r.status === "recount" && r.recount?.length).sort((a, b) => b.at.localeCompare(a.at))[0] || null;
 // reports waiting for the admin (the badge on the Count key); "match" is a report sent before pending / submitted existed
 const waiting = r => r.status === "submitted" || r.status === "match";
@@ -44,20 +54,22 @@ async function save(p, stops, by, recount) {
   const now = new Date().toISOString(), list = await loadCounts();
   const fresh = stops.map(s => ({ loc: s.loc, counted: r3(s.groups.reduce((a, g) => a + (Number(g.qty) || 0), 0)), groups: s.groups }));
   // a recount replaces only the places it was asked for; a second count of the same product before sending replaces the first
-  const prev = recount || list.find(r => r.pid === p.id && r.status === "pending" && r.by === by) || null;
+  const dev = deviceId();
+  const prev = recount || list.find(r => r.pid === p.id && r.status === "pending" && (r.deviceId ? r.deviceId === dev : r.by === by)) || null;
   const stopsOut = recount ? recount.stops.map(s => fresh.find(x => x.loc === s.loc) || s).concat(fresh.filter(x => !recount.stops.some(s => s.loc === x.loc))) : fresh;
-  const rec = { id: prev?.id || `${p.id}-${now.replace(/\D/g, "").slice(0, 14)}`, pid: p.id, name: p.name, unit: p.unit || "", by, at: now,
-    first: prev?.first || now, tries: (recount?.tries || 0) + 1, dated: !noDate(p), stops: stopsOut, status: "pending", recount: [] };
+  const rec = { id: prev?.id || `${p.id}-${dev.slice(-4)}-${now.replace(/\D/g, "").slice(0, 14)}`, pid: p.id, name: p.name, unit: p.unit || "", by, at: now,
+    deviceId: dev, device: by, first: prev?.first || now, tries: (recount?.tries || 0) + 1, dated: !noDate(p), stops: stopsOut, status: "pending", recount: [] };
+  try { localStorage.setItem("noir-device-name", by); } catch {}
   await store.putDoc(COL, rec.id, rec);
   store.log("count", `Watch count saved · ${p.name} · ${by}`).catch(() => {});
   return keep(rec);
 }
 // "Send report to admin": every pending count this person saved becomes submitted
 export async function sendReport(by) {
-  const list = await loadCounts(true), at = new Date().toISOString(), mine = myPending(list, by);
-  for (const r of mine) keep(await store.putDoc(COL, r.id, { ...r, status: "submitted", submittedAt: at }));
-  if (mine.length) store.log("count", `Watch count report sent · ${mine.length} products · ${by}`).catch(() => {});
-  return mine.length;
+  const list = await loadCounts(true), at = new Date().toISOString(), own = myPending(list, by);
+  for (const r of own) keep(await store.putDoc(COL, r.id, { ...r, status: "submitted", submittedAt: at, deviceId: r.deviceId || deviceId(), device: r.device || by }));
+  if (own.length) store.log("count", `Watch count report sent · ${own.length} products · ${by}`).catch(() => {});
+  return own.length;
 }
 // places the admin updated on another device: put their dates into this device's expiry sheet too (each place once)
 export async function syncCountsToSheet(products) {
@@ -118,7 +130,16 @@ export async function updateRow(id, loc, by) {
   // this device has written the dates already; the minute sync must not write them again
   try { const seen = JSON.parse(localStorage.getItem("noir-wc-applied") || "{}") || {}; seen[`${id}:${loc}`] = at; localStorage.setItem("noir-wc-applied", JSON.stringify(seen)); } catch {}
   await store.putDoc(COL, id, next);
-  return keep(next);
+  keep(next);
+  // another phone's open count of the same place must not write over this accept
+  for (const other of list) {
+    if (other.id === id || !(waiting(other) || other.status === "recount")) continue;
+    if (!other.stops?.some(x => x.loc === loc && !x.state && other.pid === rec.pid)) continue;
+    const held = settle({ ...other, stops: other.stops.map(x => x.loc === loc && !x.state ? { ...x, state: "superseded", supersededAt: at, supersededBy: by || "admin" } : x) });
+    keep(await store.putDoc(COL, other.id, held));
+  }
+  store.log("count", `Accepted · ${p.name} · ${locLabel(loc)} · ${rec.device || rec.by}`).catch(() => {});
+  return next;
 }
 // Recount: the stock stays as it is; the place goes back to the employee's watch
 export async function recountRow(id, loc, by) {
@@ -136,12 +157,15 @@ export function reviewHtml(list, H) {
   const unitOf = r => esc(H.UNITS[r.p?.unit || r.rec.unit] || r.p?.unit || r.rec.unit || "");
   const dates = r => !r.dated ? `<span class="wc-mute">Not dated</span>` : r.groups.length
     ? r.groups.map(g => `<span class="data" dir="ltr">${g.date ? dmy(g.date) : "—"}<small> · ${fmtN(Number(g.qty) || 0)}</small></span>`).join("") : `<span class="wc-mute">—</span>`;
-  const chips = r => r.state === "updated" ? `<span class="wc-st is-done">Updated · ready for Excel</span>` : r.state === "recount" ? `<span class="wc-st is-back">Recount sent</span>`
-    : r.ok ? `<span class="wc-st is-ok">Match</span>` : r.flags.map(f => `<span class="wc-st is-bad">${STATUS_TXT[f] || f}</span>`).join("");
+  const clash = new Map();
+  for (const r of open) { const k = `${r.rec.pid}:${r.loc}`; (clash.get(k) || clash.set(k, []).get(k)).push(r); }
+  const others = r => (clash.get(`${r.rec.pid}:${r.loc}`) || []).filter(x => x.rec.id !== r.rec.id);
+  const chips = r => r.state === "updated" ? `<span class="wc-st is-done">Updated · ready for Excel</span>` : r.state === "superseded" ? `<span class="wc-st is-back">Closed · another phone accepted</span>` : r.state === "recount" ? `<span class="wc-st is-back">Recount sent</span>`
+    : `${r.ok ? `<span class="wc-st is-ok">Match</span>` : r.flags.map(f => `<span class="wc-st is-bad">${STATUS_TXT[f] || f}</span>`).join("")}${others(r).length ? `<span class="wc-st is-bad">Other phone · ${esc(others(r)[0].rec.device || others(r)[0].rec.by)} · ${fmtN(others(r)[0].counted)}</span>` : ""}`;
   const act = r => r.state ? "" : r.ok ? `<button type="button" class="btn sm hot" data-wc-up="${esc(r.rec.id)}" data-loc="${r.loc}">Update</button>`
     : `<button type="button" class="btn sm" data-wc-re="${esc(r.rec.id)}" data-loc="${r.loc}">Recount</button>`;
   const tr = r => `<tr class="${r.state ? "is-settled" : r.ok ? "is-ok" : "is-bad"}">
-      <td><b>${esc(r.p?.name || r.rec.name)}</b><small>${esc(r.rec.by)} · ${when(r.rec.submittedAt || r.rec.at)}</small></td>
+      <td><b>${esc(r.p?.name || r.rec.name)}</b><small>${esc(r.rec.device || r.rec.by)} · ${when(r.rec.submittedAt || r.rec.at)}</small></td>
       <td>${esc(locLabel(r.loc))}</td>
       <td class="data num">${r.current == null ? "—" : fmtN(r3(r.current))} <small>${unitOf(r)}</small></td>
       <td class="data num">${fmtN(r3(r.counted))} <small>${unitOf(r)}</small></td>
@@ -154,7 +178,8 @@ export function reviewHtml(list, H) {
   return `<section class="slab wc" id="wc">
     <div class="slab-h"><h2>Watch count reports${open.length ? ` <sup class="wc-badge data">${open.length}</sup>` : ""}</h2>
       <button type="button" class="btn sm" id="wc-xlsx">Download Excel${ready ? ` · ${ready} updated` : ""}</button></div>
-    <p class="note">Compared with the live stock. Update writes only that place's quantity and the recorded dates, and only on a match. Anything else goes back for a recount and the stock stays as it is.</p>
+    <p class="note">Each phone is its own report. Update writes that place only on a match, and closes the other phone's open count of the same place so it cannot overwrite it.</p>
+    ${open.length ? `<p class="note">${[...new Map(open.map(r => [r.rec.deviceId || r.rec.by, r])).values()].map(r => `${esc(r.rec.device || r.rec.by)} · ${open.filter(x => (x.rec.deviceId || x.rec.by) === (r.rec.deviceId || r.rec.by)).length}`).join(" · ")}</p>` : ""}
     ${open.length ? table(open) : `<p class="empty">Nothing waiting. A report shows up here once an employee taps Send report to admin.</p>`}
     ${done.length ? `<details class="wc-done"><summary>Settled lately · ${done.length}</summary>${table(done)}</details>` : ""}
   </section>`;
