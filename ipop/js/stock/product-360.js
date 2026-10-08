@@ -1,15 +1,15 @@
 // Product 360 — everything about one product in one sheet: where it is, how much, expiry groups,
 // price and margin, sales / usage, cover and reorder, recipes, sales-space advice and the stock history from reports.
 // Gauge: apache/echarts (vendored). The photo uses the app's own pic() helper unchanged.
-import { placement, isBulk } from "./fefo-place.js?v=105";
-import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=105";
-import { usageOf } from "./consumption.js?v=105";
-import { MENU, VAT } from "../data/menu-data.js?v=105";
-import { RECIPES } from "../data/recipes-data.js?v=105";
-import { salesSpace } from "./sales-space.js?v=105";
-import { historyOf } from "./stock-history.js?v=105";
-import { deck, wire } from "./recipe-theater.js?v=105";
-import { loadEcharts } from "../core/chart-theme.js?v=105";
+import { placement, isBulk } from "./fefo-place.js?v=106";
+import { soldOf, moveOf, SALES_DAYS, SALES_FROM, SALES_TO, dailyUse } from "../data/sales-data.js?v=106";
+import { usageOf } from "./consumption.js?v=106";
+import { MENU, VAT } from "../data/menu-data.js?v=106";
+import { RECIPES } from "../data/recipes-data.js?v=106";
+import { salesSpace } from "./sales-space.js?v=106";
+import { historyOf } from "./stock-history.js?v=106";
+import { deck, wire } from "./recipe-theater.js?v=106";
+import { loadEcharts } from "../core/chart-theme.js?v=106";
 
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const T = {

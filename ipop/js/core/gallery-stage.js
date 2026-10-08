@@ -1,9 +1,9 @@
 // The Overview opens the way the style reference opens a product page, with this branch's own products in place of
 // hardware: a white hero stage (launch label, product name, one statement, the product render, a floating price
 // callout with a blue pill), then a Studio Mist highlights band of large white cards that advance on their own.
-import { servingOf } from "../finance/serving.js?v=105";
-import { soldOf, moveOf } from "../data/sales-data.js?v=105";
-import { AR as NAMES_AR } from "./names-ar.js?v=105";
+import { servingOf } from "../finance/serving.js?v=106";
+import { soldOf, moveOf } from "../data/sales-data.js?v=106";
+import { AR as NAMES_AR } from "./names-ar.js?v=106";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=46" alt="" loading="lazy" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
