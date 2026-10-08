@@ -3,7 +3,7 @@ body.card-only { background: var(--surface-2); }
 body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .phone-card { max-width: 390px; margin: 0 auto; padding: 16px 16px 28px; background: var(--surface-2); color: var(--ink-hi); text-align: center; }
 .shield, .shield * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-.pc-shot { background: #fff; border-radius: 18px; display: grid; place-items: center; height: 148px; margin: 0 auto 12px; }
+.pc-shot { background: #fff; border-radius: 8px; display: grid; place-items: center; height: 148px; margin: 0 auto 12px; }
 .pc-shot .pic { width: 112px; height: 112px; object-fit: contain; object-position: center; background: transparent; padding: 0; }
 .phone-card h1 { margin: 8px 0 0; font-size: 28px; line-height: 1.15; }
 .pc-en { margin: 4px 0 0; color: var(--ink); font-size: 15px; }
@@ -12,19 +12,19 @@ body.card-only .stage { padding: 0; max-width: 390px; margin: 0 auto; }
 .pc-qty span, .pc-note { color: var(--muted); font-size: 13px; }
 .pc-when { margin: 8px 0 0; color: var(--ink); font-size: 12px; }
 .pc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
-.pc-actions button { background: transparent; color: var(--ink-hi); border: 1px solid var(--ink); border-radius: 999px; padding: 11px 8px; font: inherit; }
+.pc-actions button { background: transparent; color: var(--ink-hi); border: 1px solid var(--ink); border-radius: 980px; padding: 11px 8px; font: inherit; }
 .pc-actions button[aria-pressed="true"] { background: var(--chain); border-color: var(--chain); }
-.pc-sheet { margin-top: 12px; padding: 12px; border-radius: 16px; background: #141a26; text-align: start; }
+.pc-sheet { margin-top: 12px; padding: 12px; border-radius: 8px; background: #141a26; text-align: start; }
 .pc-sheet h2, .pc-sheet h3 { margin: 0 0 8px; font-size: 16px; }
 
 .lang-switch { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
-.lang-switch button { background: transparent; color: var(--ink); border: 1px solid rgba(237,241,248,.4); border-radius: 999px; padding: 6px 14px; font: inherit; }
+.lang-switch button { background: transparent; color: var(--ink); border: 1px solid rgba(237,241,248,.4); border-radius: 980px; padding: 6px 14px; font: inherit; }
 .lang-switch button[aria-pressed="true"] { background: var(--chain); color: var(--ink-hi); border-color: var(--chain); }
-.fifo b { width: 18px; height: 18px; border-radius: 4px; background: var(--chain); color: var(--ink-hi); display: inline-grid; place-items: center; font-size: 12px; }
+.fifo b { width: 18px; height: 18px; border-radius: 8px; background: var(--chain); color: var(--ink-hi); display: inline-grid; place-items: center; font-size: 12px; }
 .fifo { margin: 10px 0 0; color: var(--ink); font-size: 13px; }
 
 .pc-shot { position: relative; }
-.pc-age { position: absolute; top: 8px; inset-inline-start: 8px; background: var(--chain); color: var(--ink-hi); border-radius: 999px; padding: 3px 8px; font-size: 11px; }
+.pc-age { position: absolute; top: 8px; inset-inline-start: 8px; background: var(--chain); color: var(--ink-hi); border-radius: 980px; padding: 3px 8px; font-size: 11px; }
 
 .phone-card { position: relative; }
 

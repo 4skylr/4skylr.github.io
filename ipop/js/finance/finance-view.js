@@ -65,7 +65,7 @@ let renderId = 0;
 function dispose() { charts.forEach(c => c.dispose()); charts = []; observer?.disconnect(); }
 
 const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#808a9d", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
-const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:12px;box-shadow:0 10px 40px rgba(91,123,255,.25)" };
+const TIP = { backgroundColor: "rgba(8,11,16,.94)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "backdrop-filter:blur(10px);border-radius:8px;box-shadow:none" };
 
 const weekNo = label => parseInt(label.match(/\d+/)?.[0] || "0", 10);
 

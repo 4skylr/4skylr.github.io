@@ -182,7 +182,7 @@ const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZ
 export async function openScanner(helpers, onId) {
   H = helpers; scanner?.stop(); // a second open never leaves the first camera running
   H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">Point the camera at the barcode or QR. The product opens straight away.</p>
-    <div style="position:relative"><video id="zx" style="width:100%;border-radius:16px;background:#000;display:block" playsinline muted autoplay></video>
+    <div style="position:relative"><video id="zx" style="width:100%;border-radius:8px;background:#000;display:block" playsinline muted autoplay></video>
     <p id="zx-msg" class="note" style="text-align:center"></p></div><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
   const video = document.getElementById("zx"), msg = document.getElementById("zx-msg");
   let stream = null, done = false, timer = 0;

@@ -1,0 +1,162 @@
+/* ═══════════════════════════════════════════════════════════
+   iPop design system — the only guideline. Loaded last.
+
+   DO
+   · #0071e3 only for filled action buttons and selected/active states — one color, one job.
+   · Pair every filled blue button with an outlined blue secondary; never stack two filled buttons.
+   · Body text 17px with -0.016em letter-spacing.
+   · Product photography fills the width; hero images are never held in a max-width container.
+   · 980px radius for every interactive button, tag and pill.
+   · Section backgrounds are full-bleed #f5f5f7 or a single product color wash — no card containers inside a section.
+   · Weight 300 for subheads and editorial descriptors, 400 for body, 600 for nav.
+
+   DON'T
+   · #0071e3 for text, borders or decoration — it is only a button fill.
+   · Drop shadows on cards, buttons or nav — hairline borders and surface shifts, not elevation.
+   · 700 for product names — 600 is the maximum.
+   · A card or panel inside a #f5f5f7 section — the canvas itself is the surface.
+   · Main content in a narrow column — 100% width, internal max-widths only for text-heavy blocks.
+   · Radius below 980px for buttons or above 8px for cards, images and inputs — the only two radius values.
+   · The three blues mixed in one element — #0071e3 fill, #0066cc outlined action, #2997ff decorative.
+
+   SPACING · base 4px · element gap 12px · card padding 24px · section gap 64px · max width 1440px
+   RADIUS  · cards, images, inputs 8px · tags, buttons 980px
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: light;
+  /* the three blues, one job each */
+  --blue-fill: #0071e3; --blue-fill-hover: #0077ed; --blue-action: #0066cc; --blue-deco: #2997ff;
+  /* surfaces and type colour */
+  --canvas: #ffffff; --section: #f5f5f7; --hairline: #d2d2d7; --hairline-soft: #e8e8ed;
+  --ink: #1d1d1f; --ink-2: #424245; --muted: #6e6e73;
+  /* shape and space */
+  --r-card: 8px; --r-pill: 980px;
+  --space: 4px; --gap: 12px; --pad: 24px; --section-gap: 64px; --max: 1440px;
+
+  /* the names the rest of the site reads, set to the system */
+  --ipop-pearl: #f7f4ef; --ipop-graphite: #3a3a3a; --ipop-silver: #e6e6e8; --ipop-black: #111111;
+  --color-gallery-white: #ffffff; --color-studio-mist: var(--section); --color-paper-frost: #fafafc; --color-hairline-silver: var(--hairline);
+  --color-control-gray: #e8e8ed; --color-ink: var(--ink); --color-slate: var(--muted); --color-steel: #86868b;
+  --color-apple-blue: var(--blue-action); --color-pricing-blue: var(--blue-fill); --color-launch-orange: #b64400;
+  --font-sf-pro-display: "Inter", "Helvetica Neue", Arial, sans-serif; --font-sf-pro-text: "Inter", "Helvetica Neue", Arial, sans-serif; --font-arial: Arial, sans-serif;
+  --f-display: var(--font-sf-pro-display); --f-text: var(--font-sf-pro-text); --f-voice: var(--f-text); --f-data: var(--f-text); --f-mono: var(--f-text);
+  --text-body: 17px; --tracking-body: -0.016em; --text-body-small: 14px;
+  --text-product-kicker: 21px; --leading-product-kicker: 1; --tracking-product-kicker: 0.231px;
+  --text-hero-display: 80px; --leading-hero-display: 1.05; --tracking-hero-display: -0.015em;
+  --font-weight-light: 300; --font-weight-regular: 400; --font-weight-medium: 500; --font-weight-semibold: 600;
+  --spacing-unit: 4px; --element-gap: var(--gap); --card-padding: var(--pad);
+  --radius-cards: var(--r-card); --radius-images: var(--r-card); --radius-inputs: var(--r-card); --radius-links: var(--r-pill);
+  --radius-pills: var(--r-pill); --radius-buttons: var(--r-pill); --radius-badges: var(--r-pill); --radius-navigation: var(--r-pill);
+  --radius: var(--r-card); --r: var(--r-card); --r-ctl: var(--r-pill);
+  --shadow-subtle: 0 0 0 1px var(--hairline-soft); --shadow-subtle-2: 0 0 0 1px var(--hairline); --card-shadow: none;
+  --page: var(--canvas); --void: var(--canvas); --deep: var(--canvas);
+  --surface-0: #ffffff; --surface-1: var(--section); --surface-2: #fafafc;
+  --plate: #ffffff; --plate-2: #ffffff; --glass: #ffffff; --glass-hi: #ffffff; --card: #ffffff; --card-edge: var(--hairline);
+  --field: #ffffff; --bg-2: #ffffff; --bg-3: var(--section);
+  --fill-1: var(--hairline); --fill-2: #e8e8ed; --fill-3: var(--section); --fill-4: #fafafc;
+  --line: var(--hairline-soft); --line-hi: var(--hairline);
+  --ink-hi: var(--ink); --ink-soft: var(--ink); --ink-rgb: 29, 29, 31; --on-hot: #ffffff;
+  --xenon: var(--ink); --chain: var(--blue-action); --chain-rgb: 232, 232, 237; --violet: var(--blue-action); --magenta: #b64400; --cyan: var(--blue-action);
+  --ice: var(--blue-action); --ice-rgb: 232, 232, 237; --tint-c: var(--blue-action); --tint-fill: var(--blue-fill); --tint-rgb: 0, 113, 227;
+  --amber: #b64400; --amber-rgb: 240, 240, 242; --orange: #b64400;
+  --good: #17692f; --good-rgb: 240, 240, 242; --bad: #c4001d; --bad-rgb: 240, 240, 242; --bad-soft: #c4001d;
+  --sys-blue: var(--blue-deco); --sys-green: #1d7a3a; --sys-red: #c4001d; --sys-orange: #b64400;
+  --tint: 29, 29, 31; --hair: 134, 134, 139; --glow: 232, 232, 237; --shade: 255, 255, 255; --shadow: 0, 0, 0;
+  --holo: linear-gradient(0deg, var(--ink), var(--ink)); --beam: linear-gradient(90deg, var(--ink), var(--ink)); --hot: var(--blue-fill); --hot-glow: none;
+}
+
+/* ── canvas and type ── */
+html, body { background: var(--canvas); color: var(--ink); }
+body { font-family: var(--f-text); font-size: 17px; line-height: 1.47; letter-spacing: -0.016em; font-weight: 400; overflow-x: clip; }
+::selection { background: rgba(41, 151, 255, .22); }
+:focus-visible { outline: 2px solid var(--blue-action); outline-offset: 2px; }
+a, .link, .btn.ghost, .gx-band-h a, .gx-band-h button, .wc-done summary { color: var(--blue-action); text-decoration-color: currentColor; }
+h1, h2, h3, h4, h5, h6, b, strong, th { font-weight: 600; }
+/* subheads and editorial descriptors whisper at 300 */
+.lede, .sheet .lede, .gx-claim, .si-sub, .ml-head p, .page-title, .slab-h .voice, .pf-src { font-weight: 300; }
+.gx-claim, .page-title { text-shadow: none; }
+.lede, .note, .pf-src, .si-sub { max-width: 80ch; }
+
+/* ── width: the page uses the screen, up to 1440px ── */
+#view { max-width: var(--max); padding: var(--section-gap) var(--pad) 0; }
+.tb-in { max-width: var(--max); }
+@media (max-width: 480px) { #view { padding: 32px 16px 0; } }
+
+/* ── nav: flat, a hairline under it, no elevation ── */
+.head.tb { background: rgba(245, 245, 247, .86); box-shadow: none; border-bottom: 1px solid var(--hairline-soft); }
+.tb-link { color: var(--ink-2); text-shadow: none; font-weight: 400; }
+.tb-link[aria-current="page"], .tb-brand { color: var(--ink); font-weight: 600; }
+
+/* ── the page header is a full-bleed #f5f5f7 section: the statement sits on the canvas, nothing boxed inside it ── */
+.title-row { background: var(--section); padding: var(--section-gap) var(--pad) 48px; }
+.page-title { color: var(--ink); }
+.kicker { font-weight: 600; }
+
+/* ── cards: white, a hairline, 8px, no shadow ── */
+.slab, .hero, .token, .dash-alerts, .al-hero, .vault, .lk-card, .uz-card, .uz-hero, .fx-node, .fx-hero, .ml-board, .sl-board,
+.p360, .sc-stage, .si-card, .an-card, .rq-card, .sf-card, .pf-item, .mrow, .use, .rw, .pop-cell, .stub, .al-card, .nr-card, .hl-panel, .bf, .wc-card, .gate, .draft,
+.pcard, .sheet, .veil .sheet, .pc-shot, .gx-brand, .gx-hero, .gx-slide {
+  border-radius: var(--r-card); box-shadow: none; }
+.slab, .hero, .token, .dash-alerts, .al-hero, .vault, .lk-card, .uz-card, .uz-hero, .fx-node, .fx-hero, .ml-board, .sl-board, .p360, .sc-stage, .si-card, .an-card,
+.rq-card, .sf-card, .nr-card, .hl-panel, .bf, .pcard, .sheet, .veil .sheet {
+  background: #ffffff; border: 1px solid var(--hairline-soft); }
+.slab { padding: var(--pad); }
+@media (max-width: 480px) { .slab { padding: 20px 16px; } }
+/* panels inside a card are a surface shift, not another card */
+.gate, .draft, .use, .rw, .pop-cell, .stub, .al-card, .wc-card, .mrow { background: var(--section); border: 0; }
+/* the stage sections: a single product color wash, full bleed, nothing boxed on it */
+.gx-brand, .gx-hero, .gx-slide { border: 0; }
+.gx-band { margin-inline: 0; }
+.gx-brand, .gx-hero { margin-inline: calc(50% - 50vw); border-radius: 0; }
+.gx-callout { box-shadow: none; border: 1px solid var(--hairline-soft); border-radius: var(--r-pill); }
+
+/* ── buttons: 980px; filled blue for the one action, outlined blue beside it ── */
+.btn, button.btn { border-radius: var(--r-pill); box-shadow: none; border: 1px solid var(--blue-action); background: transparent; color: var(--blue-action); font-weight: 400; }
+.btn:hover { box-shadow: none; background: rgba(0, 102, 204, .06); border-color: var(--blue-action); }
+.btn.hot, .btn.hot:hover, .btn.primary { background: var(--blue-fill); border-color: var(--blue-fill); color: #ffffff; }
+.btn.hot:hover { background: var(--blue-fill-hover); border-color: var(--blue-fill-hover); }
+.btn.ghost, .btn.ghost:hover { border-color: transparent; background: transparent; }
+.btn.warn { border-color: rgba(196, 0, 29, .6); color: var(--bad); box-shadow: none; }
+.btn.icon, .title-row .head-meta .btn.icon, .title-row .bell, .sheet .x, .x { border: 0; border-radius: var(--r-pill); color: var(--ink-2); box-shadow: none; }
+.sheet .x { background: var(--section); }
+/* tags, chips and pills: outlined hairline; the chosen one is the active state, filled blue */
+.cat, .uz-periods button, .uz-seg button, .uz-pager-btns button, .fx-chips button, .hl-mode button, .hl-tabs button, .al-filters button, .ra-chips button, .tag-pill, .chip, .pill {
+  border-radius: var(--r-pill); box-shadow: none; border: 1px solid var(--hairline); background: transparent; color: var(--ink); }
+.cat[aria-pressed="true"], .uz-periods button.on, .uz-seg button.on, .uz-pager-btns button.on, .fx-chips button.root.on, .fx-chips button.on, .hl-mode button[aria-pressed="true"],
+.hl-tabs button[aria-selected="true"], .al-filters button.on, .ra-chips button.on {
+  background: var(--blue-fill); border-color: var(--blue-fill); color: #ffffff; box-shadow: none; }
+.cat:hover { box-shadow: none; border-color: var(--ink-2); }
+/* in-page view switches: text labels; the chosen one is Ink with a 2px Ink rule under it */
+.seg button[aria-pressed="true"], .seg button.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); font-weight: 600; }
+.bell sup, .nav-badge { border-radius: var(--r-pill); }
+
+/* ── inputs: 8px, a hairline, the active field ringed in the action blue ── */
+.input, .select, textarea.input, .seek input { border-radius: var(--r-card); border: 1px solid var(--hairline); box-shadow: none; background: #ffffff; }
+.input:focus, .seek input:focus, .select:focus { border-color: var(--blue-action); box-shadow: 0 0 0 1px var(--blue-action); }
+input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: var(--blue-fill); }
+
+/* ── the dock: flat silver nav, round keys, no elevation ── */
+.dock-nav { box-shadow: none !important; border: 1px solid var(--hairline-soft); }
+.dock-nav .dk-key, .dock-nav .dk-btn, .dock-nav .dk-inner, .dock-nav .dk-bg, .dock-nav .dk-glow { border-radius: var(--r-pill) !important; }
+.dock-nav .dk-key, .dock-nav .dk-btn { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(0, 0, 0, .08) !important; }
+.dock-nav .dk-glow { display: none; }
+.dock-nav [aria-current="page"] .dk-led, .dock-nav .dk[aria-current="page"] .dk-led { background: var(--blue-fill); box-shadow: none; }
+
+/* ── the product watch: its controls follow the system too ── */
+.nw-pill { border-radius: var(--r-pill); box-shadow: none; }
+.nw-start { background: var(--blue-fill); color: #ffffff; }
+.nw-send { background: transparent; color: var(--blue-action); border: 1px solid var(--blue-action); box-shadow: none; }
+.nw-send em { background: var(--blue-action); color: #ffffff; }
+.nw-bar.is-due .nw-start { background: var(--blue-fill); }
+.nw-m-btn { border-radius: var(--r-pill); box-shadow: none; }
+
+/* ── toasts and sheets: no elevation, a hairline ── */
+.toast { box-shadow: none; border: 1px solid var(--hairline); border-radius: var(--r-pill); }
+.veil { background: rgba(0, 0, 0, .32); }
+
+/* ── tables read as hairline rows on the card ── */
+.wc-table th, .pf-table th, .ledger th { font-weight: 600; color: var(--muted); }
+.wc-st { border-radius: var(--r-pill); }
+.gx-band-h button, .gx-band-h a { white-space: nowrap; }
+/* a list of reports, each with its own upload: outlined actions, so no two filled buttons ever stack */
+.rq-card .btn.hot, .rq-act .btn.hot { background: transparent; color: var(--blue-action); border-color: var(--blue-action); }

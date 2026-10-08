@@ -17,7 +17,7 @@ const sgn = (n, d = 1) => `${n >= 0 ? "+" : "−"}${pct(Math.abs(n), d)}`;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const AXIS = { axisLine: { lineStyle: { color: "rgba(150,170,210,.18)" } }, axisLabel: { color: "#7c8599", fontFamily: "Inter, Plex Arabic, sans-serif", fontSize: 10 }, splitLine: { lineStyle: { color: "rgba(150,170,210,.07)" } } };
-const TIP = { backgroundColor: "rgba(8,11,16,.95)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.45)" };
+const TIP = { backgroundColor: "rgba(8,11,16,.95)", borderColor: "rgba(91,123,255,.45)", textStyle: { color: "#edf1f8", fontSize: 12 }, extraCssText: "border-radius:8px;box-shadow:none" };
 const LEG = { top: 0, itemGap: 16, icon: "roundRect", itemWidth: 10, itemHeight: 10, textStyle: { color: "#a3adbf", fontSize: 11 } };
 
 const SEV = { good: "▲", warn: "◆", bad: "▼", info: "●" };
