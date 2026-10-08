@@ -1,8 +1,5 @@
-/* Type, self-hosted (no CDN): one family for the whole site.
-
-   Inter 4 (rsms/inter, OFL), variable weight 100–900 with optical sizes (opsz 14–32), upright and italic.
-
-   IBM Plex Sans Arabic (IBM/plex, OFL) draws every Arabic letter, since Inter has none. */
+/* Type, self-hosted (no CDN): Inter 4 (rsms/inter, OFL),
+   variable weight 100–900 with optical sizes (opsz 14–32), upright and italic. */
 
 @font-face { font-family: "Inter"; src: url("../vendor/fonts/Inter-Variable.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 
