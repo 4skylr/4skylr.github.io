@@ -5,7 +5,7 @@ import { servingOf } from "../finance/serving.js?v=106";
 import { soldOf, moveOf } from "../data/sales-data.js?v=106";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=47" alt="" loading="lazy" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
+const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=47" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
 
 export function stageHtml(H, ar) {
   const T = (e, a) => (ar ? a : e), P = H.data().products, name = p => esc(p.name);
@@ -27,7 +27,7 @@ export function stageHtml(H, ar) {
         <small>${best ? T(`cost ${best.cost.toFixed(2)} · ${sv.options.length} flavours`, `التكلفة ${best.cost.toFixed(2)} · ${sv.options.length} نكهات`) : T("across all stores", "بكل المواقع")}</small></span>
         <button type="button" class="btn hot" data-edit="${esc(star.id)}">${T("View", "عرض")}</button></div>
     </section>`;
-  const picks = ranked.slice(0, 8);
+  const picks = ranked.filter(p => p.id !== star.id).slice(0, 8);
   const band = `<section class="gx-band" aria-roledescription="carousel" aria-label="${T("Top sellers", "الأكثر مبيعاً")}">
       <div class="gx-band-h"><h2>${T("Get the highlights.", "أبرز المنتجات.")}</h2><button type="button" data-route="products">${T("See all stock", "كل المخزون")} ›</button></div>
       <div class="gx-track">${picks.map((p, i) => { const s = servingOf(p), o = s?.kind === "serving" ? s.options[0] : null;

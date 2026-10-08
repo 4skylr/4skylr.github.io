@@ -388,3 +388,11 @@ tfoot td { background: #fbfaf7 !important; }
 .gx-callout { background: rgba(251, 250, 247, .92); }
 /* review lanes on Unaizah: the lane title is bare text on the card, not on a tinted strip */
 div[aria-label="Audit"] > header, div[aria-label="Inquiry"] > header, div[aria-label="Committee"] > header, div[aria-label="Note"] > header { background: transparent !important; }
+
+.gx-brand { margin-bottom: 18px; border-radius: 22px; overflow: hidden; }
+.gx-brand img { display: block; width: 100%; height: auto; }
+.gx-img, .gx-render { object-fit: contain; background: #f4f4f6; }
+.gx-slide .gx-img { height: 180px; }
+@media (max-width: 800px) {
+  .gx-brand { margin-bottom: 128px; }
+}
