@@ -6,8 +6,7 @@ Back-office web app for the concession and the branch: stock across the three lo
 product profit, the nightly report, the halls, the Unaizah ledger and safety checks. Arabic and English,
 phone first, works offline once opened.
 
-`noir-stock/` is the address printed on the product labels: it opens one product card from its barcode and nothing else.
-It is built from the app (`ipop/door/build.mjs`); do not edit it by hand.
+`noir-stock/` only redirects old printed labels to `/ipop/`.
 
 ## Layout
 

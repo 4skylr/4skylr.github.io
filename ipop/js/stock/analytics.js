@@ -2,8 +2,8 @@
 // Libraries (loaded on demand from jsDelivr):
 //   Apache ECharts — github.com/apache/echarts  (charts)
 //   Fuse.js        — github.com/krisk/Fuse      (fuzzy menu search)
-import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=104";
-import { wire } from "./recipe-theater.js?v=104";
+import { RAW_MATERIALS, RECIPES, RECIPE_SOURCE_DATE } from "../data/recipes-data.js?v=105";
+import { wire } from "./recipe-theater.js?v=105";
 const LANG = () => ((sessionStorage.getItem("noir-lang") || "en") === "ar" ? "ar" : "en");
 
 const ECHARTS_URL = "vendor/echarts.min.js";

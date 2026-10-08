@@ -6,9 +6,9 @@
 //   for a supervisor; a place that does not is sent straight back as a recount for that place, to the same watch.
 //   Dates and quantities go into the expiry sheet at once (expiry-edits.js), so the Excel download is always current.
 // Records live in the "watchCounts" collection (Firestore, with a copy in this browser).
-import * as store from "../core/store.js?v=104";
-import { countToEdits, MAX_GROUPS } from "../data/expiry-edits.js?v=104";
-import { AR as NAMES_AR } from "../core/names-ar.js?v=104";
+import * as store from "../core/store.js?v=105";
+import { countToEdits, MAX_GROUPS } from "../data/expiry-edits.js?v=105";
+import { AR as NAMES_AR } from "../core/names-ar.js?v=105";
 
 export const COL = "watchCounts";
 export const ORDER = ["stores", "mini", "refuel"]; // the walk: Store → Mini Store → Concession

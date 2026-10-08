@@ -1,8 +1,7 @@
 // Smoke test for the site (run by .github/workflows/ci.yml, or locally: node .github/scripts/smoke.mjs).
 // Serves the repo, opens every page in English and Arabic at phone and desktop width, and fails on:
 //   a JavaScript error · a missing local file · a page wider than the screen · an empty page.
-// Also checks the barcode door: the product watch alone, no menu, no way into the site.
-// Writes a Markdown table to the GitHub job summary and screenshots to ./smoke-shots.
+// // Writes a Markdown table to the GitHub job summary and screenshots to ./smoke-shots.
 import { chromium } from "playwright";
 import http from "node:http";
 import fs from "node:fs";
@@ -34,29 +33,15 @@ for (const lang of ["en", "ar"]) for (const width of [390, 1300]) {
   page.on("console", m => { if (m.type() === "error" && !NOISE.test(m.text())) errs.push(m.text().slice(0, 160)); });
   page.on("response", r => { if (r.status() >= 400 && r.url().startsWith(BASE)) missing.push(`${r.status()} ${r.url().slice(BASE.length)}`); });
   await page.addInitScript(l => { sessionStorage.setItem("noir-lang", l); sessionStorage.setItem("noir-admin", "1"); localStorage.setItem("noir-tour-v1", "1"); }, lang);
-  await page.goto(`${BASE}/k7/#dashboard`); await wait(2500);
+  await page.goto(`${BASE}/ipop/#dashboard`); await wait(2500);
   for (const route of ROUTES) {
     errs = []; missing = [];
-    await page.goto(`${BASE}/k7/#${route}`); await page.reload(); await wait(route === "unaizah" || route === "finance" ? 4500 : 2500);
+    await page.goto(`${BASE}/ipop/#${route}`); await page.reload(); await wait(route === "unaizah" || route === "finance" ? 4500 : 2500);
     const st = await page.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, text: document.querySelector("#view")?.innerText.trim().length || 0 }));
     const why = [...errs.map(e => "error: " + e), ...missing.map(m => "missing: " + m), ...(st.over > 1 ? [`${st.over}px wider than the screen`] : []), ...(st.text < 20 ? ["page is empty"] : [])];
     rows.push({ lang, width, route, ok: !why.length, why });
     if (why.length) { failures.push(`${lang} ${width} ${route}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/${lang}-${width}-${route}.png` }); }
   }
-  await ctx.close();
-}
-// the barcode door must show one card and nothing else
-{
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 860 }, serviceWorkers: "block" });
-  await ctx.route(/googleapis|gstatic\.com|firebaseio/, r => r.abort());
-  const page = await ctx.newPage(); const errs = []; page.on("pageerror", e => errs.push(e.message));
-  await page.goto(`${BASE}/noir-stock/?p=tub-46`); await wait(4000);
-  const d = await page.evaluate(() => ({ card: document.querySelectorAll(".pass, .phone-card, .nw-page").length, nav: document.querySelectorAll("#nav, .dock-nav, .head").length, links: [...document.querySelectorAll("a[href]")].map(a => a.getAttribute("href")) }));
-  await page.evaluate(() => { location.hash = "dashboard"; }); await wait(1200);
-  const still = await page.evaluate(() => document.querySelectorAll(".pass, .phone-card, .nw-page").length);
-  const why = [...errs.map(e => "error: " + e), ...(d.card !== 1 ? ["no product card"] : []), ...(d.nav ? ["site menu visible"] : []), ...(d.links.some(h => /k7/.test(h)) ? ["link into the site"] : []), ...(still !== 1 ? ["#dashboard left the card"] : [])];
-  rows.push({ lang: "door", width: 390, route: "noir-stock/?p=tub-46", ok: !why.length, why });
-  if (why.length) { failures.push(`door: ${why.join("; ")}`); await page.screenshot({ path: "smoke-shots/door.png" }); }
   await ctx.close();
 }
 await browser.close(); server.close();

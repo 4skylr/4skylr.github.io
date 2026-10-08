@@ -3,8 +3,8 @@
    - Pages and JSON: network first, cache as fallback.
    - Versioned CDN files (Firebase SDK, fonts): cache first.
    - Firestore / auth traffic is never touched, so live sync is not slowed or broken. */
-const CACHE = "ipop-v104";
-const CORE = ["./", "./index.html", "./css/style.css?v=104", "./css/fonts.css?v=104", "./css/indicators.css?v=104", "./css/scan-card.css?v=104", "./css/scan-pass.css?v=104", "./css/unaizah.css?v=104", "./css/finance.css?v=104", "./css/analyst.css?v=104", "./css/product-card.css?v=104", "./css/recipe-theater.css?v=104", "./css/watch.css?v=104", "./css/loader.css?v=104", "./css/branch-card.css?v=104", "./css/gallery.css?v=104", "./css/dock.css?v=104", "./assets/brand/ipop-hero.webp", "./vendor/fonts/Inter-Variable.woff2", "./vendor/fonts/plex-arabic-400.woff2", "./vendor/fonts/plex-arabic-600.woff2"];
+const CACHE = "ipop-v105";
+const CORE = ["./", "./index.html", "./css/style.css?v=105", "./css/fonts.css?v=105", "./css/indicators.css?v=105", "./css/scan-card.css?v=105", "./css/scan-pass.css?v=105", "./css/unaizah.css?v=105", "./css/finance.css?v=105", "./css/analyst.css?v=105", "./css/product-card.css?v=105", "./css/recipe-theater.css?v=105", "./css/watch.css?v=105", "./css/loader.css?v=105", "./css/branch-card.css?v=105", "./css/gallery.css?v=105", "./css/dock.css?v=105", "./assets/brand/ipop-hero.webp", "./vendor/fonts/Inter-Variable.woff2", "./vendor/fonts/plex-arabic-400.woff2", "./vendor/fonts/plex-arabic-600.woff2"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdn\.jsdelivr\.net\/(gh|npm)\/)/;
 
 self.addEventListener("install", e => {

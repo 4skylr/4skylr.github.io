@@ -1,5 +1,0 @@
-.gauge { width: 84px; height: 84px; }
-.risk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.risk b { display: block; font-family: var(--f-data); font-size: 13px; }
-.risk span { font-size: 10px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-@media (max-width: 560px) { .risk { grid-template-columns: 1fr 1fr; } }

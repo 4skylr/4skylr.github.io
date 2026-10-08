@@ -1,5 +1,5 @@
 // Reads "User Transaction Log - Payment Type wise" (pdf.js, mozilla/pdf.js) into seat counts per hall.
-import { summarize } from "./halls-data.js?v=104";
+import { summarize } from "./halls-data.js?v=105";
 
 // rebuild each printed line from the text positions, top to bottom
 export async function pdfLines(pdfjs, data, onProgress = () => {}) {
@@ -22,7 +22,7 @@ export async function pdfLines(pdfjs, data, onProgress = () => {}) {
 }
 
 export async function parseTxLog(file, onProgress) {
-  const { loadPdf } = await import("./sync-admin.js?v=104");
+  const { loadPdf } = await import("./sync-admin.js?v=105");
   const pdfjs = await loadPdf();
   const lines = await pdfLines(pdfjs, new Uint8Array(await file.arrayBuffer()), onProgress);
   if (!lines.some(l => /User Transaction Log/i.test(l))) throw new Error("This is not the User Transaction Log - Payment Type wise report");

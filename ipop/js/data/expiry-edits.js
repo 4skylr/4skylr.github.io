@@ -1,6 +1,6 @@
 // Changes people make to the expiry sheet (quantities and dates per row and group), kept on this device.
 // Shape: { "<sheet row>": { q1: 12, d1: "2026-12-31", q2: … } }. One reader and one writer for every page.
-import { EXPIRY_SHEET } from "./expiry-data.js?v=104";
+import { EXPIRY_SHEET } from "./expiry-data.js?v=105";
 export const EDITS_KEY = "noir-expiry-edits-v1";
 export function readEdits() { try { return JSON.parse(localStorage.getItem(EDITS_KEY) || "{}") || {}; } catch { return {}; } }
 export function writeEdits(all) { try { localStorage.setItem(EDITS_KEY, JSON.stringify(all)); } catch {} }
