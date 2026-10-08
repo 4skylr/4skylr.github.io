@@ -3,84 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>67 Stock</title>
+<title>iPop</title>
 <meta name="description" content="Concessions inventory ledger for Noir Cinema — Othaim Mall, Onaizah">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#e6e6e8">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="assets/icons/apple-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="67 Stock">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236ccbff'/%3E%3Cstop offset='.5' stop-color='%235b7bff'/%3E%3Cstop offset='1' stop-color='%23dce6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='%23000000'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='18' fill='url%28%23g%29'%3E67%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=101">
-<link rel="stylesheet" href="css/fonts.css?v=101">
-<link rel="stylesheet" href="css/indicators.css?v=101">
-<link rel="stylesheet" href="css/scan-card.css?v=101">
-<link rel="stylesheet" href="css/scan-pass.css?v=101">
-<link rel="stylesheet" href="css/unaizah.css?v=101">
-<link rel="stylesheet" href="css/finance.css?v=101">
-<link rel="stylesheet" href="css/analyst.css?v=101">
-<link rel="stylesheet" href="css/logo.css?v=101">
-<link rel="stylesheet" href="css/product-card.css?v=101">
-<link rel="stylesheet" href="css/recipe-theater.css?v=101" data-rt-css>
-<link rel="stylesheet" href="css/watch.css?v=101">
-<link rel="stylesheet" href="css/loader.css?v=101">
-<link rel="stylesheet" href="css/branch-card.css?v=101">
-<link rel="stylesheet" href="css/gallery.css?v=101">
+<meta name="apple-mobile-web-app-title" content="iPop">
+<link rel="icon" type="image/png" href="assets/brand/ipop-64.png">
+<link rel="stylesheet" href="css/style.css?v=102">
+<link rel="stylesheet" href="css/fonts.css?v=102">
+<link rel="stylesheet" href="css/indicators.css?v=102">
+<link rel="stylesheet" href="css/scan-card.css?v=102">
+<link rel="stylesheet" href="css/scan-pass.css?v=102">
+<link rel="stylesheet" href="css/unaizah.css?v=102">
+<link rel="stylesheet" href="css/finance.css?v=102">
+<link rel="stylesheet" href="css/analyst.css?v=102">
+<link rel="stylesheet" href="css/product-card.css?v=102">
+<link rel="stylesheet" href="css/recipe-theater.css?v=102" data-rt-css>
+<link rel="stylesheet" href="css/watch.css?v=102">
+<link rel="stylesheet" href="css/loader.css?v=102">
+<link rel="stylesheet" href="css/branch-card.css?v=102">
+<link rel="stylesheet" href="css/gallery.css?v=102">
+<link rel="stylesheet" href="css/dock.css?v=102">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
-/* Launch screen: the plain page background, the logo, a thin progress line; inline so it paints before anything else loads */
-#curtain{position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:var(--page,#f2f2f7);transition:opacity .45s ease}
-#curtain .hud{display:grid;justify-items:center;gap:14px;text-align:center;color:var(--ink,#000);font-family:Inter,"Plex Arabic",sans-serif;transition:transform .45s ease}
-#curtain .now{font:600 13px/1.4 Inter,"Plex Arabic",sans-serif;color:var(--muted,#5f5f64)}
-#curtain .feat{font-weight:700;font-size:clamp(18px,5vw,24px);letter-spacing:-.02em;max-width:84vw}
-#curtain .loader{margin:4px auto 34px}
-#curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:scale(1.04)}
+/* Launch screen: the iPop stage (brushed silver, the pearl mark, the wordmark), the loading mark under it; inline so it paints first */
+#curtain{position:fixed;inset:0;z-index:999;display:grid;place-items:end center;background:url("assets/brand/ipop-hero.webp") center top/auto 86% no-repeat,linear-gradient(180deg,#c7c8ce 0%,#dcdde1 50%,#b9bac0 100%);transition:opacity .5s ease}
+#curtain .hud{position:static;inset:auto;width:auto;height:auto;background:none;border:0;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;display:grid;justify-items:center;gap:10px;text-align:center;color:#3a3a3a;font-family:Inter,"Plex Arabic",sans-serif;padding:0 16px calc(2vh + env(safe-area-inset-bottom,0px));transition:transform .5s ease}
+#curtain .now{font:500 13px/1.4 Inter,"Plex Arabic",sans-serif;color:#3a3a3a}
+#curtain .feat{font-weight:600;font-size:clamp(16px,4.4vw,22px);letter-spacing:-.01em;color:#111;max-width:84vw}
+#curtain .loader{margin:6px auto 22px;color:#3a3a3a;zoom:.7}
+#curtain .loader .text{color:#3a3a3a}
+#curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:translateY(8px)}
 #curtain.gone{display:none}
-#curtain.quick .now,#curtain.quick .feat{display:none}
+#curtain .now,#curtain .feat{display:none}#curtain.scan .now,#curtain.scan .feat{display:block}
 @media (prefers-reduced-motion:reduce){#curtain,#curtain .hud{transition-duration:.01s}}
 </style>
 <!-- modulepreload:start (generated by .github/scripts/preload.mjs) -->
-<link rel="modulepreload" href="js/core/store.js?v=101">
-<link rel="modulepreload" href="js/core/firebase-config.js?v=101">
-<link rel="modulepreload" href="js/data/seed-data.js?v=101">
-<link rel="modulepreload" href="js/core/lock.js?v=101">
-<link rel="modulepreload" href="js/core/time-pin.js?v=101">
-<link rel="modulepreload" href="js/core/icons.js?v=101">
-<link rel="modulepreload" href="js/core/loader.js?v=101">
-<link rel="modulepreload" href="js/core/gallery-stage.js?v=101">
-<link rel="modulepreload" href="js/finance/serving.js?v=101">
-<link rel="modulepreload" href="js/data/menu-data.js?v=101">
-<link rel="modulepreload" href="js/data/recipes-data.js?v=101">
-<link rel="modulepreload" href="js/finance/costing.js?v=101">
-<link rel="modulepreload" href="js/data/price-list.js?v=101">
-<link rel="modulepreload" href="js/data/nutrition.js?v=101">
-<link rel="modulepreload" href="js/data/sales-data.js?v=101">
-<link rel="modulepreload" href="js/core/names-ar.js?v=101">
-<link rel="modulepreload" href="js/core/chart-theme.js?v=101">
-<link rel="modulepreload" href="js/stock/watch-count.js?v=101">
-<link rel="modulepreload" href="js/data/expiry-edits.js?v=101">
-<link rel="modulepreload" href="js/data/expiry-data.js?v=101">
-<link rel="modulepreload" href="js/stock/product-card.js?v=101">
-<link rel="modulepreload" href="js/core/likes.js?v=101">
-<link rel="modulepreload" href="js/stock/stock-card.js?v=101">
-<link rel="modulepreload" href="js/data/barcodes.js?v=101">
-<link rel="modulepreload" href="js/stock/indicators.js?v=101">
-<link rel="modulepreload" href="js/stock/scan-view.js?v=101">
-<link rel="modulepreload" href="js/stock/fefo-place.js?v=101">
-<link rel="modulepreload" href="js/stock/consumption.js?v=101">
-<link rel="modulepreload" href="js/stock/watch.js?v=101">
-<link rel="modulepreload" href="js/stock/recipe-names.js?v=101">
-<link rel="modulepreload" href="js/stock/stock-alerts.js?v=101">
-<link rel="modulepreload" href="js/core/clock.js?v=101">
+<link rel="modulepreload" href="js/core/store.js?v=102">
+<link rel="modulepreload" href="js/core/firebase-config.js?v=102">
+<link rel="modulepreload" href="js/data/seed-data.js?v=102">
+<link rel="modulepreload" href="js/core/lock.js?v=102">
+<link rel="modulepreload" href="js/core/time-pin.js?v=102">
+<link rel="modulepreload" href="js/core/icons.js?v=102">
+<link rel="modulepreload" href="js/core/loader.js?v=102">
+<link rel="modulepreload" href="js/core/gallery-stage.js?v=102">
+<link rel="modulepreload" href="js/finance/serving.js?v=102">
+<link rel="modulepreload" href="js/data/menu-data.js?v=102">
+<link rel="modulepreload" href="js/data/recipes-data.js?v=102">
+<link rel="modulepreload" href="js/finance/costing.js?v=102">
+<link rel="modulepreload" href="js/data/price-list.js?v=102">
+<link rel="modulepreload" href="js/data/nutrition.js?v=102">
+<link rel="modulepreload" href="js/data/sales-data.js?v=102">
+<link rel="modulepreload" href="js/core/names-ar.js?v=102">
+<link rel="modulepreload" href="js/core/chart-theme.js?v=102">
+<link rel="modulepreload" href="js/stock/watch-count.js?v=102">
+<link rel="modulepreload" href="js/data/expiry-edits.js?v=102">
+<link rel="modulepreload" href="js/data/expiry-data.js?v=102">
+<link rel="modulepreload" href="js/stock/product-card.js?v=102">
+<link rel="modulepreload" href="js/core/likes.js?v=102">
+<link rel="modulepreload" href="js/stock/stock-card.js?v=102">
+<link rel="modulepreload" href="js/data/barcodes.js?v=102">
+<link rel="modulepreload" href="js/stock/indicators.js?v=102">
+<link rel="modulepreload" href="js/stock/scan-view.js?v=102">
+<link rel="modulepreload" href="js/stock/fefo-place.js?v=102">
+<link rel="modulepreload" href="js/stock/consumption.js?v=102">
+<link rel="modulepreload" href="js/stock/watch.js?v=102">
+<link rel="modulepreload" href="js/stock/recipe-names.js?v=102">
+<link rel="modulepreload" href="js/stock/stock-alerts.js?v=102">
+<link rel="modulepreload" href="js/core/clock.js?v=102">
 <!-- modulepreload:end -->
 </head>
 <body>
 <div id="curtain" aria-hidden="true">
   <div class="hud">
     <span class="now" id="cur-now">Now showing</span>
-    <span class="nlogo" style="--s:1.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span>
     <span class="feat" id="cur-feat">Concession Stock</span>
     <div class="loader" aria-hidden="true"><div class="load-inner load-one"></div><div class="load-inner load-two"></div><div class="load-inner load-three"></div><span class="text" id="cur-load">Loading...</span></div>
   </div>
@@ -96,6 +96,7 @@
   var ar = (sessionStorage.getItem("noir-card-lang") || "ar") !== "en";
   if (q ? ar : sessionStorage.getItem("noir-lang") === "ar") { var ld = document.getElementById("cur-load"); if (ld) ld.textContent = "جاري التحميل..."; }
   if (q) {
+    c.classList.add("scan");
     document.getElementById("cur-now").textContent = ar ? "تم المسح · يعرض الآن" : "Scanned · now showing";
     document.getElementById("cur-feat").textContent = q.replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
   }
@@ -116,41 +117,37 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-101")) {
-    localStorage.setItem("noir-bust-101", "1");
+  if (!localStorage.getItem("noir-bust-102")) {
+    localStorage.setItem("noir-bust-102", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
 } catch (e) {}
 </script>
 
-<header class="head gn" id="gn">
-  <div class="gn-in">
-  <a class="mark" href="#dashboard" aria-label="67 Stock home"><span class="nlogo" style="--s:.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span><span class="six7-tag">STOCK</span></a>
-  <nav class="gn-links" id="nav" aria-label="Main"></nav>
-  <div class="head-meta">
-    <button type="button" class="btn sm ghost icon bell quiet" id="bell-btn" data-route="alerts" aria-label="Stock alerts"><svg class="lu ion" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><sup>0</sup></button>
-    <button type="button" class="btn sm ghost" id="lang-btn">عربي</button>
-    <span class="net" id="net"><i></i><span>Connecting…</span></span>
-    <button type="button" class="gn-menu" id="gn-menu" aria-label="Menu" aria-expanded="false" aria-controls="gn-sheet"><i></i><i></i></button>
-  </div>
-  </div>
+<header class="head tb" id="tb">
+  <nav class="tb-in" id="tb-nav" aria-label="iPop"></nav>
 </header>
-<div class="gn-sheet" id="gn-sheet" hidden></div>
 
-<div class="ln" id="ln"><div class="ln-in"><b class="ln-title" id="ln-title"></b><div class="title-actions" id="title-actions"></div></div></div>
 <main class="stage">
   <div class="title-row">
+    <div class="head-meta">
+      <button type="button" class="btn sm ghost icon bell quiet" id="bell-btn" data-route="alerts" aria-label="Stock alerts"><svg class="lu ion" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><sup>0</sup></button>
+      <button type="button" class="btn sm ghost" id="lang-btn">عربي</button>
+      <span class="net" id="net"><i></i><span>Connecting…</span></span>
+    </div>
     <p class="kicker" id="kicker"></p>
     <h1 class="page-title" id="page-title"></h1>
     <div class="clk" id="clock" role="timer" aria-live="off"></div>
+    <div class="title-actions" id="title-actions"></div>
   </div>
   <section id="view" aria-live="polite"></section>
 </main>
+<nav class="dock-nav" id="nav" aria-label="Main"></nav>
 
 <div id="modal-root"></div>
 <div class="toasts" id="toasts" role="status"></div>
 
-<script type="module" src="js/app.js?v=101"></script>
+<script type="module" src="js/app.js?v=102"></script>
 </body>
 </html>

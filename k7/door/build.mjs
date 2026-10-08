@@ -22,9 +22,9 @@ await esbuild.build({
 });
 fs.writeFileSync(path.join(out, "index.html"), fs.readFileSync(path.join(here, "index.html"), "utf8").replace(/__V__/g, V));
 const copy = (rel) => { const s = path.join(site, rel), d = path.join(out, rel); fs.mkdirSync(path.dirname(d), { recursive: true }); fs.cpSync(s, d, { recursive: true }); };
-["css/style.css", "css/fonts.css", "css/indicators.css", "css/scan-card.css", "css/scan-pass.css", "css/recipe-theater.css", "css/watch.css", "css/logo.css", "css/loader.css", "css/gallery.css"].forEach(copy);
+["css/style.css", "css/fonts.css", "css/indicators.css", "css/scan-card.css", "css/scan-pass.css", "css/recipe-theater.css", "css/watch.css", "css/loader.css", "css/gallery.css"].forEach(copy);
 ["vendor/jsbarcode.all.min.js", "vendor/fonts", "vendor/gsap", "assets/cutouts"].forEach(copy);
-["assets/products", "assets/combos", "assets/icons", "assets/pay"].forEach(copy);
+["assets/brand", "assets/products", "assets/combos", "assets/icons", "assets/pay"].forEach(copy);
 // retire the full app's service worker on devices that installed it here
 fs.writeFileSync(path.join(out, "sw.js"), `self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(caches.keys().then(k => Promise.all(k.map(c => caches.delete(c)))).then(() => self.registration.unregister())));\n`);

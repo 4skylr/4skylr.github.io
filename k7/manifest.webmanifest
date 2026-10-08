@@ -1,13 +1,13 @@
 {
-  "name": "67 Stock",
-  "short_name": "67",
-  "description": "Concessions inventory for Noir Cinema, Othaim Mall, Onaizah",
+  "name": "iPop",
+  "short_name": "iPop",
+  "description": "iPop — Premium Popped Experiences. Concessions stock for Noir Cinema, Othaim Mall, Onaizah",
   "start_url": "./#dashboard",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#05040a",
-  "theme_color": "#7c2280",
+  "background_color": "#e6e6e8",
+  "theme_color": "#e6e6e8",
   "icons": [
     {
       "src": "assets/icons/icon-192.png",

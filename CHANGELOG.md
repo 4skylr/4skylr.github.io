@@ -1,5 +1,19 @@
 # Changelog
 
+## v102 · 2026-10-08 · iPop identity
+
+- **The site is iPop now**, following the identity sheet: the pearl popcorn mark, the iPop wordmark, "Premium Popped Experiences", and the four colours Pearl #F7F4EF, Graphite #3A3A3A, Silver #E6E6E8 and Black #111111. · **هوية iPop الجديدة.**
+  - **Logo:** the old animated logo (logo.css) and the "67" icon are gone. The tab icon, the home-screen icons and the manifest use the pearl mark on a silver tile, and the app is named iPop.
+  - **Image quality:** the identity images were upscaled with Real-ESRGAN (xinntao/Real-ESRGAN, ncnn build). The mark was cut out with rembg (danielgatis/rembg).
+- **Navigation:**
+  - **Top:** the silver bar from the identity, with five words spread across it: iPop · Shop · Flavors · Origins · Support (Overview, Stock, Profit, Budget, Settings). The previous top bar, its full-screen menu and the page bar are removed.
+  - **Bottom:** the dock keys are back as they were.
+- **Pages:**
+  - **Hero:** each page opens on brushed silver with its statement pressed into the metal, the iPop wordmark style, and the page tools in the corner.
+  - **Launch screen:** the iPop stage.
+  - **Overview:** opens on the iPop stage. The best seller and the highlights sit on the same silver with a reflection.
+- **Colour:** Black pills replace the blue buttons, links are Graphite, and cards are pearl-white on a silver page.
+
 ## v101 · 2026-10-07 · Gallery theme
 
 - **New and only theme, from the Apple product-page style reference you sent**, with our own products in place of Apple's: the reference's tokens as given, in css/gallery.css. · **الثيم الجديد بالكامل.**

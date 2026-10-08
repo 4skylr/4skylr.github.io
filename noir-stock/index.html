@@ -3,32 +3,32 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>67</title>
+<title>iPop</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#ffffff">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236ccbff'/%3E%3Cstop offset='.5' stop-color='%235b7bff'/%3E%3Cstop offset='1' stop-color='%23dce6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='%23000000'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Arial Black,Arial' font-weight='900' font-size='18' fill='url%28%23g%29'%3E67%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=101">
-<link rel="stylesheet" href="css/fonts.css?v=101">
-<link rel="stylesheet" href="css/indicators.css?v=101">
-<link rel="stylesheet" href="css/scan-card.css?v=101">
-<link rel="stylesheet" href="css/scan-pass.css?v=101">
-<link rel="stylesheet" href="css/logo.css?v=101">
-<link rel="stylesheet" href="css/recipe-theater.css?v=101" data-rt-css>
-<link rel="stylesheet" href="css/watch.css?v=101">
-<link rel="stylesheet" href="css/loader.css?v=101">
-<link rel="stylesheet" href="css/gallery.css?v=101">
+<link rel="icon" type="image/png" href="assets/brand/ipop-64.png">
+<link rel="stylesheet" href="css/style.css?v=102">
+<link rel="stylesheet" href="css/fonts.css?v=102">
+<link rel="stylesheet" href="css/indicators.css?v=102">
+<link rel="stylesheet" href="css/scan-card.css?v=102">
+<link rel="stylesheet" href="css/scan-pass.css?v=102">
+<link rel="stylesheet" href="css/recipe-theater.css?v=102" data-rt-css>
+<link rel="stylesheet" href="css/watch.css?v=102">
+<link rel="stylesheet" href="css/loader.css?v=102">
+<link rel="stylesheet" href="css/gallery.css?v=102">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
 <style id="curtain-css">
-/* Launch screen: the plain page background, the logo, a thin progress line; inline so it paints before anything else loads */
-#curtain{position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:var(--page,#f2f2f7);transition:opacity .45s ease}
-#curtain .hud{display:grid;justify-items:center;gap:14px;text-align:center;color:var(--ink,#000);font-family:Inter,"Plex Arabic",sans-serif;transition:transform .45s ease}
-#curtain .now{font:600 13px/1.4 Inter,"Plex Arabic",sans-serif;color:var(--muted,#5f5f64)}
-#curtain .feat{font-weight:700;font-size:clamp(18px,5vw,24px);letter-spacing:-.02em;max-width:84vw}
-#curtain .loader{margin:4px auto 34px}
-#curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:scale(1.04)}
+/* Launch screen: the iPop stage (brushed silver, the pearl mark, the wordmark), the loading mark under it; inline so it paints first */
+#curtain{position:fixed;inset:0;z-index:999;display:grid;place-items:end center;background:url("assets/brand/ipop-hero.webp") center top/auto 86% no-repeat,linear-gradient(180deg,#c7c8ce 0%,#dcdde1 50%,#b9bac0 100%);transition:opacity .5s ease}
+#curtain .hud{position:static;inset:auto;width:auto;height:auto;background:none;border:0;box-shadow:none;border-radius:0;-webkit-backdrop-filter:none;backdrop-filter:none;display:grid;justify-items:center;gap:10px;text-align:center;color:#3a3a3a;font-family:Inter,"Plex Arabic",sans-serif;padding:0 16px calc(2vh + env(safe-area-inset-bottom,0px));transition:transform .5s ease}
+#curtain .now{font:500 13px/1.4 Inter,"Plex Arabic",sans-serif;color:#3a3a3a}
+#curtain .feat{font-weight:600;font-size:clamp(16px,4.4vw,22px);letter-spacing:-.01em;color:#111;max-width:84vw}
+#curtain .loader{margin:6px auto 22px;color:#3a3a3a;zoom:.7}
+#curtain .loader .text{color:#3a3a3a}
+#curtain.open{opacity:0;pointer-events:none}#curtain.open .hud{transform:translateY(8px)}
 #curtain.gone{display:none}
-#curtain.quick .now,#curtain.quick .feat{display:none}
+#curtain .now,#curtain .feat{display:none}#curtain.scan .now,#curtain.scan .feat{display:block}
 @media (prefers-reduced-motion:reduce){#curtain,#curtain .hud{transition-duration:.01s}}
 </style>
 </head>
@@ -36,7 +36,6 @@
 <div id="curtain" aria-hidden="true">
   <div class="hud">
     <span class="now" id="cur-now">Now showing</span>
-    <span class="nlogo" style="--s:1.4" aria-hidden="true"><span class="nlogo-in"><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l"><span class="nlogo-bg"></span></span><span class="nlogo-l is-blur"><span class="nlogo-bg"></span></span></span></span>
     <span class="feat" id="cur-feat">Concession Stock</span>
     <div class="loader" aria-hidden="true"><div class="load-inner load-one"></div><div class="load-inner load-two"></div><div class="load-inner load-three"></div><span class="text" id="cur-load">جاري التحميل...</span></div>
   </div>
@@ -48,6 +47,7 @@
   var ar = (sessionStorage.getItem("noir-card-lang") || "ar") !== "en";
   if (!ar) { var ld = document.getElementById("cur-load"); if (ld) ld.textContent = "Loading..."; }
   if (q) {
+    c.classList.add("scan");
     document.getElementById("cur-now").textContent = ar ? "تم المسح · يعرض الآن" : "Scanned · now showing";
     document.getElementById("cur-feat").textContent = q.replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
   }
@@ -84,6 +84,6 @@
 <div class="toasts" id="toasts" role="status"></div>
 
 <script>window.CARD_DOOR = true;</script>
-<script type="module" src="app.js?v=514515"></script>
+<script type="module" src="app.js?v=105799"></script>
 </body>
 </html>

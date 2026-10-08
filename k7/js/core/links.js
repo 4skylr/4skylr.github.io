@@ -1,5 +1,5 @@
 // Links — quick doors to the systems the reports come from. Opens them in a new tab; no passwords are kept here.
-import { isOpen } from "./lock.js?v=101";
+import { isOpen } from "./lock.js?v=102";
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "links";
 export const BUILT_IN = [

@@ -46,3 +46,7 @@ export const ICON = {
 };
 export const icon = (n, cls = "") => { const d = ICON[n] || ["", ""]; return `<svg class="lu ion ${cls}" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><g class="i-o">${d[0]}</g><g class="i-f">${d[1]}</g></svg>`; };
 
+// the dock keys (css/dock.css): the filled symbol is engraved in the key; the outline traces over it in light
+const traced = svg => svg.replace(/<(path|circle|rect|line|polyline|polygon|ellipse)\b/g, '<$1 pathLength="100"');
+export const keySymbol = n => { const d = ICON[n] || ["", ""];
+  return `<svg class="dk-sym" viewBox="0 0 512 512" aria-hidden="true"><g class="dk-symbol" fill="currentColor">${d[1]}</g><g class="dk-path-glow">${traced(d[0])}</g><g class="dk-path">${traced(d[0])}</g></svg>`; };
