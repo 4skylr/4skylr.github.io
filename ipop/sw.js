@@ -3,8 +3,8 @@
    - Pages and JSON: network first, cache as fallback.
    - Versioned CDN files (Firebase SDK, fonts): cache first.
    - Firestore / auth traffic is never touched, so live sync is not slowed or broken. */
-const CACHE = "ipop-v106";
-const CORE = ["./", "./index.html", "./css/style.css?v=106", "./css/fonts.css?v=106", "./css/indicators.css?v=106", "./css/scan-card.css?v=106", "./css/scan-pass.css?v=106", "./css/unaizah.css?v=106", "./css/finance.css?v=106", "./css/analyst.css?v=106", "./css/product-card.css?v=106", "./css/recipe-theater.css?v=106", "./css/watch.css?v=106", "./css/loader.css?v=106", "./css/branch-card.css?v=106", "./css/gallery.css?v=106", "./css/dock.css?v=106", "./assets/brand/ipop-hero.webp", "./vendor/fonts/Inter-Variable.woff2"];
+const CACHE = "ipop-v108";
+const CORE = ["./", "./index.html", "./css/style.css?v=108", "./css/fonts.css?v=108", "./css/indicators.css?v=108", "./css/scan-card.css?v=108", "./css/scan-pass.css?v=108", "./css/unaizah.css?v=108", "./css/finance.css?v=108", "./css/analyst.css?v=108", "./css/product-card.css?v=108", "./css/recipe-theater.css?v=108", "./css/watch.css?v=108", "./css/loader.css?v=108", "./css/branch-card.css?v=108", "./css/gallery.css?v=108", "./css/dock.css?v=108", "./assets/brand/ipop-hero.webp", "./vendor/fonts/Inter-Variable.woff2"];
 const CDN = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdn\.jsdelivr\.net\/(gh|npm)\/)/;
 
 self.addEventListener("install", e => {
@@ -29,6 +29,11 @@ self.addEventListener("fetch", e => {
   const isPage = req.mode === "navigate" || url.pathname.endsWith(".html") || url.pathname.endsWith("/") || url.pathname.endsWith(".json");
   if (isPage) {
     e.respondWith(fetch(req).then(res => put(req, res)).catch(() => caches.match(req).then(hit => hit || caches.match("./index.html"))));
+    return;
+  }
+  // JS and CSS: network first, so an update opens on the next visit instead of a stale shell.
+  if (/\.(js|css|webp|svg|woff2)$/.test(url.pathname)) {
+    e.respondWith(fetch(req).then(res => put(req, res)).catch(() => caches.match(req)));
     return;
   }
   e.respondWith(caches.match(req).then(hit => {

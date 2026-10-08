@@ -58,7 +58,7 @@ button { cursor: pointer; }
 @keyframes blink { 50% { opacity: .35; } }
 
 /* ── Stage & titles ─────────────────────────── */
-.stage { padding: 34px var(--gutter) 150px; max-width: 1480px; margin: 0 auto; }
+.stage { padding: 34px var(--gutter) 210px; max-width: 1480px; margin: 0 auto; }
 .title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
 .kicker { margin: 0 0 6px; font-family: var(--f-data); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
 .page-title { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(34px, 6.4vw, 84px); line-height: .92; letter-spacing: -0.035em; text-wrap: balance; }
