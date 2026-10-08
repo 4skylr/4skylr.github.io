@@ -1,64 +1,14 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Noir Cinema</title>
-<link rel="icon" href="logo.svg"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Arabic:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
-<style>
-:root{--bg:#0B0710;--text:#F4EDE4;--mute:#9A938C;--violet:#7A2A90;--line:rgba(244,237,228,.12)}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text)}
-body{font-family:"IBM Plex Sans",sans-serif;min-height:100vh}
-body.ar{font-family:"Noto Sans Arabic","IBM Plex Sans",sans-serif}
-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:12px}
-.brand img{width:44px;height:44px;border-radius:12px;background:var(--violet)}
-.brand b{font-family:Syne,sans-serif;letter-spacing:.08em;font-size:14px}
-.lang button{border:1px solid var(--line);background:transparent;color:var(--mute);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
-.lang button.on{background:var(--violet);color:#fff;border-color:var(--violet)}
-main{min-height:calc(100vh - 81px);display:grid;place-items:center;padding:40px 24px;text-align:center}
-main img{width:112px;height:112px;border-radius:24px;background:var(--violet);margin-bottom:20px}
-h1{font-family:Syne,sans-serif;font-size:clamp(36px,7vw,64px);margin:0 0 10px}
-p{color:var(--mute);margin:0}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPop</title>
+<meta http-equiv="refresh" content="0; url=/ipop/">
+<link rel="canonical" href="https://4skylr.github.io/ipop/">
+<script>location.replace("/ipop/" + location.search + location.hash);</script>
 </head>
 <body>
-<header>
-  <div class="brand">
-    <img src="logo.svg" alt="Noir Cinema"/>
-    <b>NOIR CINEMA</b>
-  </div>
-  <div class="lang">
-    <button id="enBtn" class="on">EN</button>
-    <button id="arBtn">AR</button>
-  </div>
-</header>
-<main>
-  <div>
-    <img src="logo.svg" alt="Noir Cinema"/>
-    <h1 data-i="title">Noir Cinema</h1>
-    <p data-i="lede">Content coming next.</p>
-  </div>
-</main>
-<script>
-const T = {
-  en:{title:"Noir Cinema",lede:"Content coming next."},
-  ar:{title:"نوار سينما",lede:"المحتوى جاي بعدين."}
-};
-let lang = localStorage.getItem("noir-lang") || "en";
-function apply(){
-  const p = T[lang];
-  document.documentElement.lang = lang;
-  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-  document.body.classList.toggle("ar", lang === "ar");
-  document.querySelectorAll("[data-i]").forEach(el => { if (p[el.dataset.i]) el.textContent = p[el.dataset.i]; });
-  document.getElementById("enBtn").classList.toggle("on", lang === "en");
-  document.getElementById("arBtn").classList.toggle("on", lang === "ar");
-}
-document.getElementById("enBtn").onclick = () => { lang = "en"; localStorage.setItem("noir-lang", lang); apply(); };
-document.getElementById("arBtn").onclick = () => { lang = "ar"; localStorage.setItem("noir-lang", lang); apply(); };
-apply();
-</script>
+<p><a href="/ipop/">iPop</a></p>
 </body>
 </html>
