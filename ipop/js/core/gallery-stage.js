@@ -5,7 +5,7 @@ import { servingOf } from "../finance/serving.js?v=106";
 import { soldOf, moveOf } from "../data/sales-data.js?v=106";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=47" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
+const render = (p, H) => `<img class="gx-img" src="${esc(H.src(`assets/cutouts/${p.id}.webp`))}" alt="" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
 
 export function stageHtml(H, ar) {
   const T = (e, a) => (ar ? a : e), P = H.data().products, name = p => esc(p.name);
