@@ -7,24 +7,24 @@ product profit, the nightly report, the halls, the Unaizah ledger and safety che
 phone first, works offline once opened.
 
 `noir-stock/` is the address printed on the product labels: it opens one product card from its barcode and nothing else.
-It is built from the app (`k7/door/build.mjs`); do not edit it by hand.
+It is built from the app (`ipop/door/build.mjs`); do not edit it by hand.
 
 ## Layout
 
 | Folder | What lives there |
 |---|---|
-| `k7/js/core` | shell services: store (Firestore + browser storage), clock, quick find, Arabic layer, links |
-| `k7/js/data` | data generated from system reports: stock seed, sales, recipes, menu, expiry, price list, safety register |
-| `k7/js/stock` | stock pages, product card, the product watch and its count mission, showcase, alerts, analytics, Menu Lab |
-| `k7/js/finance` | budget, Unaizah ledger and audit, product profit |
-| `k7/js/reports` | nightly report, halls, the required-reports uploads |
-| `k7/js/safety` | safety & maintenance board and its drawings |
-| `k7/vendor` | third-party libraries, vendored so the app works offline |
+| `ipop/js/core` | shell services: store (Firestore + browser storage), clock, quick find, Arabic layer, links |
+| `ipop/js/data` | data generated from system reports: stock seed, sales, recipes, menu, expiry, price list, safety register |
+| `ipop/js/stock` | stock pages, product card, the product watch and its count mission, showcase, alerts, analytics, Menu Lab |
+| `ipop/js/finance` | budget, Unaizah ledger and audit, product profit |
+| `ipop/js/reports` | nightly report, halls, the required-reports uploads |
+| `ipop/js/safety` | safety & maintenance board and its drawings |
+| `ipop/vendor` | third-party libraries, vendored so the app works offline |
 
 ## Security
 
 Settings and the audit tools open with the clock PIN. The site is static and this repository is public, so everything
-under `k7/js/data` can be read by anyone; keep sensitive files (invoices, card data, personal details) out of it.
+under `ipop/js/data` can be read by anyone; keep sensitive files (invoices, card data, personal details) out of it.
 
 ## Checks
 
