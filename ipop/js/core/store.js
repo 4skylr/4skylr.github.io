@@ -231,6 +231,38 @@ export async function saveProduct(p, { silent = false } = {}) {
   return doc;
 }
 
+// Quantities only: writes stock.<place> for one product and touches no other field (name, price, cost, image,
+// recipe, barcode, par stay exactly as they are). changes: { stores?, mini?, refuel? }
+export async function setStock(id, changes, note = "") {
+  const at = new Date().toISOString(), keys = Object.keys(changes || {}).filter(k => LOCATIONS.some(l => l.id === k));
+  if (!keys.length) return;
+  if (!mem.products.some(x => x.id === id)) throw new Error("Not in the catalog: " + id);
+  if (await remote()) {
+    const batch = fb.fs.writeBatch(fb.db);
+    batch.update(fb.fs.doc(fb.db, COL.products, id), Object.fromEntries([...keys.map(k => [`stock.${k}`, Number(changes[k]) || 0]), ["updatedAt", at]]));
+    await batch.commit();
+  } else {
+    mem.products = mem.products.map(p => p.id === id ? { ...p, stock: { ...(p.stock || {}), ...Object.fromEntries(keys.map(k => [k, Number(changes[k]) || 0])) }, updatedAt: at } : p);
+    lsWrite(); emit();
+  }
+  if (note) await log("edit", note);
+}
+// many products at once (a stock report upload): { id: { stores?, mini?, refuel? } }, quantities only
+export async function setStockMany(byId) {
+  const at = new Date().toISOString(), ids = Object.keys(byId || {}).filter(id => mem.products.some(x => x.id === id));
+  const clean = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => LOCATIONS.some(l => l.id === k)).map(([k, v]) => [k, Number(v) || 0]));
+  if (await remote()) {
+    for (let i = 0; i < ids.length; i += 400) { // a Firestore batch takes 500 writes at most
+      const batch = fb.fs.writeBatch(fb.db);
+      ids.slice(i, i + 400).forEach(id => { const c = clean(byId[id]); if (Object.keys(c).length) batch.update(fb.fs.doc(fb.db, COL.products, id), { ...Object.fromEntries(Object.entries(c).map(([k, v]) => [`stock.${k}`, v])), updatedAt: at }); });
+      await batch.commit();
+    }
+  } else {
+    mem.products = mem.products.map(p => ids.includes(p.id) ? { ...p, stock: { ...(p.stock || {}), ...clean(byId[p.id]) }, updatedAt: at } : p);
+    lsWrite(); emit();
+  }
+  return ids.length;
+}
 
 // ── Count sessions ──────────────────────────────
 export async function saveSession(s) {

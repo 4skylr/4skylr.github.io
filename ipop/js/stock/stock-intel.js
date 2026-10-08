@@ -5,11 +5,10 @@ import { soldOf, soldSource, moveOf, dailyUse, SALES_DAYS, SALES_FROM, SALES_TO 
 import { placement, isBulk } from "./fefo-place.js?v=106";
 import { usageOf } from "./consumption.js?v=106";
 import { salesSpace } from "./sales-space.js?v=106";
-import { AR as NAME_AR } from "../core/names-ar.js?v=106";
 import { loadEcharts } from "../core/chart-theme.js?v=106";
 
 const LEAD = 7, SAFETY = 7;
-const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
+const AR = () => false; // English only
 const T = {
   en: {
     title: "Stock intelligence", sub: `Usage from sales ${SALES_FROM} → ${SALES_TO} (${SALES_DAYS} days). Lead time ${LEAD} d + safety ${SAFETY} d.`,
@@ -69,7 +68,7 @@ export function analyse(H) {
 export function renderIntel(host, H) {
   charts.forEach(c => { try { c.dispose(); } catch {} }); charts = [];
   const L = T[AR() ? "ar" : "en"], A = analyse(H), esc = H.esc, q = H.qty, sar = H.sar;
-  const nm = p => AR() ? (NAME_AR[p.id] || p.name) : p.name;
+  const nm = p => p.name;
   const unit = p => esc(H.UNITS[p.unit] || "");
   const gname = n => AR() ? "المجموعة " + (ORD[n - 1] || n) : "Group " + n;
   const tracked = A.rows.filter(r => r.daily > 0).sort((a, b) => a.cover - b.cover);

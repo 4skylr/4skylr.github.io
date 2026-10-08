@@ -5,7 +5,6 @@
 //   ExcelJS       github.com/exceljs/exceljs
 import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=106";
 import { BARCODES } from "../data/barcodes.js?v=106";
-import { mountGauges } from "./indicators.js?v=106";
 import { renderScanCard } from "./scan-view.js?v=106";
 import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 
@@ -27,17 +26,9 @@ const loadScript = src => loading.get(src) || loading.set(src, new Promise((res,
 
 let H = null;
 const edits = readEdits, saveEdits = writeEdits;
-export function livePin() {
-  let pin = localStorage.getItem("noir-live-pin");
-  if (!pin) { pin = String(Math.floor(100000 + Math.random() * 900000)); localStorage.setItem("noir-live-pin", pin); }
-  return pin;
-}
-export function rotatePin() {
-  const pin = String(Math.floor(100000 + Math.random() * 900000));
-  localStorage.setItem("noir-live-pin", pin);
-  localStorage.removeItem(UNLOCK);
-  return pin;
-}
+// the edit PIN: set by the admin on this device (Settings → Admin), never generated or shown on screen
+export function livePin() { try { return localStorage.getItem("noir-live-pin") || ""; } catch { return ""; } }
+export function setLivePin(pin) { localStorage.setItem("noir-live-pin", String(pin)); localStorage.removeItem(UNLOCK); }
 export const pinUnlocked = () => Number(localStorage.getItem(UNLOCK) || 0) > Date.now();
 export const pinLeft = () => Math.max(0, Number(localStorage.getItem(UNLOCK) || 0) - Date.now());
 
@@ -94,7 +85,8 @@ export function requirePin() {
     setTimeout(() => root.querySelector("#pin")?.focus(), 40);
     root.querySelector("#pin-form").onsubmit = e => {
       e.preventDefault();
-      if (root.querySelector("#pin").value.trim() !== livePin()) { const n=root.querySelector(".lede"); if(n) n.textContent="Wrong pin."; return; }
+      const typed = root.querySelector("#pin").value.trim();
+      if (!livePin() || typed !== livePin()) { const n=root.querySelector(".lede"); if(n) n.textContent=livePin() ? "Wrong pin." : "No edit PIN on this device yet. The admin sets one in Settings → Admin."; return; }
       localStorage.setItem(UNLOCK, String(Date.now() + PIN_HOURS * 3600000));
       H?.toast?.(`Unlocked for ${PIN_HOURS} hours`);
       close(true);
@@ -109,7 +101,7 @@ export function openProductCard(p, helpers) {
   H.openModal("", "wide");
   const sheet = document.querySelector("#modal-root .sheet");
   sheet.innerHTML = ""; sheet.append(host);
-  renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff });
+  renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate });
 }
 
 export async function applyCountToSheet(locationId, counts) {
@@ -136,7 +128,9 @@ export async function downloadSheet() {
     if (raw === 0 && b.date === "") { ws.getCell(row, b.qtyCol).value = null; ws.getCell(row, b.dateCol).value = null; return; }
     if (raw != null && raw !== "") ws.getCell(row, b.qtyCol).value = Number.isFinite(num) && !/[a-z]/i.test(String(raw)) ? num : raw;
     // Excel dates carry no time zone: write midnight UTC, or the sheet shows the day before in Riyadh
-    if (b.date) ws.getCell(row, b.dateCol).value = /^\d{4}-\d{2}-\d{2}/.test(b.date) ? new Date(b.date.slice(0, 10) + "T00:00:00Z") : b.date;
+    if (b.date) { const c = ws.getCell(row, b.dateCol), iso = /^\d{4}-\d{2}-\d{2}/.test(b.date);
+      c.value = iso ? new Date(b.date.slice(0, 10) + "T00:00:00Z") : b.date;
+      if (iso && !c.numFmt) c.numFmt = "d/m/yyyy"; } // a cell that held text has no date format: without one Excel shows a serial number
   };
   const all = edits(), rows = expiryRows(null, all);
   let last = Math.max(...EXPIRY_SHEET.rows.map(r => r.row)), sr = Math.max(...EXPIRY_SHEET.rows.map(r => Number(r.sr) || 0));
@@ -173,20 +167,9 @@ export async function mountLabelSheet(root, products, helpers) {
 }
 export async function mountProductPage(root, p, helpers) {
   H = helpers;
-  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate, savedMark, mountGauges, writeOff, requirePin, rotatePin });
+  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate });
 }
 
-async function writeOff(p, batch) {
-  if (!await requirePin()) return;
-  const all = edits();
-  const row = rowsFor(p.id).find(r => r.location === batch.location);
-  if (!row) return;
-  all[String(row.row)] = all[String(row.row)] || {};
-  all[String(row.row)][`q${batch.n}`] = 0;
-  saveEdits(all);
-  H.toast("Batch written off · Excel download includes it");
-  mountProductPage(document.getElementById("scan-root") || document.getElementById("view"), p, H);
-}
 export async function printBarcodes() { location.hash = "labels"; }
 
 // Camera scanner for the printed labels (QR with the product link, Code 128 "NC-<id>"). The labels themselves are unchanged.

@@ -285,24 +285,33 @@ td, th { border-color: var(--color-control-gray) !important; }
 
 /* ── Count page: watch counts waiting for a supervisor ── */
 .wc { margin-bottom: var(--element-gap); }
+.settings > #sync-admin { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.settings > #sync-admin .wc { margin-bottom: 0; }
 .wc .slab-h { align-items: center; flex-wrap: wrap; }
-.wc-badge { display: inline-block; min-width: 20px; height: 20px; padding: 0 6px; margin-inline-start: 6px; border-radius: 999px; background: var(--color-pricing-blue); color: #fff; font: 600 12px/20px var(--f-text); text-align: center; vertical-align: middle; }
-.wc-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
-.wc-card { border-radius: 20px; padding: 16px 18px; background: var(--color-studio-mist); display: grid; gap: 8px; }
-.wc-card header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.wc-card header b { font: var(--font-weight-semibold) 17px/1.24 var(--f-text); }
-.wc-tag { font: var(--font-weight-semibold) 12px/16px var(--f-text); letter-spacing: -0.12px; color: var(--good); white-space: nowrap; }
-.wc-card.is-bad .wc-tag { color: var(--color-launch-orange); }
-.wc-card.is-done .wc-tag { color: var(--color-slate); }
-.wc-by { margin: 0; font-size: 12px; color: var(--color-slate); }
-.wc-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.wc-card li { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 12px; border-radius: 14px; background: #fbfaf7; font-size: 14px; }
-.wc-card li.bad span { color: var(--color-launch-orange); font-weight: 600; } .wc-card li.ok span { color: var(--good); font-weight: 600; }
-.wc-card li small { grid-column: 1 / -1; font-size: 12px; color: var(--color-slate); }
-.wc-card li em { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); }
-.wc-act { display: flex; justify-content: flex-end; gap: 8px; }
+.wc-badge { display: inline-block; min-width: 20px; height: 20px; padding: 0 6px; margin-inline-start: 6px; border-radius: 999px; background: var(--color-launch-orange); color: #fff; font: 600 12px/20px var(--f-text); text-align: center; vertical-align: middle; }
+.wc-tw { overflow-x: auto; margin: 0 calc(-1 * var(--s3, 12px)); padding: 0 var(--s3, 12px); }
+.wc-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; }
+.wc-table th { text-align: start; font: 600 12px/16px var(--f-text); color: var(--color-slate); padding: 8px 10px; border-bottom: 1px solid var(--line, #e5e5ea); white-space: nowrap; }
+.wc-table td { padding: 10px; border-bottom: 1px solid var(--line, #e5e5ea); vertical-align: top; }
+.wc-table td small { display: block; font-size: 12px; color: var(--color-slate); }
+.wc-table td.num { white-space: nowrap; text-align: end; } .wc-table td.num small { display: inline; }
+.wc-table th:nth-child(3), .wc-table th:nth-child(4) { text-align: end; }
+.wc-dates span { display: block; white-space: nowrap; } .wc-dates small { display: inline; }
+.wc-mute { color: var(--color-slate); }
+.wc-sts { white-space: nowrap; }
+.wc-st { display: inline-block; margin: 0 4px 4px 0; padding: 2px 9px; border-radius: 999px; font: 600 12px/18px var(--f-text); background: #eef6ee; color: #1d6b2c; }
+.wc-st.is-bad { background: #fdeee8; color: #a8360c; }
+.wc-st.is-back { background: #fff4e0; color: #8a5300; }
+.wc-st.is-done { background: #eaf1fb; color: #0b5cad; }
+.wc-act { text-align: end; white-space: nowrap; }
+.wc-table tr.is-settled td { color: var(--ink-2); }
 .wc-done summary { cursor: pointer; margin-top: 14px; font-size: 14px; color: var(--color-apple-blue); }
-.wc-done .wc-list { margin-top: 10px; }
+.wc-done .wc-tw { margin-top: 10px; }
+.wc-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wc-note p { margin: 0; }
+.pin-set { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.pin-set .input { flex: 1 1 180px; }
+.unmatched { margin: 0; padding-inline-start: 20px; max-height: 50vh; overflow: auto; font-size: 14px; line-height: 1.5; }
 
 /* ── the Overview stage: our own products shown the way the reference shows hardware ── */
 .gx-hero { position: relative; text-align: center; background: #fbfaf7; border-radius: var(--radius-cards); padding: 40px 22px 34px; margin-bottom: var(--element-gap); overflow: hidden; }

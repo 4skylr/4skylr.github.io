@@ -30,7 +30,7 @@ jobs:
       - run: node .github/scripts/preload.mjs --check
 
   smoke:
-    name: Smoke test (every page, AR/EN, phone/desktop)
+    name: Smoke test (every page and a label scan, phone/desktop)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

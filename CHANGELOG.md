@@ -1,5 +1,25 @@
 # Changelog
 
+## v104 · 2026-10-08 · One scan, one count, one match
+
+- **Scanning works again.** Five modules still imported the deleted Arabic names file, so a label scan opened nothing. Lint had been skipping the app folder; it checks it again, and the smoke test now opens a label scan from /ipop/, /k7/ and /noir-stock/.
+- **A scan opens the product watch for that product only.**
+  - **Screens:** name, photo and barcode; on hand in Main Stores, Mini Store and Concession; its expiry groups; its own recipe.
+  - **Ingredients:** an item with no recipe of its own (oil, caramel, sugar…) shows which recipes use it and how many g, ml or pieces each takes.
+  - **Removed from the scan:** the long pass card, the cost and sales screens, and the PIN edit form.
+- **Counting on the watch:** quantity and expiry per warehouse, with more than one dated group allowed.
+  - **Saving:** a count is saved as *pending* and does not touch stock.
+  - **Sending:** *Send report to admin* marks this phone's counts *submitted*.
+- **Admin match (Settings → admin panel):** each warehouse is checked against the live stock and marked match, mismatch, expired or missing date.
+  - **Update:** only on a match. It needs the edit PIN, writes just that warehouse's quantity and the dates, and marks the row ready for Excel.
+  - **Recount:** sends the warehouse back to the watch and leaves the stock as it was.
+  - **Excel dates:** they now carry a date format.
+- **Stock report upload:** it changes only stock.stores, stock.mini and stock.refuel. Items not in the catalog are listed and never created.
+- **Product profit:**
+  - **Prices:** one table of menu price, cost, profit and margin, with the price-list source on top.
+  - **Sales:** one table sorted by profit, with item, units sold this year and profit.
+  - **Removed:** the rank cards, Menu Lab's repeated KPI and combo tables, and the Settings top-sellers chart.
+
 ## v103 · 2026-10-08 · People of Performance, silver keys
 
 - **The slogan is now "People of Performance".**

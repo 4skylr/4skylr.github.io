@@ -7,8 +7,8 @@ import { isOpen, unlock } from "./core/lock.js?v=106";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=106";
-import { tone, loadEcharts } from "./core/chart-theme.js?v=106";
-import { reviewHtml, approve, syncCountsToSheet, pendingCount, cachedCounts } from "./stock/watch-count.js?v=106";
+import { tone } from "./core/chart-theme.js?v=106";
+import { syncCountsToSheet, pendingCount, cachedCounts } from "./stock/watch-count.js?v=106";
 import { pcardHtml, wirePcards } from "./stock/product-card.js?v=106";
 import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=106";
 import { SEED_DATE } from "./data/seed-data.js?v=106";
@@ -193,6 +193,8 @@ const csv = rows => "﻿" + rows.map(r => r.map(v => `"${String(v ?? "").replace
 
 // ── Chrome ───────────────────────────────────────────────────
 const LANG_KEY = "noir-lang";
+// English only: modules that still read this key always get "en", whatever an older visit left in the tab
+try { sessionStorage.setItem(LANG_KEY, "en"); sessionStorage.setItem("noir-card-lang", "en"); } catch {}
 const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
 function siteLang() { return "en"; }
 // the iPop bar (top): five words, evenly spaced on brushed silver, as in the identity — iPop · Shop · Flavors · Origins · Support
@@ -222,11 +224,15 @@ let stockHist = store.localDocs("stockHistory");
 const histMod = lazy("./stock/stock-history.js?v=106");
 async function stockReport(found, source, fromRequired) {
   const m = await histMod();
-  const entry = await m.applyStockReport(found, { data: () => data, saveProduct: store.saveProduct, putDoc: store.putDoc, log: store.log }, source);
+  const entry = await m.applyStockReport(found, { data: () => data, setStockMany: store.setStockMany, putDoc: store.putDoc, log: store.log }, source);
   stockHist = [...stockHist.filter(e => e.id !== entry.id), entry];
   localStorage.setItem("noir-sync-at", new Date().toISOString());
-  const sold = entry.net.filter(n => n.delta < 0), added = entry.net.filter(n => n.delta > 0), ar = siteLang() === "ar";
-  toast(ar ? `تحديث ${entry.products} منتج · ${sold.length} انباع · ${added.length} انضاف` : `${entry.products} products · ${sold.length} sold · ${added.length} added`);
+  const sold = entry.net.filter(n => n.delta < 0), added = entry.net.filter(n => n.delta > 0);
+  toast(`Quantities updated · ${entry.products} products · ${sold.length} down · ${added.length} up`);
+  // items in the file that the catalog does not have: shown, never created
+  if (entry.unmatched?.length) openModal(`<h2>Not in the catalog <span class="voice">· ${entry.unmatched.length}</span></h2>
+    <p class="lede">These lines of ${esc(source)} match no product, so nothing was created or changed for them. Only stock quantities were updated.</p>
+    <ul class="unmatched">${entry.unmatched.map(u => `<li>${esc(u)}</li>`).join("")}</ul>`, "narrow");
   renderBell();
   if (!fromRequired) markUpload("stock", source).catch(() => {});
   return entry;
@@ -542,7 +548,7 @@ function newSession(where, counter) {
 function viewCount() {
   if (ui.session) return viewRun();
   const drafts = data.sessions.filter(s => s.status === "draft");
-  $("#view").innerHTML = `<div id="wc-host">${reviewHtml(cachedCounts(), helpers(), siteLang() === "ar")}</div>
+  $("#view").innerHTML = `<div id="wc-host">${wcNote()}</div>
     <div class="setup">
       <section class="slab">
         <div class="slab-h"><h2>New count</h2><span class="voice">pick a vault</span></div>
@@ -566,21 +572,16 @@ function viewCount() {
   $("#only").onchange = e => { ui.countOnlyStock = e.target.checked; lsSet("countOnlyStock", ui.countOnlyStock); };
   $("#start").onclick = () => { const c = $("#counter").value.trim(); lsSet("counter", c); ui.session = newSession(ui.setupLoc, c); ui.countQ = ""; ui.countCat = "all"; render(); };
   $$("[data-resume]").forEach(b => b.onclick = () => { ui.session = JSON.parse(JSON.stringify(data.sessions.find(s => s.id === b.dataset.resume))); render(); });
-  wireWc(); refreshWc();
+  refreshWc();
 }
-// watch counts waiting for a supervisor (watch-count.js): approve, see what differs, download the expiry sheet
-function paintWc() { const h = $("#wc-host"); if (!h) return; h.innerHTML = reviewHtml(cachedCounts(), helpers(), siteLang() === "ar"); wireWc(); }
-function wireWc() {
-  const h = $("#wc-host"); if (!h) return;
-  h.querySelector("#wc-xlsx")?.addEventListener("click", () => downloadSheet().then(() => toast(siteLang() === "ar" ? "نزل ملف الصلاحيات" : "Expiry sheet downloaded")).catch(e => toast(e.message, true)));
-  h.querySelectorAll("[data-wc-ok]").forEach(b => b.onclick = async () => { b.disabled = true; await approve(b.dataset.wcOk, lsGet("counter", "")).catch(e => toast(e.message, true)); paintWc(); renderNav();
-    toast(siteLang() === "ar" ? "اعتمد" : "Approved"); });
-}
+// watch count reports are matched on the admin panel (Settings); here only a pointer to them
+function wcNote() { const n = pendingCount(cachedCounts()); return n ? `<section class="slab wc-note"><p><b class="data">${n}</b> watch count ${n === 1 ? "report is" : "reports are"} waiting for the admin.</p><button type="button" class="btn sm" data-route="settings">Open the admin panel</button></section>` : ""; }
+function paintWc() { const h = $("#wc-host"); if (h) h.innerHTML = wcNote(); }
 let wcSeen = null;
 function refreshWc() {
   return syncCountsToSheet(data.products || []).then(list => {
-    const open = list.filter(r => r.status === "match" || r.status === "recount"), ids = open.map(r => r.id + r.at);
-    if (wcSeen && ids.some(id => !wcSeen.has(id))) toast(siteLang() === "ar" ? "وصل جرد جديد من الساعة" : "New watch count in");
+    const open = list.filter(r => r.status === "submitted"), ids = open.map(r => r.id + (r.submittedAt || r.at));
+    if (wcSeen && ids.some(id => !wcSeen.has(id))) toast("New watch count report in");
     wcSeen = new Set(ids); renderNav(); if (ui.route === "count" && !ui.session && !typing()) paintWc();
   }).catch(() => {});
 }
@@ -941,10 +942,7 @@ function viewSettings() {
   $("#view").innerHTML = `
   <div class="settings">
     <div id="rq-host" class="rq-wrap"></div>
-    <section class="slab">
-      <div class="slab-h"><h2>${T("Top sellers", "الأكثر مبيعاً")}</h2><span class="tag">${SALES_FROM} → ${SALES_TO}</span></div>
-      <div id="sales-chart" style="height:340px"></div>
-    </section>
+    <div id="sync-admin"></div>
     <section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
@@ -955,7 +953,6 @@ function viewSettings() {
       </div>
       <p class="note">${T("Import adds or updates products by ID. It never deletes anything.", "الاستيراد يضيف أو يحدّث المنتجات حسب الرقم، وما يحذف شي.")}</p>
     </section>
-    <div id="sync-admin"></div>
     <section class="slab">
       <div class="slab-h"><h2>${T("Starting data", "البيانات الأصلية")}</h2></div>
       <p style="margin:0;color:var(--ink-2);font-size:14px">${T("Current Stock Position Report", "تقرير الجرد الأصلي")} · Noir Cinema, Othaim Mall, Onaizah · <span class="data" style="font-size:12px">${when(SEED_DATE)}</span>. ${T("Three locations: Concession, Mini Store, Store. Unit cost is net amount ÷ system stock, before VAT.", "ثلاث مواقع: الكونسيشن، الميني ستور، المستودع. تكلفة الوحدة = الصافي ÷ كمية النظام، قبل الضريبة.")}</p>
@@ -977,7 +974,6 @@ function viewSettings() {
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
-  loadChart();
   $("#reset")?.addEventListener("click", async () => {
     if (await confirmBox('Reload <span class="voice">report data?</span>', "Every edit and count saved in this browser will be wiped and replaced with the original report.", "Reload", true)) { await store.resetLocal(); toast("Report data reloaded"); }
   });
@@ -1037,15 +1033,3 @@ if (CARD_DOOR) {
     .then(() => Promise.all([histMod(), store.allDocs("stockHistory")])).then(([, d]) => { stockHist = d; }).catch(() => {});
 }
 
-async function loadChart() {
-  const el = document.getElementById("sales-chart");
-  if (!el) return;
-  await loadEcharts();
-  const top = data.products.filter(p => !moveOf(p.id)).map(p => ({ name: p.name, sold: soldOf(p.id) })).filter(x => x.sold).sort((a, b) => b.sold - a.sold).slice(0, 10).reverse();
-  const c = window.echarts.init(el);
-  c.setOption({ grid: { left: 130, right: 30, top: 10, bottom: 20 }, tooltip: { trigger: "axis", axisPointer: { type: "shadow" } },
-    xAxis: { type: "value", axisLabel: { color: "#8c95a8" }, splitLine: { lineStyle: { color: "rgba(255,255,255,.07)" } } },
-    yAxis: { type: "category", data: top.map(x => x.name), axisLabel: { color: "#edf1f8", width: 120, overflow: "truncate" } },
-    series: [{ type: "bar", data: top.map(x => x.sold), barWidth: 14, itemStyle: { color: "#5b7bff", borderRadius: [0, 6, 6, 0] }, label: { show: true, position: "right", color: "#edf1f8" } }] });
-  new ResizeObserver(() => { if (!c.isDisposed()) c.resize(); }).observe(el);
-}

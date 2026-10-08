@@ -8,7 +8,6 @@ import { RECIPES, RAW_MATERIALS } from "../data/recipes-data.js?v=106";
 import { KCAL, recipeKcal } from "../data/nutrition.js?v=106";
 import { recipeCost } from "../finance/costing.js?v=106";
 import { MENU, COMBOS, VAT } from "../data/menu-data.js?v=106";
-import { AR as NAMES_AR } from "../core/names-ar.js?v=106";
 import { CAT, prettyName, titleCase } from "./recipe-names.js?v=106";
 export { CAT, prettyName };
 
@@ -57,7 +56,7 @@ export function model(r, H) {
   return { r, lines, limit, makes: limit ? limit.makes : 0, cost, kcal: recipeKcal(r, RAW_MATERIALS), price, net, margin: net ? (net - cost) / net : null, hero, hash: hash(r) };
 }
 const stateOf = n => (n <= 0 ? "zero" : n < 20 ? "low" : "ok");
-const nameOf = (x, ar) => (ar && x.p && NAMES_AR[x.p.id]) || (x.p ? x.p.name : titleCase(x.rm));
+const nameOf = x => x.p ? x.p.name : titleCase(x.rm);
 const imgOf = (x, H) => x.p?.image ? (H?.src ? H.src(x.p.image) : x.p.image) : "";
 const cutOf = s => String(s || "").replace("assets/products/", "assets/cutouts/");
 const picHtml = (x, H, cls = "") => { const im = imgOf(x, H); return im

@@ -1,109 +1,105 @@
-// Product watch: the scan card's photo sits on a smartwatch face (design after "chase2k25" on Uiverse.io).
-// Face: the product photo (the card's own .pc-shot, passed in untouched), how many expiry groups it has, the next
-// expiry date and the days left. Swipe the screen up (or turn the crown, or use the dots) for the next screens:
-// recipes (each opens the recipe theater), stock by location, the groups one by one, and sales.
-import { RAW_MATERIALS } from "../data/recipes-data.js?v=106";
-import { CAT, prettyName } from "./recipe-names.js?v=106";
-import { servingOf } from "../finance/serving.js?v=106";
+// Product watch: what a scan opens, for that one product only (design after "chase2k25" on Uiverse.io).
+// Screens (swipe up, turn the crown, or use the dots):
+//   1 · the product: photo (the card's own .pc-shot, passed in untouched), name, barcode, next expiry
+//   2 · on hand: Main Stores, then Mini Store, then Concession
+//   3 · expiry: the dated groups (packaging, lids, straws and CO₂ are quantity only)
+//   4 · recipe: this product's own recipe, or, for an ingredient (oil, caramel, sugar …), the recipes that use it and how much each one takes
+// Under the watch: Start count, and Send report to admin once this phone has counts waiting.
+import { RECIPES } from "../data/recipes-data.js?v=106";
+import { prettyName } from "./recipe-names.js?v=106";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-const low = s => String(s ?? "").toLowerCase();
-const RM = new Map(Object.entries(RAW_MATERIALS).map(([k, v]) => [low(k), v]));
+const low = s => String(s ?? "").toLowerCase().trim();
 const pad = n => String(n).padStart(2, "0");
-const RING = ["#ff3b30", "#34c759", "#007aff"];
-
-// how many serves of a recipe the stock makes (the ingredient that runs out first decides)
-function makes(r, products, total) {
-  let best = Infinity;
-  for (const l of r.lines) {
-    const key = low(l.rm), p = products.find(x => low(x.sku) === key || low(x.name) === key);
-    const have = p ? total(p) * (RM.get(key)?.conv || 1) : 0;
-    if (l.qty > 0) best = Math.min(best, Math.floor(have / l.qty + 1e-9));
-  }
-  return best;
-}
 const tone = d => (d == null ? "none" : d < 0 ? "exp" : d <= 7 ? "crit" : d <= 30 ? "soon" : "ok");
+const num = n => (Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100));
 
+// The recipe screen, from recipes-data.js and nothing else.
+//  own:  a menu recipe carries this product's report name (a can, a bottle, a packet) → its lines
+//  uses: no recipe of its own → every recipe that consumes it and how much, in the recipe unit of the catalog unit
+//        (kg → g, L → ml, pieces → pcs). Combos that differ only by the drink they come with take the same amount: one row.
+export function recipeFor(p) {
+  const key = low(p.sku || p.name);
+  if (!key) return { kind: "none" };
+  const own = RECIPES.filter(r => low(r.name) === key).sort((a, b) => Number(!!a.ta) - Number(!!b.ta))[0];
+  if (own) return { kind: "own", name: own.name, lines: own.lines.map(l => ({ name: l.rm, qty: l.qty, uom: l.uom })) };
+  const rows = new Map();
+  for (const r of RECIPES) {
+    const l = r.lines.find(x => low(x.rm) === key); if (!l) continue;
+    const base = r.name.replace(/\s+with\s+.+$/i, "").trim(), k = `${low(base)}|${l.qty}|${l.uom}|${r.ta ? 1 : 0}`;
+    const row = rows.get(k) || { name: base, ta: !!r.ta, qty: l.qty, uom: l.uom, n: 0 };
+    row.n++; rows.set(k, row);
+  }
+  const list = [...rows.values()].sort((a, b) => Number(a.ta) - Number(b.ta) || b.qty - a.qty || a.name.localeCompare(b.name));
+  return list.length ? { kind: "uses", rows: list } : { kind: "none" };
+}
+
+// o: { p, H, name, shot, code, barcode, unit, total, locs: [{ id, label, n }], dated, groups: [{ label, qty, when, left }], next, recipe }
 export function watchHtml(o) {
-  const { ar, shot, groups, next, recipes, locs, total, unit, sold, perDay, code, H, products, gname, locName, name = "", p } = o;
-  const T = (e, a) => (ar ? a : e), q = n => H.qty(n);
+  const { H, name, shot, code, barcode, unit, total, locs, dated, groups, next, recipe, p } = o, q = n => H.qty(n);
   const d = next ? next.left : null, t = tone(d), frac = d == null ? 0 : Math.max(0, Math.min(1, d / 365));
   const ringDeg = Math.round((d == null ? 0 : d < 0 ? 1 : Math.min(1, d / 90)) * 360);
-  const lines = [
-    // 1 · face
-    `<section class="nw-view nw-face" aria-label="${T("Product", "المنتج")}">
-      <div class="nw-comp nw-tl"><b class="data">${groups.length || "—"}</b><small>${groups.length ? T(groups.length === 1 ? "group" : "groups", "مجموعة") : T("no date", "بدون تاريخ")}</small></div>
-      <div class="nw-comp nw-tr t-${t}" style="--deg:${ringDeg}deg"><b class="data">${d == null ? "∞" : d < 0 ? "!" : d}</b><small>${d == null ? T("days", "يوم") : d < 0 ? T("expired", "منتهي") : T("days", "يوم")}</small></div>
-      <div class="nw-photo">${shot}<span class="pass-laser" aria-hidden="true"></span>${p?.outOfStock ? `<span class="nw-oos">${T("Out of stock", "نفد من المخزون")}</span>` : ""}</div>${name ? `<p class="nw-name">${esc(name)}</p>` : ""}
+  const out = p && !total;
+  const recipeView = recipe.kind === "own"
+    ? `<section class="nw-view nw-list" aria-label="Recipe">
+        <h3>Recipe<em>${esc(prettyName(recipe.name))}</em></h3>
+        <div class="nw-rows nw-scroll">${recipe.lines.map(l => `<div class="nw-row"><span>${esc(prettyName(l.name))}</span><b class="data">${num(l.qty)}<small>${esc(l.uom)}</small></b></div>`).join("")}</div>
+        <p class="nw-note">One serving, as sold</p></section>`
+    : recipe.kind === "uses"
+      ? `<section class="nw-view nw-list" aria-label="Used in recipes">
+        <h3>Used in<em class="data">${recipe.rows.reduce((a, r) => a + r.n, 0)} recipes</em></h3>
+        <div class="nw-rows nw-scroll">${recipe.rows.map(r => `<div class="nw-row"><span>${esc(prettyName(r.name))}<small>${r.ta ? "Takeaway" : "Served"}${r.n > 1 ? ` · ${r.n} versions` : ""}</small></span><b class="data">${num(r.qty)}<small>${esc(r.uom)} each</small></b></div>`).join("")}</div>
+        <p class="nw-note">Has no recipe of its own · amount each recipe takes per serving</p></section>`
+      : `<section class="nw-view nw-list" aria-label="Recipe"><h3>Recipe</h3><p class="nw-empty">Not in any menu recipe</p></section>`;
+  const views = [
+    `<section class="nw-view nw-face" aria-label="Product">
+      <div class="nw-comp nw-tl"><b class="data">${q(total)}</b><small>${esc(unit)} on hand</small></div>
+      <div class="nw-comp nw-tr t-${t}" style="--deg:${ringDeg}deg"><b class="data">${d == null ? "—" : d < 0 ? "!" : d}</b><small>${!dated ? "no date" : d == null ? "no date" : d < 0 ? "expired" : "days"}</small></div>
+      <div class="nw-photo">${shot}<span class="pass-laser" aria-hidden="true"></span>${out ? `<span class="nw-oos">Out of stock</span>` : ""}</div>
+      <p class="nw-name">${esc(name)}</p>
       <div class="nw-comp nw-bottom t-${t}">
-        <div><small>${next ? (d < 0 ? T("Expired on", "انتهى في") : T("Expires", "ينتهي")) : T("Expiry", "الانتهاء")}</small><b class="data" dir="ltr">${next ? esc(next.when) : "—"}</b>
+        <div class="nw-code">${barcode ? `<img src="${esc(barcode)}" alt="" width="96" height="22" decoding="async">` : ""}<small class="data" dir="ltr">${esc(code)}</small></div>
+        <div class="nw-exp"><small>${!dated ? "Expiry" : next ? (d < 0 ? "Expired" : "Expires") : "Expiry"}</small><b class="data" dir="ltr">${!dated ? "Not dated" : next ? esc(next.when) : "—"}</b>
           <div class="nw-progress"><i style="width:${(frac * 100).toFixed(1)}%"></i></div></div>
-        <span class="nw-qty data" dir="ltr">${q(total)}<em>${esc(unit)}</em></span>
       </div>
-      <p class="nw-hint" aria-hidden="true"><i></i>${T("Swipe up", "اسحب لفوق")}</p>
+      <p class="nw-hint" aria-hidden="true"><i></i>Swipe up</p>
     </section>`,
-    // 2 · one full serving: cost (the whole recipe), price, profit — per flavour
-    ...((sv => !sv ? [] : [sv.kind === "serving" ? `<section class="nw-view nw-list nw-econ" aria-label="${T("Cost and profit", "التكلفة والربح")}">
-      <h3>${T("Per serving", "الحبة الواحدة")}<em class="data">${T("sells", "البيع")} ${sv.price} ${T("SR", "ر.س")}</em></h3>
-      <div class="nw-rows">${sv.options.slice(0, 4).map(x => `<div class="nw-row"><span>${esc(ar ? x.label.ar : x.label.en)}<small>${T("cost", "التكلفة")} <b class="data">${x.cost.toFixed(2)}</b></small></span>
-        <b class="data nw-profit">${x.profit.toFixed(2)}<small>${T("profit", "ربح")} · ${Math.round(x.margin * 100)}%</small></b></div>`).join("")}</div>
-      <p class="nw-note">${T("Cost = every ingredient of the recipe · profit on the price without VAT", "التكلفة = كل مكوّنات الوصفة · الربح على السعر بدون الضريبة")}</p></section>`
-      : `<section class="nw-view nw-info" aria-label="${T("Cost", "التكلفة")}">
-      <div class="nw-cover"><b class="data">${sv.cost.toFixed(2)}</b><small>${T("SR per", "ر.س لكل")} ${esc(H.UNITS?.[sv.unit] || sv.unit || "")}</small></div>
-      <p class="nw-line"><span>${T("In recipes", "يدخل في")}</span><b class="data">${sv.uses}</b></p></section>`])(p ? servingOf(p) : null)),
-    // 3 · recipes
-    `<section class="nw-view nw-list" aria-label="${T("Recipes", "الوصفات")}">
-      <h3>${T("Recipe", "الوصفة")}<em class="data">${recipes.length}</em></h3>
-      ${recipes.length ? `<div class="nw-rows" data-rt-list>${recipes.slice(0, 4).map(r => { const m = makes(r, products, H.total);
-        return `<button type="button" class="nw-row" data-rt="${esc(r.name)}"><span>${esc(prettyName(r.name, ar))}<small>${esc((CAT[r.cat] || [r.cat, r.cat])[ar ? 1 : 0])}</small></span><b class="data">${isFinite(m) ? q(m) : "∞"}</b></button>`; }).join("")}</div>
-        <p class="nw-note">${T("Number = serves the stock makes · tap to open", "الرقم = كم حصة يكفي المخزون · اضغط للفتح")}</p>`
-      : `<p class="nw-empty">${T("Not used in a menu recipe", "ما يدخل في وصفة منيو")}</p>`}
+    `<section class="nw-view nw-list nw-stock" aria-label="On hand">
+      <h3>On hand<em class="data">${q(total)} ${esc(unit)}</em></h3>
+      <div class="nw-rows">${locs.map((x, i) => `<div class="nw-row"><span><i class="data">${i + 1}</i> ${esc(x.label)}</span><b class="data">${q(x.n)}<small>${esc(unit)}</small></b></div>`).join("")}</div>
     </section>`,
-    // 3 · stock by location (activity rings)
-    `<section class="nw-view nw-act" aria-label="${T("Stock", "المخزون")}">
-      <h3>${T("On hand", "الموجود")}<em class="data">${q(total)} ${esc(unit)}</em></h3>
-      ${locs.map((x, i) => { const pct = total ? x.n / total : 0;
-        return `<div class="nw-act-row"><span class="nw-ring" style="--c:${RING[i % 3]};--deg:${Math.round(pct * 360)}deg"></span>
-          <div><b class="data">${q(x.n)}</b><small>${esc(locName(x.l))} · ${Math.round(pct * 100)}%</small></div></div>`; }).join("")}
+    `<section class="nw-view nw-list" aria-label="Expiry">
+      <h3>Expiry<em class="data">${dated ? `${groups.length} ${groups.length === 1 ? "group" : "groups"}` : "not dated"}</em></h3>
+      ${!dated ? `<p class="nw-empty">No expiry date · counted by quantity only</p>`
+        : groups.length ? `<div class="nw-rows nw-scroll">${groups.map(b => `<div class="nw-row nw-g t-${tone(b.left)}"><span>${esc(b.label)}<small>${q(b.qty)} ${esc(unit)}</small></span>
+          <b class="data" dir="ltr">${esc(b.when)}<small>${b.left < 0 ? "expired" : `${b.left} days`}</small></b></div>`).join("")}</div>`
+        : `<p class="nw-empty">No date recorded yet</p>`}
     </section>`,
-    // 4 · groups
-    `<section class="nw-view nw-list" aria-label="${T("Groups", "المجموعات")}">
-      <h3>${T("Groups", "المجموعات")}<em class="data">${groups.length}</em></h3>
-      ${groups.length ? `<div class="nw-rows">${groups.slice(0, 4).map(b => `<div class="nw-row nw-g t-${tone(b.left)}"><span>${esc(gname(b.n))}<small>${esc(locName({ id: b.loc, name: b.location }))} · ${q(b.qty)}</small></span>
-          <b class="data" dir="ltr">${b.left < 0 ? T("expired", "منتهي") : `${b.left} ${T("d", "يوم")}`}<small>${esc(b.when)}</small></b></div>`).join("")}</div>`
-      : `<p class="nw-empty">${T("No dated groups · quantity only", "بدون تاريخ · الكمية فقط")}</p>`}
-    </section>`,
-    // 5 · sales
-    `<section class="nw-view nw-info" aria-label="${T("Sales", "المبيعات")}">
-      <div class="nw-cover"><b class="data">${sold ? q(sold) : "—"}</b><small>${T("sold this year", "مباع هذي السنة")}</small></div>
-      <p class="nw-line"><span>${T("Per day", "باليوم")}</span><b class="data" dir="ltr">${perDay ? "≈ " + q(perDay) : "—"}</b></p>
-      <p class="nw-line"><span>${T("Lasts", "يكفي")}</span><b class="data" dir="ltr">${perDay ? `${Math.round(total / perDay)} ${T("d", "يوم")}` : "—"}</b></p>
-      <p class="nw-line"><span>${T("Code", "الكود")}</span><b class="data" dir="ltr">${esc(code)}</b></p>
-    </section>`
+    recipeView
   ];
   const now = new Date();
-  // under the watch: the language and the count mission, always in sight
-  const bar = `<div class="nw-bar" dir="${ar ? "rtl" : "ltr"}">
-      <button type="button" class="nw-pill nw-lang" data-lang aria-label="${ar ? "English" : "عربي"}">${ar ? "EN" : "ع"}</button>
-      <button type="button" class="nw-pill nw-start" data-count><span class="nw-play" aria-hidden="true"></span><b>${T("Start count", "ابدأ الجرد")}</b></button>
+  const bar = `<div class="nw-bar">
+      <button type="button" class="nw-pill nw-start" data-count><span class="nw-play" aria-hidden="true"></span><b>Start count</b></button>
+      <button type="button" class="nw-pill nw-send" data-send hidden><b>Send report to admin</b><em class="data"></em></button>
     </div>`;
-  return `<div class="nw-shell"><div class="nw" dir="ltr">
+  return `<div class="nw-shell"><div class="nw">
     <div class="nw-strap top" aria-hidden="true"></div><div class="nw-strap bottom" aria-hidden="true"></div>
     <div class="nw-case">
-      <span class="nw-crown-well" aria-hidden="true"></span><button type="button" class="nw-crown" aria-label="${T("Next screen", "الشاشة التالية")}"></button>
-      <span class="nw-side-well" aria-hidden="true"></span><button type="button" class="nw-side" aria-label="${ar ? "English" : "عربي"}" title="${ar ? "English" : "عربي"}"></button>
-      <span class="nw-action-well" aria-hidden="true"></span><button type="button" class="nw-action" aria-label="${T("Back to the product", "رجوع للمنتج")}"></button>
-      <div class="nw-display" tabindex="0" role="region" aria-roledescription="${T("watch", "ساعة")}" aria-label="${T("Product watch: swipe up for more", "ساعة المنتج: اسحب لفوق للمزيد")}" dir="${ar ? "rtl" : "ltr"}">
-        <div class="nw-status" dir="ltr"><span class="nw-time data">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="nw-brand">NOIR<i></i></span></div>
-        <div class="nw-wrap" style="height:${lines.length * 100}%;--nv:${lines.length}">${lines.join("")}</div>
-        <div class="nw-dots" role="tablist">${lines.map((_, i) => `<button type="button" role="tab" class="nw-dot" data-go="${i}" aria-label="${i + 1}"></button>`).join("")}</div>
+      <span class="nw-crown-well" aria-hidden="true"></span><button type="button" class="nw-crown" aria-label="Next screen"></button>
+      <span class="nw-side-well" aria-hidden="true"></span><button type="button" class="nw-side" aria-label="Previous screen"></button>
+      <span class="nw-action-well" aria-hidden="true"></span><button type="button" class="nw-action" aria-label="Back to the product"></button>
+      <div class="nw-display" tabindex="0" role="region" aria-roledescription="watch" aria-label="Product watch: swipe up for more">
+        <div class="nw-status"><span class="nw-time data">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="nw-brand">iPop<i></i></span></div>
+        <div class="nw-wrap" style="height:${views.length * 100}%;--nv:${views.length}">${views.join("")}</div>
+        <div class="nw-dots" role="tablist">${views.map((_, i) => `<button type="button" role="tab" class="nw-dot" data-go="${i}" aria-label="Screen ${i + 1}"></button>`).join("")}</div>
       </div>
     </div>
   </div>${bar}</div>`;
 }
 
-// screens move up and down: swipe, wheel, arrow keys, crown (next), action button (back to the face), dots
-export function mountWatch(root, { onRecipe, onLang, onCount } = {}) {
+// screens move up and down: swipe, wheel, arrow keys, crown (next), side button (back one), action button (the face), dots.
+// A list that scrolls (.nw-scroll) and the count mission (.nw-m) keep their own touch and wheel.
+export function mountWatch(root, { onCount, onSend } = {}) {
   const w = root.querySelector(".nw"); if (!w) return;
   const disp = w.querySelector(".nw-display"), wrap = w.querySelector(".nw-wrap"), dots = [...w.querySelectorAll(".nw-dot")], n = dots.length;
   let at = 0, movedAt = 0;
@@ -119,19 +115,23 @@ export function mountWatch(root, { onRecipe, onLang, onCount } = {}) {
   set(0, true);
   dots.forEach(d => d.onclick = e => { e.stopPropagation(); set(Number(d.dataset.go)); });
   w.querySelector(".nw-crown").onclick = () => set(at + 1 >= n ? 0 : at + 1);
+  w.querySelector(".nw-side").onclick = () => set(at - 1);
   w.querySelector(".nw-action").onclick = () => set(0);
-  w.querySelector(".nw-side").onclick = () => onLang?.(); // the side button switches Arabic / English too
   const shell = w.closest(".nw-shell") || root;
-  shell.querySelector("[data-lang]")?.addEventListener("click", () => onLang?.());
   shell.querySelector("[data-count]")?.addEventListener("click", () => { set(0); onCount?.(disp); });
-  const mission = e => !!e.target.closest?.(".nw-m");
-  disp.addEventListener("keydown", e => { if (mission(e)) return; if (e.key === "ArrowDown" || e.key === "PageDown") { e.preventDefault(); set(at + 1); } if (e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); set(at - 1); } });
+  shell.querySelector("[data-send]")?.addEventListener("click", e => onSend?.(e.currentTarget));
+  const own = e => {
+    if (e.target.closest?.(".nw-m")) return true;
+    const sc = e.target.closest?.(".nw-scroll");
+    return !!sc && sc.scrollHeight > sc.clientHeight + 2;
+  };
+  disp.addEventListener("keydown", e => { if (own(e)) return; if (e.key === "ArrowDown" || e.key === "PageDown") { e.preventDefault(); set(at + 1); } if (e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); set(at - 1); } });
   let wheelAt = 0;
   // one screen per wheel turn or swipe, never a run of them
-  disp.addEventListener("wheel", e => { if (mission(e)) return; if (busy() || Math.abs(e.deltaY) < 18 || Date.now() - wheelAt < 900) { if (!mission(e)) e.preventDefault(); return; } const i = at + (e.deltaY > 0 ? 1 : -1); if (i < 0 || i >= n) return; e.preventDefault(); wheelAt = Date.now(); set(i); }, { passive: false });
-  // the finger drags the screens; release past a third of a screen (or a flick) moves one
+  disp.addEventListener("wheel", e => { if (own(e)) return; if (busy() || Math.abs(e.deltaY) < 18 || Date.now() - wheelAt < 900) { e.preventDefault(); return; } const i = at + (e.deltaY > 0 ? 1 : -1); if (i < 0 || i >= n) return; e.preventDefault(); wheelAt = Date.now(); set(i); }, { passive: false });
+  // the finger drags the screens; release past a quarter of a screen (or a flick) moves one
   let y0 = null, x0 = 0, t0 = 0, dy = 0, h = 1, drag = false;
-  disp.addEventListener("pointerdown", e => { if (e.button > 0 || mission(e)) return; y0 = e.clientY; x0 = e.clientX; t0 = performance.now(); dy = 0; drag = false; h = disp.clientHeight || 1; });
+  disp.addEventListener("pointerdown", e => { if (e.button > 0 || own(e)) return; y0 = e.clientY; x0 = e.clientX; t0 = performance.now(); dy = 0; drag = false; h = disp.clientHeight || 1; });
   disp.addEventListener("pointermove", e => {
     if (y0 == null) return; dy = e.clientY - y0;
     if (!drag && Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(e.clientX - x0)) { drag = true; disp.setPointerCapture?.(e.pointerId); }
@@ -140,13 +140,10 @@ export function mountWatch(root, { onRecipe, onLang, onCount } = {}) {
     wrap.style.transition = "none"; wrap.style.transform = `translate3d(0, calc(${-at * 100 / n}% + ${dy * edge}px), 0)`;
   });
   const end = () => { if (y0 == null) return; const v = dy / Math.max(1, performance.now() - t0); y0 = null;
-    if (!drag) return; drag = false; w.dataset.dragged = "1"; setTimeout(() => { delete w.dataset.dragged; }, 50);
+    if (!drag) return; drag = false;
     set(dy < -h / 4 || v < -.6 ? at + 1 : dy > h / 4 || v > .6 ? at - 1 : at); };
   disp.addEventListener("pointerup", end); disp.addEventListener("pointercancel", end);
   disp.style.touchAction = "none";
-  // recipe rows open the recipe theater
-  w.addEventListener("click", e => { const b = e.target.closest?.("[data-rt]"); if (!b || w.dataset.dragged) return; e.stopPropagation();
-    onRecipe?.(b.dataset.rt, [...w.querySelectorAll("[data-rt]")].map(x => x.dataset.rt), b); }, true);
   // the status-bar clock
   const tEl = w.querySelector(".nw-time");
   const tick = () => { if (!w.isConnected) { clearInterval(iv); return; } const d = new Date(); tEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`; };

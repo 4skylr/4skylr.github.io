@@ -57,7 +57,7 @@ export function pcardHtml(p, H) {
       ${econHtml(sv, ar, 0)}
       ${sv?.kind === "serving" ? `<span class="pk-price data" title="${T("Menu price, VAT included", "سعر المنيو شامل الضريبة")}"><small>${T("Sells", "البيع")} </small>${fmt(sv.price)}<small> ${T("SR", "ر.س")}</small></span>`
         : sv?.cost ? `<span class="pk-price data" title="${T("What one stock unit costs", "تكلفة وحدة المخزون")}"><small>${T("Cost", "التكلفة")} </small>${sv.cost.toFixed(2)}<small> ${T("SR", "ر.س")}/${esc(H.UNITS[sv.unit] || sv.unit || unit)}</small></span>` : ""}
-      ${total && !p.outOfStock ? "" : `<span class="pk-out">${p.outOfStock ? T("Out of stock", "نفد من المخزون") : T("Out", "نفد")}</span>`}
+      ${total ? "" : `<span class="pk-out">Out of stock</span>`}
     </div>
     <button type="button" class="pk-fav${mine ? " on" : ""}" data-like="${esc(p.id)}" aria-pressed="${mine}" aria-label="${T("Like", "إعجاب")}" title="${L ? T(`${L} like${L > 1 ? "s" : ""}`, `${L} إعجاب`) : T("Like", "إعجاب")}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.4-9.3-9.2C1.5 8 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.6 0 5.7 3.5 4.5 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"/></svg>${L ? `<b class="data">${L}</b>` : ""}</button>

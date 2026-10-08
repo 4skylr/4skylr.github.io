@@ -92,13 +92,6 @@ export function renderMenuLab(host, H) {
 
   host.innerHTML = `<div class="ml">
     <header class="ml-head"><div><h2>${L.title}</h2><p>${esc(L.sub)}</p></div></header>
-    <div class="ml-kpis">
-      <article><span>${L.k.rev}</span><b class="data">${n0(A.rev)} <small>SAR</small></b><em>${L.note}</em></article>
-      <article class="good"><span>${L.k.profit}</span><b class="data">${n0(A.profit)} <small>SAR</small></b></article>
-      <article class="${A.fc < .2 ? "good" : "warn"}"><span>${L.k.fc}</span><b class="data">${pct(A.fc)}</b></article>
-      <article><span>${L.k.best}</span><b>${esc(name(A.best))}</b><em class="data">${n0(A.best.profit)} SAR</em></article>
-    </div>
-
     <h3 class="ml-h">${L.showcase}</h3>
     <div class="ml-show">${A.combos.filter(c => c.img).map(c => `<article class="ml-card" style="--c:${c.color}">
         <div class="ml-poster"><img src="${c.img}" alt="${esc(ar ? c.ar : c.en)}" loading="lazy">${c.isNew ? `<span class="ml-new">${L.newTag}</span>` : ""}</div>
@@ -125,7 +118,7 @@ export function renderMenuLab(host, H) {
       <header><b>${esc(t[ar ? 1 : 0])}</b><img src="assets/pay/noir.webp" alt=""></header>
       ${A.items.filter(i => i.group === g).map(i => `<article class="ml-item q-${i.q}">
         ${ring(i.fc)}
-        <div class="ml-nm"><b>${esc(name(i))}</b><small>${L.cost} ${m2(i.cost)}${i.c && i.c.n > 1 ? ` <i>(${m2(i.c.min)}–${m2(i.c.max)} · ${i.c.n} ${L.range})</i>` : ""} · ${L.sold} ${n0(i.units)} · ${L.make} ${n0(i.make)}</small>
+        <div class="ml-nm"><b>${esc(name(i))}</b><small>${L.cost} ${m2(i.cost)}${i.c && i.c.n > 1 ? ` <i>(${m2(i.c.min)}–${m2(i.c.max)} · ${i.c.n} ${L.range})</i>` : ""} · ${L.make} ${n0(i.make)}</small>
           <span class="ml-q" style="--q:${QCOL[i.q]}">${L.q[i.q]}</span></div>
         <div class="ml-pr"><b class="data">${i.price}<small> SR</small></b><em class="data">+${m2(i.margin)}</em></div>
       </article>`).join("")}
@@ -140,12 +133,6 @@ export function renderMenuLab(host, H) {
           <div class="ml-sim-out" id="ml-out"></div></div></section>
     </div>
 
-    <section class="slab"><div class="slab-h"><h2>${L.combos}</h2></div><p class="si-sub">${L.combosSub}</p>
-      <div class="ledger-wrap"><table class="ledger si-t"><thead><tr>${L.cols.map((c, i) => `<th class="${i ? "r" : ""}">${c}</th>`).join("")}</tr></thead><tbody>
-      ${A.combos.map(c => `<tr style="cursor:default"><td><b>${esc(ar ? c.ar : c.en)}</b></td><td data-l="${L.cols[1]}" class="r data">${c.hasFree ? "—" : c.alc}</td><td data-l="${L.cols[2]}" class="r data"><b>${c.price}</b></td>
-        <td data-l="${L.cols[3]}" class="r data">${c.hasFree ? "—" : `<span class="si-pill good">${pct(c.save)}</span>`}</td><td data-l="${L.cols[4]}" class="r data">${m2(c.cost)}</td>
-        <td data-l="${L.cols[5]}" class="r data pos">${m2(c.profit)}</td><td data-l="${L.cols[6]}" class="r data">${pct(c.margin)}</td></tr>`).join("")}
-      </tbody></table></div></section>
   </div>`;
 
   // price simulator

@@ -3,13 +3,12 @@
 // callout with a blue pill), then a Studio Mist highlights band of large white cards that advance on their own.
 import { servingOf } from "../finance/serving.js?v=106";
 import { soldOf, moveOf } from "../data/sales-data.js?v=106";
-import { AR as NAMES_AR } from "./names-ar.js?v=106";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=46" alt="" loading="lazy" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
 
 export function stageHtml(H, ar) {
-  const T = (e, a) => (ar ? a : e), P = H.data().products, name = p => esc(ar ? (NAMES_AR[p.id] || p.name) : p.name);
+  const T = (e, a) => (ar ? a : e), P = H.data().products, name = p => esc(p.name);
   const sold = p => (moveOf(p.id)?.shared ? 0 : soldOf(p.id) || 0);
   const ranked = P.filter(p => sold(p) > 0).sort((a, b) => sold(b) - sold(a));
   const star = ranked.find(p => servingOf(p)?.kind === "serving") || ranked[0];

@@ -3,7 +3,8 @@
 import { isOpen, unlock } from "../core/lock.js?v=106";
 import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
 import { REPORT_NAMES } from "../core/report-names.js?v=106";
-import { livePin, rotatePin, downloadSheet } from "../stock/stock-card.js?v=106";
+import { livePin, setLivePin, requirePin, pinUnlocked, downloadSheet } from "../stock/stock-card.js?v=106";
+import { reviewHtml, loadCounts, cachedCounts, updateRow, recountRow, counterName } from "../stock/watch-count.js?v=106";
 import { mergeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
@@ -57,17 +58,21 @@ export async function parseStockPdf(file, products) {
     [...rows.entries()].sort((a, b) => b[0] - a[0]).forEach(([, r]) => lines.push(r.sort((a, b) => a.x - b.x).map(c => c.s).join("   ")));
   }
   let loc = "mini";
-  const found = [];
+  const found = [], unmatched = [];
   lines.forEach(line => {
     const next = locOf(line);
     if (next) loc = next;
     const p = matchProduct(products, line);
     const nums = line.match(/\d[\d,]*\.\d{2}/g);
+    // an item row the catalog does not know: listed for the person uploading, never created
+    if (!p && nums && !next && /[a-z]{3}/i.test(line) && !/\b(total|page|report|printed|date|warehouse|location|qty|quantity)\b/i.test(line))
+      unmatched.push(`${line.replace(/\s{3,}/g, " · ").replace(/[\d,]+\.\d{2}.*$/, "").replace(/[\s·]+$/, "").slice(0, 80)} (${loc === "stores" ? "Main Stores" : loc === "mini" ? "Mini Store" : "Concession"})`);
     if (!p || !nums) return;
     const qty = Number(nums[0].replace(/,/g, ""));
     if (!Number.isFinite(qty)) return;
     found.push({ id: p.id, loc, qty, name: p.name, code: p.code || p.sku });
   });
+  found.unmatched = unmatched;
   return found;
 }
 
@@ -83,11 +88,9 @@ export function reviewGaps(products) {
 }
 
 function gate(root, H) {
-  const ar = AR();
-  root.innerHTML = `<section class="slab"><h2>${ar ? "خانة الأدمن" : "Admin"}</h2><form id="adm"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="${ar ? "رقم الأدمن" : "Admin PIN"}"><button class="btn" type="submit">${ar ? "دخول" : "Open"}</button></form></section>`;
-  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; H.toast(ar ? "الرقم غلط" : "Wrong PIN", true); return; } draw(root, H); };
+  root.innerHTML = `<section class="slab"><h2>Admin</h2><form id="adm"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" aria-label="Admin PIN"><button class="btn" type="submit">Open</button></form></section>`;
+  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; H.toast("Wrong PIN", true); return; } draw(root, H); };
 }
-const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 // keep the last uploaded copy of each system file on this device
 export async function keepFile(key, file) {
   const buf = await file.arrayBuffer();
@@ -120,22 +123,49 @@ export function renderAdmin(root, H) {
   if (!isOpen()) return gate(root, H);
   draw(root, H);
 }
-// Edit PIN for the product cards, the expiry sheet download, and items whose stock and dated groups disagree
+// The admin panel: the watch count reports (match → Update, otherwise Recount), the edit PIN, the expiry sheet,
+// and items whose stock and dated groups disagree.
+// Opening the panel takes the admin PIN; writing a product's stock takes the edit PIN as well (stock-card.js requirePin),
+// so the clock PIN alone never changes stock.
 function draw(root, H) {
-  const ar = AR(), pin = livePin(), gaps = reviewGaps(H.data().products);
-  root.innerHTML = `<section class="slab">
-    <div class="slab-h"><h2>${ar ? "رقم التعديل والتواريخ" : "Edit PIN & expiry"}</h2></div>
-    <p class="note" style="margin-top:0">${ar ? "رقم الموظف لتعديل بطاقة المنتج. بعد أي تعديل يتغير ولا يرجع القديم يفتح." : "Staff PIN for editing a product card. It changes after every edit; the old one stops working."}</p>
-    <p class="pc-qty"><b id="live-pin">${pin}</b></p>
-    <div class="btns">
-      <button class="btn" id="new-pin" type="button">${ar ? "إصدار رقم جديد" : "New PIN"}</button>
-      <button class="btn" id="dl-dates" type="button">${ar ? "تحميل ملف التواريخ بالتعديلات" : "Download the expiry sheet"}</button>
-    </div>
+  const gaps = reviewGaps(H.data().products), hasPin = !!livePin();
+  root.innerHTML = `<div id="wc-admin">${reviewHtml(cachedCounts(), H)}</div>
+  <section class="slab">
+    <div class="slab-h"><h2>Edit PIN &amp; dated groups</h2></div>
+    <p class="note" style="margin-top:0">The edit PIN unlocks stock writes on this device for a few hours: Update on a watch count, Commit on a count sheet. It is never shown on screen.</p>
+    <form class="pin-set" id="pin-set">
+      ${hasPin ? `<input class="input data" name="cur" type="password" inputmode="numeric" autocomplete="off" placeholder="Current edit PIN" aria-label="Current edit PIN">` : ""}
+      <input class="input data" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="New edit PIN, 6 digits" aria-label="New edit PIN">
+      <button class="btn" type="submit">${hasPin ? "Change edit PIN" : "Set edit PIN"}</button>
+    </form>
     <div class="review">
-      <h3>${ar ? "مراجعة: الكمية مقابل المجموعات المؤرخة" : "Check: stock against dated groups"} · ${gaps.length}</h3>
-      ${gaps.slice(0, 12).map(g => `<article class="use">${H.pic ? H.pic(g.p, "pic") : ""}<span><b>${H.esc(g.p.name)}</b><i>${H.esc(g.p.code || g.p.sku)}</i></span><em>${ar ? "ستوك" : "stock"} ${H.qty(g.stock)} · ${ar ? "تواريخ" : "dated"} ${H.qty(g.batchQty)}</em></article>`).join("") || `<p class="note">${ar ? "الكمية تطابق مجموع المجموعات لكل صنف." : "Every item's stock matches its dated groups."}</p>`}
+      <h3>Check: stock against dated groups · ${gaps.length}</h3>
+      ${gaps.slice(0, 12).map(g => `<article class="use">${H.pic ? H.pic(g.p, "pic") : ""}<span><b>${H.esc(g.p.name)}</b><i>${H.esc(g.p.code || g.p.sku)}</i></span><em>stock ${H.qty(g.stock)} · dated ${H.qty(g.batchQty)}</em></article>`).join("") || `<p class="note">Every item matches its dated groups.</p>`}
     </div>
   </section>`;
-  root.querySelector("#new-pin").onclick = () => { root.querySelector("#live-pin").textContent = rotatePin(); H.toast(ar ? "رقم جديد. الرقم السابق توقف" : "New PIN. The old one has stopped"); };
-  root.querySelector("#dl-dates").onclick = () => downloadSheet().then(() => H.toast(ar ? "ملف التواريخ نزل بالتعديلات" : "Expiry sheet downloaded")).catch(e => H.toast(e.message, true));
+  root.querySelector("#pin-set").onsubmit = e => {
+    e.preventDefault(); const f = e.target, next = f.pin.value.trim();
+    if (hasPin && f.cur.value.trim() !== livePin()) { f.cur.value = ""; H.toast("The current edit PIN is wrong", true); return; }
+    if (!/^\d{6}$/.test(next)) { H.toast("The edit PIN is 6 digits", true); return; }
+    setLivePin(next); H.toast("Edit PIN saved on this device"); draw(root, H);
+  };
+  wireCounts(root, H);
+  loadCounts(true).then(() => paintCounts(root, H)).catch(() => {});
+}
+function paintCounts(root, H) { const host = root.querySelector("#wc-admin"); if (!host || host.contains(document.activeElement) && document.activeElement !== document.body) return; host.innerHTML = reviewHtml(cachedCounts(), H); wireCounts(root, H); }
+function wireCounts(root, H) {
+  const host = root.querySelector("#wc-admin"); if (!host) return;
+  host.querySelector("#wc-xlsx")?.addEventListener("click", () => downloadSheet().then(() => H.toast("Excel downloaded with the updated quantities and dates")).catch(e => H.toast(e.message, true)));
+  const run = async (b, fn, done) => {
+    b.disabled = true;
+    try { await fn(b.dataset.wcUp || b.dataset.wcRe, b.dataset.loc, counterName() || "admin"); H.toast(done); }
+    catch (e) { H.toast(e.message, true); }
+    host.innerHTML = reviewHtml(cachedCounts(), H); wireCounts(root, H);
+  };
+  host.querySelectorAll("[data-wc-up]").forEach(b => b.onclick = async () => {
+    if (!livePin()) { H.toast("Set an edit PIN below first", true); return; }
+    if (!pinUnlocked() && !await requirePin()) return;
+    run(b, updateRow, "Stock updated · ready for Excel");
+  });
+  host.querySelectorAll("[data-wc-re]").forEach(b => b.onclick = () => run(b, recountRow, "Sent back for a recount · stock unchanged"));
 }

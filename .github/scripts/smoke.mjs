@@ -1,5 +1,5 @@
 // Smoke test for the site (run by .github/workflows/ci.yml, or locally: node .github/scripts/smoke.mjs).
-// Serves the repo, opens every page in English and Arabic at phone and desktop width, and fails on:
+// Serves the repo, opens every page at phone and desktop width (the site is English only), and fails on:
 //   a JavaScript error · a missing local file · a page wider than the screen · an empty page.
 // // Writes a Markdown table to the GitHub job summary and screenshots to ./smoke-shots.
 import { chromium } from "playwright";
@@ -24,7 +24,7 @@ fs.mkdirSync("smoke-shots", { recursive: true });
 
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 const rows = [], failures = [];
-for (const lang of ["en", "ar"]) for (const width of [390, 1300]) {
+for (const lang of ["en"]) for (const width of [390, 1300]) {
   const ctx = await browser.newContext({ viewport: { width, height: width < 500 ? 860 : 900 }, isMobile: width < 500, serviceWorkers: "block" });
   await ctx.route(/googleapis|gstatic\.com|firebaseio/, r => r.abort()); // run against browser storage only
   const page = await ctx.newPage();
@@ -41,6 +41,15 @@ for (const lang of ["en", "ar"]) for (const width of [390, 1300]) {
     const why = [...errs.map(e => "error: " + e), ...missing.map(m => "missing: " + m), ...(st.over > 1 ? [`${st.over}px wider than the screen`] : []), ...(st.text < 20 ? ["page is empty"] : [])];
     rows.push({ lang, width, route, ok: !why.length, why });
     if (why.length) { failures.push(`${lang} ${width} ${route}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/${lang}-${width}-${route}.png` }); }
+  }
+  // a label scan opens the product watch, from the current address and from the old printed ones
+  if (width < 500) for (const url of ["/ipop/?p=caramel", "/k7/?p=caramel", "/noir-stock/?p=caramel"]) {
+    errs = []; missing = [];
+    await page.goto(BASE + url); await wait(3000);
+    const st = await page.evaluate(() => ({ path: location.pathname, views: document.querySelectorAll(".nw .nw-view").length, name: document.querySelector(".nw-name")?.textContent || "" }));
+    const why = [...errs.map(e => "error: " + e), ...missing.map(m => "missing: " + m), ...(st.path !== "/ipop/" ? [`landed on ${st.path}`] : []), ...(st.views !== 4 || !st.name ? ["the product watch did not open"] : [])];
+    rows.push({ lang, width, route: "scan " + url, ok: !why.length, why });
+    if (why.length) { failures.push(`${lang} ${width} scan ${url}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/scan-${url.split("/")[1]}.png` }); }
   }
   await ctx.close();
 }

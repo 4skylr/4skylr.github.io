@@ -43,83 +43,89 @@ export function analyseProfit() {
 }
 
 // ── view ─────────────────────────────────────────────────────
-const state = { tab: "items", group: "all", sort: "profit", open: new Set() };
+// One product-price section (menu price, cost, profit, margin, and where the costs come from), the year's sales once
+// in one sorted table, the combos, and the supplier list behind the costs. A recipe opens from its price row only.
+const state = { tab: "prices", group: "all", sort: "profit", open: new Set() };
 export function renderProfit(host, H) {
-  const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar", T = (en, a) => ar ? a : en, esc = H.esc;
-  const A = analyseProfit(), n0 = v => H.nf0.format(Math.round(v)), pct = v => `${Math.round(v * 100)}%`;
-  const nm = i => esc(ar ? i.ar : i.en);
+  const esc = H.esc, A = analyseProfit();
+  const pct = x => `${(x * 100).toFixed(1)}%`, n0 = x => Math.round(x).toLocaleString("en-US");
   const tone = m => m >= .7 ? "good" : m >= .5 ? "ok" : m >= .3 ? "warn" : "bad";
   const bar = m => `<span class="pf-bar t-${tone(m)}"><i style="width:${Math.max(2, Math.min(100, m * 100)).toFixed(1)}%"></i></span>`;
-  const best = [...A.items].sort((a, b) => b.profit - a.profit)[0], thin = [...A.items].sort((a, b) => a.margin - b.margin)[0];
 
-  // the line-by-line recipe lives in the recipe theater; here: where the cost goes, and the door to it
+  // where the cost of a serving goes, and the one door to its recipe
   const DNA = ["#6ccbff", "#ffb547", "#3ed69e", "#5b7bff", "#ff8a5c", "#dce6ff", "#b18cff", "#ff6fb0", "#7de3d0", "#ffd36b", "#8fb4ff", "#c6f36b"];
   const breakdown = o => `<div class="pf-dna">${o.lines.map((l, k) => ({ l, c: DNA[k % DNA.length] })).filter(x => x.l.cost > 0).sort((a, b) => b.l.cost - a.l.cost)
       .map(x => `<i style="--w:${Math.max(.8, x.l.cost / (o.total || 1) * 100).toFixed(2)}%;--c:${x.c}" title="${esc(x.l.rm)} · ${x.l.cost.toFixed(2)} (${Math.round(x.l.cost / (o.total || 1) * 100)}%)"></i>`).join("")}</div>
-    <button type="button" class="btn sm ghost pf-rt" data-rt="${esc(o.name)}">${T("Open the recipe", "افتح الوصفة")} · ${o.lines.length} ${T("ingredients", "مكوّن")}</button>`;
-  const itemRow = i => {
+    <button type="button" class="btn sm ghost pf-rt" data-rt="${esc(o.name)}">Open the recipe · ${o.lines.length} ingredients</button>`;
+  const priceRow = i => {
     const multi = i.options.length > 1, open = state.open.has(i.id);
     const costTxt = multi && i.max - i.min > 0.005 ? `${i.min.toFixed(2)}–${i.max.toFixed(2)}` : i.cost.toFixed(2);
     return `<details class="pf-item" data-id="${i.id}" ${open ? "open" : ""}><summary>
-      <span class="pf-name"><b>${nm(i)}</b>${multi ? `<small>${i.options.length} ${T("options", "خيارات")}</small>` : ""}</span>
-      <span class="pf-num" data-l="${T("Price", "السعر")}"><b class="data">${i.price}</b><small class="data">${i.net.toFixed(2)} ${T("net", "صافي")}</small></span>
-      <span class="pf-num" data-l="${T("Cost", "التكلفة")}"><b class="data">${costTxt}</b></span>
-      <span class="pf-num pf-p" data-l="${T("Profit", "الربح")}"><b class="data">${i.profit.toFixed(2)}</b>${bar(i.margin)}<small class="data">${pct(i.margin)}</small></span>
-      <span class="pf-num" data-l="${T("This year", "هذي السنة")}"><b class="data">${n0(i.total)}</b><small class="data">${n0(i.units)} ${T("sold", "مباع")}</small></span>
+      <span class="pf-name"><b>${esc(i.en)}</b>${multi ? `<small>${i.options.length} options</small>` : ""}</span>
+      <span class="pf-num" data-l="Menu price"><b class="data">${i.price}</b><small class="data">${i.net.toFixed(2)} net</small></span>
+      <span class="pf-num" data-l="Cost"><b class="data">${costTxt}</b></span>
+      <span class="pf-num pf-p" data-l="Profit"><b class="data">${i.profit.toFixed(2)}</b></span>
+      <span class="pf-num" data-l="Margin"><b class="data">${pct(i.margin)}</b>${bar(i.margin)}</span>
     </summary>
     <div class="pf-opts">${i.options.map(o => `<section class="pf-opt">
-      <header><b>${esc(ar ? o.label.ar : o.label.en)}</b><span class="pf-chips">${o.chips.map(c => `<em>${esc(c[ar ? 1 : 0])}</em>`).join("")}</span>
-        <span class="pf-o-num data">${T("cost", "تكلفة")} ${o.total.toFixed(2)} · ${T("profit", "ربح")} <b>${o.profit.toFixed(2)}</b> · ${pct(o.margin)}${o.kcal != null ? ` · <i class="pf-kcal">≈ ${o.kcal} ${T("kcal", "سعرة")}</i>` : ""}</span></header>
+      <header><b>${esc(o.label.en)}</b><span class="pf-chips">${o.chips.map(c => `<em>${esc(c[0])}</em>`).join("")}</span>
+        <span class="pf-o-num data">cost ${o.total.toFixed(2)} · profit <b>${o.profit.toFixed(2)}</b> · ${pct(o.margin)}${o.kcal != null ? ` · <i class="pf-kcal">≈ ${o.kcal} kcal</i>` : ""}</span></header>
       ${breakdown(o)}</section>`).join("")}</div></details>`;
   };
   const groups = Object.keys(GROUPS).filter(g => state.group === "all" || state.group === g);
-  const sorter = { profit: (a, b) => b.profit - a.profit, margin: (a, b) => b.margin - a.margin, total: (a, b) => b.total - a.total }[state.sort];
+  const sorter = { profit: (a, b) => b.profit - a.profit, margin: (a, b) => b.margin - a.margin, price: (a, b) => b.price - a.price }[state.sort] || ((a, b) => b.profit - a.profit);
+  const head = first => `<div class="pf-head" aria-hidden="true"><span>${first}</span><span>Menu price · net</span><span>Cost</span><span>Profit</span><span>Margin</span></div>`;
 
-  const tabItems = () => `<div class="pf-tools"><div class="seg" role="group">${["all", ...Object.keys(GROUPS)].map(g => `<button data-g="${g}" aria-pressed="${state.group === g}">${g === "all" ? T("All", "الكل") : esc(GROUPS[g][ar ? 1 : 0])}</button>`).join("")}</div>
-      <label class="pf-sort">${T("Sort by", "ترتيب حسب")} <select class="select" id="pf-sort">${[["profit", T("Profit per item", "ربح الحبة")], ["margin", T("Margin", "الهامش")], ["total", T("Profit this year", "ربح السنة")]].map(([k, l]) => `<option value="${k}" ${state.sort === k ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
-    <div class="pf-head" aria-hidden="true"><span>${T("Item", "الصنف")}</span><span>${T("Price · net", "السعر · الصافي")}</span><span>${T("Cost", "التكلفة")}</span><span>${T("Profit · margin", "الربح · الهامش")}</span><span>${T("Profit this year", "ربح السنة")}</span></div>
-    ${groups.map(g => `<h3 class="pf-g">${esc(GROUPS[g][ar ? 1 : 0])}</h3>${A.items.filter(i => i.group === g).sort(sorter).map(itemRow).join("")}`).join("")}`;
+  const tabPrices = () => `<div class="pf-tools"><div class="seg" role="group" aria-label="Menu group">${["all", ...Object.keys(GROUPS)].map(g => `<button data-g="${g}" aria-pressed="${state.group === g}">${g === "all" ? "All" : esc(GROUPS[g][0])}</button>`).join("")}</div>
+      <label class="pf-sort">Sort by <select class="select" id="pf-sort">${[["profit", "Profit per item"], ["margin", "Margin"], ["price", "Menu price"]].map(([k, l]) => `<option value="${k}" ${state.sort === k ? "selected" : ""}>${l}</option>`).join("")}</select></label></div>
+    ${head("Item")}
+    ${groups.map(g => `<h3 class="pf-g">${esc(GROUPS[g][0])}</h3>${A.items.filter(i => i.group === g).sort(sorter).map(priceRow).join("")}`).join("")}`;
 
-  const tabCombos = () => `<div class="pf-head" aria-hidden="true"><span>${T("Combo", "الكومبو")}</span><span>${T("Price · net", "السعر · الصافي")}</span><span>${T("Cost", "التكلفة")}</span><span>${T("Profit · margin", "الربح · الهامش")}</span><span>${T("Bought separately", "بالمفرد")}</span></div>
+  // the year's sales, once: item, units sold, profit (units × profit per item), sorted by profit
+  const tabSales = () => {
+    const rows = A.items.filter(i => i.units > 0).sort((a, b) => b.total - a.total || b.units - a.units), none = A.items.length - rows.length;
+    return `<p class="note">Sales ${SALES_FROM} → ${SALES_TO}. Profit = units × profit per item on the net price; items sold inside combos count at menu price, so read the total as a ceiling.</p>
+      <div class="pf-tw"><table class="pf-table pf-sales"><thead><tr><th>Item</th><th class="num">Units sold this year</th><th class="num">Profit</th></tr></thead>
+      <tbody>${rows.map(i => `<tr><td><b>${esc(i.en)}</b></td><td class="data num">${n0(i.units)}</td><td class="data num">${n0(i.total)} <small>SAR</small></td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>Total</td><td class="data num">${n0(A.units)}</td><td class="data num">${n0(A.gross)} <small>SAR</small></td></tr></tfoot></table></div>
+      ${none ? `<p class="note">${none} menu ${none === 1 ? "item has" : "items have"} no sales figure in the report.</p>` : ""}`;
+  };
+
+  const tabCombos = () => `${head("Combo")}
     ${[...A.combos].sort((a, b) => b.profit - a.profit).map(c => `<details class="pf-item"><summary>
-      <span class="pf-name"><b>${nm(c)}</b><small>${c.parts.length} ${T("items", "أصناف")}${c.recipe ? "" : ` · ${T("parts averaged", "متوسط الأصناف")}`}</small></span>
-      <span class="pf-num" data-l="${T("Price", "السعر")}"><b class="data">${c.price}</b><small class="data">${c.net.toFixed(2)} ${T("net", "صافي")}</small></span>
-      <span class="pf-num" data-l="${T("Cost", "التكلفة")}"><b class="data">${c.cost.toFixed(2)}</b></span>
-      <span class="pf-num pf-p" data-l="${T("Profit", "الربح")}"><b class="data">${c.profit.toFixed(2)}</b>${bar(c.margin)}<small class="data">${pct(c.margin)}</small></span>
-      <span class="pf-num" data-l="${T("Separately", "بالمفرد")}"><b class="data">${c.alc || "—"}</b>${c.alc ? `<small class="data">${T("guest saves", "يوفر")} ${c.alc - c.price}</small>` : ""}</span>
+      <span class="pf-name"><b>${esc(c.en)}</b><small>${c.parts.length} items${c.recipe ? "" : " · parts averaged"}${c.alc ? ` · ${c.alc} separately` : ""}</small></span>
+      <span class="pf-num" data-l="Menu price"><b class="data">${c.price}</b><small class="data">${c.net.toFixed(2)} net</small></span>
+      <span class="pf-num" data-l="Cost"><b class="data">${c.cost.toFixed(2)}</b></span>
+      <span class="pf-num pf-p" data-l="Profit"><b class="data">${c.profit.toFixed(2)}</b></span>
+      <span class="pf-num" data-l="Margin"><b class="data">${pct(c.margin)}</b>${bar(c.margin)}</span>
     </summary><div class="pf-opts">${c.recipe ? `<section class="pf-opt"><header><b>${esc(c.recipe.name)}</b></header>${breakdown(c.recipe)}</section>`
-      : `<ul class="pf-parts">${c.parts.map(p => `<li><span>${esc(ar ? p.ar : p.en)}</span><b class="data">${p.cost.toFixed(2)}</b></li>`).join("")}</ul>`}</div></details>`).join("")}`;
+      : `<ul class="pf-parts">${c.parts.map(p => `<li><span>${esc(p.en)}</span><b class="data">${p.cost.toFixed(2)}</b></li>`).join("")}</ul>`}</div></details>`).join("")}`;
 
   const tabList = () => {
     const cats = [...new Set(PRICE_LIST.map(l => l.cat))];
-    return `<p class="note">${T("Case prices are turned into the cost of one unit: what the case holds is read from the description (a case of 6 × 3.78 kg oil = 22.68 kg). Tubs, trays and hot-dog boxes are priced per piece on the list.", "سعر الكرتون يتحول لتكلفة الوحدة حسب محتوى الكرتون المكتوب بالوصف (كرتون زيت 6 × 3.78 كجم = 22.68 كجم). العلب والصواني وعلب الهوت دوق مسعّرة بالحبة في القائمة.")}</p>
-      ${cats.map(cat => { const L = PRICE_LIST.filter(l => l.cat === cat); return `<h3 class="pf-g">${esc(ar ? L[0].catAr : cat.charAt(0) + cat.slice(1).toLowerCase())}</h3>
-      <div class="pf-tw"><table class="pf-table"><thead><tr><th>${T("Item", "الصنف")}</th><th>${T("Price", "السعر")}</th><th>${T("Holds", "المحتوى")}</th><th>${T("Per unit", "الوحدة")}</th><th>${T("Used in", "يدخل في")}</th></tr></thead><tbody>
-      ${L.map(l => `<tr><td><b>${esc(l.name)}</b><small class="data">${esc(l.code)}${l.note ? ` · ${esc(l.note)}` : ""}</small></td><td class="data">${l.price.toFixed(2)}<small>${l.pack === 1 ? T("per piece", "للحبة") : T("per case", "للكرتون")}</small></td>
+    return `<p class="note">Case prices are turned into the cost of one unit: what the case holds is read from the description (a case of 6 × 3.78 kg oil = 22.68 kg). Tubs, trays and hot-dog boxes are priced per piece on the list.</p>
+      ${cats.map(cat => { const L = PRICE_LIST.filter(l => l.cat === cat); return `<h3 class="pf-g">${esc(cat.charAt(0) + cat.slice(1).toLowerCase())}</h3>
+      <div class="pf-tw"><table class="pf-table"><thead><tr><th>Item</th><th>Price</th><th>Holds</th><th>Per unit</th><th>Used in</th></tr></thead><tbody>
+      ${L.map(l => `<tr><td><b>${esc(l.name)}</b><small class="data">${esc(l.code)}${l.note ? ` · ${esc(l.note)}` : ""}</small></td><td class="data">${l.price.toFixed(2)}<small>${l.pack === 1 ? "per piece" : "per case"}</small></td>
         <td class="data">${l.pack ? (l.pack === 1 ? "1 pcs" : `${+l.pack.toFixed(2)} ${esc(l.unit)}`) : "—"}</td><td class="data">${l.per != null ? `${l.per.toFixed(l.per < 1 ? 3 : 2)} / ${esc(l.unit)}` : "—"}</td>
-        <td>${l.rm ? esc(l.rm) : `<span class="pf-mute">${T("Not in a recipe", "مو داخل بوصفة")}</span>`}</td></tr>`).join("")}</tbody></table></div>`; }).join("")}`;
+        <td>${l.rm ? esc(l.rm) : `<span class="pf-mute">Not in a recipe</span>`}</td></tr>`).join("")}</tbody></table></div>`; }).join("")}`;
   };
 
-  const tabChanges = () => A.changes.length ? `<p class="note">${T("Where the supplier list and the system's purchase rate disagree. Profits on this page use the list.", "الأصناف اللي يختلف فيها سعر المورد عن سعر الشراء بالنظام. الأرباح بهذي الصفحة محسوبة على القائمة.")}</p>
+  const tabChanges = () => A.changes.length ? `<p class="note">Where the supplier list and the system's purchase rate disagree. Costs on this page use the list.</p>
     <div class="pf-changes">${A.changes.sort((a, b) => Math.abs(b.list - b.sys) / (b.sys || 1) - Math.abs(a.list - a.sys) / (a.sys || 1)).map(c => { const up = c.list > c.sys; return `<article class="pf-ch ${up ? "up" : "down"}">
       <header><b>${esc(c.rm)}</b><span class="data">${c.sys.toFixed(c.sys < 1 ? 3 : 2)} → <strong>${c.list.toFixed(c.list < 1 ? 3 : 2)}</strong> / ${esc(c.unit)}</span><em class="data">${up ? "+" : ""}${Math.round((c.list / c.sys - 1) * 100)}%</em></header>
-      <p>${c.hits.length ? c.hits.map(h => `<span>${nm(h.i)} <b class="data">${h.delta >= 0 ? "+" : ""}${h.delta.toFixed(2)}</b></span>`).join("") : T("No menu item uses it", "ما يدخل بأي صنف بالمنيو")}</p>
-      <small>${T("Profit change per item", "التغير في ربح الحبة")}</small></article>`; }).join("")}</div>` : `<p class="empty">${T("The list matches the system everywhere.", "القائمة مطابقة للنظام بالكامل.")}</p>`;
+      <p>${c.hits.length ? c.hits.map(h => `<span>${esc(h.i.en)} <b class="data">${h.delta >= 0 ? "+" : ""}${h.delta.toFixed(2)}</b></span>`).join("") : "No menu item uses it"}</p>
+      <small>Profit change per item</small></article>`; }).join("")}</div>` : `<p class="empty">The list matches the system everywhere.</p>`;
 
+  const TABS = [["prices", "Prices"], ["sales", "Sales this year"], ["combos", "Combos"], ["list", "Price list"], ["changes", `Price changes${A.changes.length ? ` · ${A.changes.length}` : ""}`]];
+  if (!TABS.some(([k]) => k === state.tab)) state.tab = "prices";
   host.innerHTML = `<div class="pf">
-    <section class="slab pf-top">
-      <div class="pf-k"><span>${T("Gross margin", "هامش الربح")}</span><b class="data">${pct(A.margin)}</b><small>${T("weighted by this year's sales; items inside combos count at menu price, so read it as a ceiling", "موزون بمبيعات السنة؛ أصناف الكومبو محسوبة بسعر المنيو، فاعتبره حد أعلى")}</small></div>
-      <div class="pf-k"><span>${T("Gross profit", "إجمالي الربح")}</span><b class="data">${n0(A.gross)}<small> SAR</small></b><small class="data" dir="ltr">${SALES_FROM} → ${SALES_TO}</small></div>
-      <div class="pf-k"><span>${T("Most per item", "أعلى ربح للحبة")}</span><b>${nm(best)}</b><small class="data">${best.profit.toFixed(2)} SAR · ${pct(best.margin)}</small></div>
-      <div class="pf-k"><span>${T("Thinnest margin", "أقل هامش")}</span><b>${nm(thin)}</b><small class="data">${thin.profit.toFixed(2)} SAR · ${pct(thin.margin)}</small></div>
-      <p class="pf-src-line">${T(`Costs: ${SUPPLIER} price list, ${PRICE_LIST_DATE} · ${PRICE_LIST.length} lines. Menu prices include 15% VAT; profit is on the net price.`, `التكاليف: قائمة أسعار ${SUPPLIER} بتاريخ ${PRICE_LIST_DATE} · ${PRICE_LIST.length} صنف. أسعار المنيو شاملة الضريبة 15%، والربح محسوب على السعر الصافي.`)}</p>
-    </section>
-    <div class="seg pf-tabs" role="group">${[["items", T("Menu items", "أصناف المنيو")], ["combos", T("Combos", "الكومبو")], ["list", T("Price list", "قائمة الأسعار")], ["changes", `${T("Price changes", "فروقات الأسعار")} <sup class="data">${A.changes.length}</sup>`]]
-      .map(([k, l]) => `<button data-tab="${k}" aria-pressed="${state.tab === k}">${l}</button>`).join("")}</div>
-    <section class="slab pf-body">${{ items: tabItems, combos: tabCombos, list: tabList, changes: tabChanges }[state.tab]()}</section>
+    <p class="pf-src-line pf-src">Costs: ${esc(SUPPLIER)} price list, ${PRICE_LIST_DATE} · ${PRICE_LIST.length} lines (materials it does not sell use the system's purchase rate). Menu prices include ${Math.round(VAT * 100)}% VAT; profit and margin are on the net price.</p>
+    <div class="seg pf-tabs" role="group" aria-label="Product profit">${TABS.map(([k, l]) => `<button data-tab="${k}" aria-pressed="${state.tab === k}">${l}</button>`).join("")}</div>
+    <section class="slab pf-body">${{ prices: tabPrices, sales: tabSales, combos: tabCombos, list: tabList, changes: tabChanges }[state.tab]()}</section>
   </div>`;
   const again = () => renderProfit(host, H);
-  wire(host, H, { lang: ar ? "ar" : "en" });
+  wire(host, H, { lang: "en" });
   host.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { state.tab = b.dataset.tab; again(); });
   host.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { state.group = b.dataset.g; again(); });
   host.querySelector("#pf-sort")?.addEventListener("change", e => { state.sort = e.target.value; again(); });
