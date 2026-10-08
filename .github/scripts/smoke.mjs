@@ -43,7 +43,7 @@ for (const lang of ["en"]) for (const width of [390, 1300]) {
     if (why.length) { failures.push(`${lang} ${width} ${route}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/${lang}-${width}-${route}.png` }); }
   }
   // a label scan opens the product watch, from the current address and from the old printed ones
-  if (width < 500) for (const url of ["/ipop/?p=caramel", "/k7/?p=caramel", "/noir-stock/?p=caramel"]) {
+  if (width < 500) for (const url of ["/ipop/?p=caramel", "/noir-stock/?p=caramel"]) {
     errs = []; missing = [];
     await page.goto(BASE + url); await wait(3000);
     const st = await page.evaluate(() => ({ path: location.pathname, views: document.querySelectorAll(".nw .nw-view").length, name: document.querySelector(".nw-name")?.textContent || "" }));

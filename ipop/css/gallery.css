@@ -391,8 +391,20 @@ div[aria-label="Audit"] > header, div[aria-label="Inquiry"] > header, div[aria-l
 
 .gx-brand { margin-bottom: 18px; border-radius: 22px; overflow: hidden; }
 .gx-brand img { display: block; width: 100%; height: auto; }
-.gx-img, .gx-render { object-fit: contain; background: #f4f4f6; }
-.gx-slide .gx-img { height: 180px; }
+/* the products stand on the silver stage like hardware in a keynote: the transparent cut-out, no box behind it,
+   a soft key light above, a contact shadow on the floor and a faint reflection */
+.gx-img, .gx-render { object-fit: contain; background: none; filter: drop-shadow(0 22px 22px rgba(20, 20, 30, .22)) drop-shadow(0 4px 6px rgba(20, 20, 30, .14)); }
+.gx-slide .gx-img { width: 78%; height: 232px; margin: auto auto 18px; position: relative; z-index: 1; transition: transform .6s cubic-bezier(.2, .8, .2, 1); }
+.gx-slide:hover .gx-img, .gx-slide:focus-visible .gx-img { transform: translateY(-6px) scale(1.02); }
+.gx-slide::before, .gx-stage::before { content: ""; position: absolute; left: 50%; bottom: 28px; width: 62%; height: 26px; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(20, 20, 30, .28), rgba(20, 20, 30, 0)); pointer-events: none; }
+.gx-slide::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(70% 42% at 50% 62%, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 70%); }
+.gx-slide > * { position: relative; z-index: 1; }
+.gx-stage { position: relative; }
+.gx-stage::before { bottom: 6px; width: 48%; height: 30px; }
+.gx-render { position: relative; z-index: 1; }
+@media (max-width: 480px) { .gx-slide .gx-img { height: 210px; } }
 @media (max-width: 800px) {
   .gx-brand { margin-bottom: 128px; }
 }
