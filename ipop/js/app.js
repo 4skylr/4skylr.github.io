@@ -72,7 +72,7 @@ const CARD_DOOR = !!window.CARD_DOOR;
 const isScanUrl = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
 
 // bump with each release so browsers fetch fresh photos instead of cached ones
-const ASSET_V = "46";
+const ASSET_V = "47";
 
 // ── Helpers ──────────────────────────────────────────────────
 const $ = (s, r = document) => r.querySelector(s);
@@ -714,7 +714,7 @@ function renderDoor() {
   if (p) { if (location.hash !== "#p/" + p.id) history.replaceState(null, "", location.pathname + location.search + "#p/" + p.id); return viewScanProduct(p); }
   if (data.products?.length || !id) {
     lastCard = null;
-    $("#view").innerHTML = `<article class="phone-card door-empty"><h1>${id ? "المنتج غير موجود" : "امسح باركود منتج"}</h1><p>${id ? "Product not found" : "Scan a product label"}</p></article>`;
+    $("#view").innerHTML = `<article class="phone-card door-empty"><h1>${id ? "Product not found" : "Scan a product label"}</h1><p>${id ? "This label points to a product that is not in the catalog." : "Point the camera at a product label."}</p></article>`;
     window.NoirCurtain?.open();
   }
 }
@@ -735,7 +735,7 @@ function viewScanProduct(p) {
       .then(() => new Promise(r => requestAnimationFrame(r)))
       .then(() => window.NoirCurtain?.open());
   }).catch(err => {
-    $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "تعذر فتح البطاقة")}</p></article>`;
+    $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "The product could not be opened")}</p></article>`;
     window.NoirCurtain?.open();
   });
 }

@@ -91,11 +91,9 @@
   // later opens and refreshes in the same visit: just the logo for a moment, then a fade
   if (again) c.classList.add("quick");
   var q = new URLSearchParams(location.search).get("p") || (location.hash.indexOf("#p/") === 0 ? location.hash.slice(3) : "");
-  var ar = (sessionStorage.getItem("noir-card-lang") || "ar") !== "en";
-  if (q ? ar : sessionStorage.getItem("noir-lang") === "ar") { var ld = document.getElementById("cur-load"); if (ld) ld.textContent = "جاري التحميل..."; }
   if (q) {
     c.classList.add("scan");
-    document.getElementById("cur-now").textContent = ar ? "تم المسح · يعرض الآن" : "Scanned · now showing";
+    document.getElementById("cur-now").textContent = "Scanned · now showing";
     document.getElementById("cur-feat").textContent = q.replace(/-/g, " ").replace(/\b\w/g, function (m) { return m.toUpperCase(); });
   }
   function open() {

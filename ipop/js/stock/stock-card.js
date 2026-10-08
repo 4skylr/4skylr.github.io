@@ -181,10 +181,9 @@ let zxwP = null;
 const zxw = () => zxwP ??= import(/* @vite-ignore */ ZXW).then(m => { m.prepareZXingModule({ overrides: { locateFile: (f, prefix) => f.endsWith(".wasm") ? new URL("../../vendor/zxing_reader.wasm", import.meta.url).href : prefix + f } }); return m; });
 export async function openScanner(helpers, onId) {
   H = helpers; scanner?.stop(); // a second open never leaves the first camera running
-  const ar = (sessionStorage.getItem("noir-lang") || "en") === "ar";
-  H.openModal(`<h2>${ar ? "امسح" : "Scan"} <span class="voice">${ar ? "الملصق" : "a label"}</span></h2><p class="lede">${ar ? "وجّه الكاميرا على الباركود أو الـ QR. تنفتح بطاقة المنتج مباشرة." : "Point the camera at the barcode or QR. The product opens straight away."}</p>
+  H.openModal(`<h2>Scan <span class="voice">a label</span></h2><p class="lede">Point the camera at the barcode or QR. The product opens straight away.</p>
     <div style="position:relative"><video id="zx" style="width:100%;border-radius:16px;background:#000;display:block" playsinline muted autoplay></video>
-    <p id="zx-msg" class="note" style="text-align:center"></p></div><div class="form-actions"><button class="btn ghost" data-close type="button">${ar ? "إغلاق" : "Close"}</button></div>`);
+    <p id="zx-msg" class="note" style="text-align:center"></p></div><div class="form-actions"><button class="btn ghost" data-close type="button">Close</button></div>`);
   const video = document.getElementById("zx"), msg = document.getElementById("zx-msg");
   let stream = null, done = false, timer = 0;
   const stop = () => { done = true; clearTimeout(timer); stream?.getTracks().forEach(t => t.stop()); };
@@ -192,7 +191,7 @@ export async function openScanner(helpers, onId) {
   document.querySelector("#modal-root [data-close]")?.addEventListener("click", stop);
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
-  } catch (e) { msg.textContent = ar ? "ما قدرنا نفتح الكاميرا. اسمح للموقع باستخدامها من إعدادات المتصفح." : "The camera could not start. Allow camera access for this site in the browser settings."; throw e; }
+  } catch (e) { msg.textContent = "The camera could not start. Allow camera access for this site in the browser settings."; throw e; }
   if (!document.body.contains(video)) { stop(); return; }
   video.srcObject = stream; await video.play().catch(() => {});
   // pick a reader
