@@ -3,11 +3,11 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=102";
-import { BARCODES } from "../data/barcodes.js?v=102";
-import { mountGauges } from "./indicators.js?v=102";
-import { renderScanCard } from "./scan-view.js?v=102";
-import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=102";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=103";
+import { BARCODES } from "../data/barcodes.js?v=103";
+import { mountGauges } from "./indicators.js?v=103";
+import { renderScanCard } from "./scan-view.js?v=103";
+import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=103";
 
 const UNLOCK = "noir-edit-until";
 const LIB = {

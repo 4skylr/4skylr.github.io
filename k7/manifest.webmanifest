@@ -1,7 +1,7 @@
 {
   "name": "iPop",
   "short_name": "iPop",
-  "description": "iPop — Premium Popped Experiences. Concessions stock for Noir Cinema, Othaim Mall, Onaizah",
+  "description": "iPop — People of Performance. Concessions stock for Noir Cinema, Othaim Mall, Onaizah",
   "start_url": "./#dashboard",
   "scope": "./",
   "display": "standalone",

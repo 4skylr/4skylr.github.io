@@ -1,9 +1,9 @@
 // The Overview opens the way the style reference opens a product page, with this branch's own products in place of
 // hardware: a white hero stage (launch label, product name, one statement, the product render, a floating price
 // callout with a blue pill), then a Studio Mist highlights band of large white cards that advance on their own.
-import { servingOf } from "../finance/serving.js?v=102";
-import { soldOf, moveOf } from "../data/sales-data.js?v=102";
-import { AR as NAMES_AR } from "./names-ar.js?v=102";
+import { servingOf } from "../finance/serving.js?v=103";
+import { soldOf, moveOf } from "../data/sales-data.js?v=103";
+import { AR as NAMES_AR } from "./names-ar.js?v=103";
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const render = (p, H) => `<img class="gx-img" src="assets/cutouts/${esc(p.id)}.webp?v=46" alt="" loading="lazy" onerror="this.onerror=null;this.src='${esc(H.src(p.image || ""))}'">`;
@@ -17,7 +17,7 @@ export function stageHtml(H, ar) {
   const sv = servingOf(star), best = sv?.kind === "serving" ? [...sv.options].sort((a, b) => b.profit - a.profit)[0] : null;
   const unit = esc(H.UNITS[star.unit] || star.unit || "");
   // the iPop stage from the identity: the pearl mark and the wordmark on brushed silver
-  const brand = `<section class="gx-brand" aria-label="iPop — Premium Popped Experiences"><img src="assets/brand/ipop-hero.webp" alt="iPop — Premium Popped Experiences" width="2816" height="1536" decoding="async"></section>`;
+  const brand = `<section class="gx-brand" aria-label="iPop — People of Performance"><img src="assets/brand/ipop-hero.webp" alt="iPop — People of Performance" width="2816" height="1536" decoding="async"></section>`;
   const hero = `<section class="gx-hero">
       <span class="gx-label">${T("Best seller this year", "الأكثر مبيعاً هذي السنة")}</span>
       <h2 class="gx-name">${name(star)}</h2>

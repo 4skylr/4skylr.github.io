@@ -1,8 +1,17 @@
 # Changelog
 
+## v103 · 2026-10-08 · People of Performance, silver keys
+
+- **The slogan is now "People of Performance".**
+  - **On the image:** the old line was removed from the upscaled stage image with OpenCV inpainting, and the new one set in Inter Light in the same graphite. It shows on the launch screen and the Overview.
+  - **In the text:** the app description carries it too. · **الشعار النصي الجديد.**
+- **The dock keys are light silver:** the same keys and motion, now on a brushed-silver bar.
+  - **Each key:** light aluminium with the symbol pressed into its face.
+  - **The page you are on:** its key is set down, its symbol in Black and traced in graphite, with a small pearl LED.
+
 ## v102 · 2026-10-08 · iPop identity
 
-- **The site is iPop now**, following the identity sheet: the pearl popcorn mark, the iPop wordmark, "Premium Popped Experiences", and the four colours Pearl #F7F4EF, Graphite #3A3A3A, Silver #E6E6E8 and Black #111111. · **هوية iPop الجديدة.**
+- **The site is iPop now**, following the identity sheet: the pearl popcorn mark, the iPop wordmark, its slogan, and the four colours Pearl #F7F4EF, Graphite #3A3A3A, Silver #E6E6E8 and Black #111111. · **هوية iPop الجديدة.**
   - **Logo:** the old animated logo (logo.css) and the "67" icon are gone. The tab icon, the home-screen icons and the manifest use the pearl mark on a silver tile, and the app is named iPop.
   - **Image quality:** the identity images were upscaled with Real-ESRGAN (xinntao/Real-ESRGAN, ncnn build). The mark was cut out with rembg (danielgatis/rembg).
 - **Navigation:**
