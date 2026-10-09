@@ -4,7 +4,6 @@
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=106";
 import { isOpen, unlock } from "./core/lock.js?v=106";
-import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf, watchKick, signOut } from "./core/access.js?v=120";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
@@ -24,7 +23,7 @@ const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.d
 const exportCount = lazy("./stock/export-count.js?v=106");
 const financeView = lazy("./finance/finance-view.js?v=106");
 const unaizahView = lazy("./finance/unaizah-view.js?v=106");
-const syncAdmin = lazy("./reports/sync-admin.js?v=116");
+const syncAdmin = lazy("./reports/sync-admin.js?v=113");
 const toolsMod = lazy("./core/tools.js?v=106");
 const intelMod = lazy("./stock/stock-intel.js?v=106");
 const menuMod = lazy("./stock/menu-lab.js?v=106"), yieldMod = lazy("./stock/analytics.js?v=106");
@@ -199,7 +198,7 @@ try { sessionStorage.setItem(LANG_KEY, "en"); sessionStorage.setItem("noir-card-
 const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
 function siteLang() { return "en"; }
 // the iPop bar (top): five words, evenly spaced on brushed silver, as in the identity — iPop · Shop · Flavors · Origins · Support
-const TB = [["dashboard", "iPop", "iPop"], ["products", "Shop", "المتجر"], ["profit", "Flavors", "النكهات"], ["finance", "Origins", "الفروع"], ["settings", "Admin", "الأدمن"]];
+const TB = [["dashboard", "iPop", "iPop"], ["products", "Shop", "المتجر"], ["profit", "Flavors", "النكهات"], ["finance", "Origins", "الفروع"], ["settings", "Support", "الدعم"]];
 // the dock (bottom): each page is a key (css/dock.css); rebuilt only when the page, the language or the badge changes,
 // so a key lights up once when you arrive on its page, not on every redraw
 let navKey = "";
@@ -261,13 +260,6 @@ function go(route) {
 }
 function render() {
   if (CARD_DOOR) return renderDoor();
-  if (!isScanUrl() && !isAdmin() && branchOf() !== "unaizah") {
-    document.body.classList.remove("card-only", "watch-only");
-    $("#kicker").textContent = "Access";
-    $("#page-title").textContent = "Your branch";
-    $("#title-actions").innerHTML = "";
-    return renderBranch($("#view"), { toast });
-  }
   if (!isScanUrl()) lastCard = null;
   document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   const qid = new URLSearchParams(location.search).get("p");
@@ -290,7 +282,7 @@ function render() {
   $("#title-actions").innerHTML = "";
   // a page change starts on the loading mark; pages that load their code first replace it when they are ready
   if (ui.lastPaint !== r.id) { ui.lastPaint = r.id; $("#view").innerHTML = `<div class="loader-page">${loaderHtml(siteLang() === "ar")}</div>`; }
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, links: viewLinks, alerts: viewAlerts, settings: viewSettings, people: viewPeople })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
   if (ui.lastEnter !== r.id) { ui.lastEnter = r.id; motionMod().then(m => m.enter($("#view"), $("#page-title"))).catch(() => {}); } // only on a page change, not every re-render
 }
 
@@ -940,20 +932,17 @@ function reportHandlers() {
     }
   };
 }
-function viewPeople() { renderPeople($("#view"), { toast }); }
 function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   if (!isOpen()) {
     $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>${T("Master sign-in", "دخول الماستر")}</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" aria-label="PIN"><button class="btn hot" type="submit">${T("Open", "دخول")}</button></form>`;
-    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } try { sessionStorage.setItem("noir-who", JSON.stringify({ id: "admin", name: "Admin", role: "admin", branch: "unaizah" })); sessionStorage.setItem("noir-at", String(Date.now())); } catch {} viewSettings(); };
+    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } viewSettings(); };
     return;
   }
   $("#view").innerHTML = `
   <div class="settings">
-    <section class="slab" id="people-host"></section>
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
-    <div class="btns"><button class="btn" id="sign-out">Sign out</button></div>
     <section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
@@ -982,8 +971,6 @@ function viewSettings() {
     try { await store.importAll(JSON.parse(await f.text())); toast("Import complete"); } catch (err) { toast(err.message || "That file isn't a valid backup", true); }
     e.target.value = "";
   };
-  const out = $("#sign-out"); if (out) out.onclick = signOut;
-  if (isAdmin()) import("./core/access.js?v=120").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
@@ -1031,7 +1018,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 // watch counts: picked up when the app opens and every minute after, so the Count tab shows what arrived
-if (!CARD_DOOR) { syncPeople().then(() => watchKick()).catch(() => {}); setInterval(() => watchKick().catch(() => {}), 15000); setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
+if (!CARD_DOOR) { setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
 // petty cash is gone from the site: clear what it left behind, once per device (a device that could not reach Firebase tries again next time)
 if (!CARD_DOOR && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
 if (CARD_DOOR) {
