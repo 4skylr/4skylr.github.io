@@ -4,7 +4,7 @@
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=106";
 import { isOpen, unlock } from "./core/lock.js?v=106";
-import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf } from "./core/access.js?v=115";
+import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf, watchKick, signOut } from "./core/access.js?v=117";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
@@ -952,6 +952,7 @@ function viewSettings() {
   <div class="settings">
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
+    <div class="btns"><button class="btn" id="sign-out">Sign out</button></div>
     <section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
@@ -1027,7 +1028,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 // watch counts: picked up when the app opens and every minute after, so the Count tab shows what arrived
-if (!CARD_DOOR) { syncPeople().catch(() => {}); setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
+if (!CARD_DOOR) { syncPeople().then(() => watchKick()).catch(() => {}); setInterval(() => watchKick().catch(() => {}), 15000); setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
 // petty cash is gone from the site: clear what it left behind, once per device (a device that could not reach Firebase tries again next time)
 if (!CARD_DOOR && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
 if (CARD_DOOR) {

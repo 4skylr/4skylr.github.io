@@ -113,8 +113,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-116")) {
-    localStorage.setItem("noir-bust-116", "1");
+  if (!localStorage.getItem("noir-bust-117")) {
+    localStorage.setItem("noir-bust-117", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
@@ -185,6 +185,7 @@ try {
       sessionStorage.setItem("noir-site", "1");
       if (who.role === "admin") sessionStorage.setItem("noir-admin", "1");
       sessionStorage.setItem("noir-who", JSON.stringify({ id: who.id, name: who.name, role: who.role, branch: who.branch }));
+      sessionStorage.setItem("noir-at", String(Date.now()));
     } catch (e) {}
     gate.remove();
   };

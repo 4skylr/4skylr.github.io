@@ -18,6 +18,28 @@ export const isAdmin = () => who()?.role === "admin";
 export const branchOf = () => who()?.branch || "unaizah";
 export const branchName = id => BRANCHES.find(b => b.id === id)?.name || id;
 
+export function signOut() {
+  try {
+    sessionStorage.removeItem("noir-site");
+    sessionStorage.removeItem("noir-admin");
+    sessionStorage.removeItem("noir-who");
+    sessionStorage.removeItem("noir-at");
+  } catch {}
+  location.reload();
+}
+export async function watchKick() {
+  const me = who();
+  if (!me || me.id === "admin") return;
+  const at = Number(sessionStorage.getItem("noir-at") || 0);
+  const row = (await allDocs(COL)).find(p => p.id === me.id);
+  if (row?.kickedAt && Date.parse(row.kickedAt) > at) signOut();
+}
+export async function kick(id) {
+  const row = (await allDocs(COL)).find(p => p.id === id);
+  if (!row) return;
+  await putDoc(COL, id, { ...row, kickedAt: new Date().toISOString() });
+}
+
 export async function syncPeople() {
   return allDocs(COL);
 }
@@ -42,7 +64,7 @@ export async function renderPeople(el, { toast }) {
       ${people.map(p => `<article class="block" style="display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;padding:16px 0;border-top:1px solid var(--hairline-soft)">
         <span style="width:48px;height:48px;border-radius:8px;border:1px solid var(--hairline);background:#f5f5f7 center/cover url('${photoOf(p.id)}')"></span>
         <span><b>${esc(p.name)}</b><small style="display:block;font-weight:300;color:var(--muted)">${esc(p.role)} · ${esc(branchName(p.branch))}</small>
-        <span class="tag">${esc(p.pin)}</span></span></article>`).join("") || `<p class="lede">No people yet. Add the first code.</p>`}
+        <span class="tag">${esc(p.pin)}</span> <button type="button" class="btn sm" data-kick="${esc(p.id)}">Kick</button></span></article>`).join("") || `<p class="lede">No people yet. Add the first code.</p>`}
     </section>
     <form id="person-form" class="slab" style="display:grid;gap:12px;margin-top:24px">
       <label>Name<input class="input" name="name" required maxlength="40"></label>
@@ -51,7 +73,7 @@ export async function renderPeople(el, { toast }) {
       <label>Branch<select class="input" name="branch">${BRANCHES.map(b => `<option value="${b.id}">${b.name}</option>`).join("")}</select></label>
       <button class="btn hot" type="submit">Add person</button>
     </form>
-    <p class="note">A code opens that branch only. ${esc(me?.name || "Admin")} can add people. Branch stock and reports stay hidden from the others.</p>`;
+    <button type="button" class="btn" id="sign-out" style="margin-bottom:12px">Sign out</button><p class="note">A code opens that branch only. ${esc(me?.name || "Admin")} can add people. Branch stock and reports stay hidden from the others.</p>`;
   el.querySelector("#person-form").onsubmit = async e => {
     e.preventDefault();
     const f = new FormData(e.target);
@@ -62,6 +84,8 @@ export async function renderPeople(el, { toast }) {
     toast("Person added");
     renderPeople(el, { toast });
   };
+  el.querySelector("#sign-out").onclick = signOut;
+  el.querySelectorAll("[data-kick]").forEach(b => b.onclick = async () => { await kick(b.dataset.kick); toast("Kicked"); renderPeople(el, { toast }); });
 }
 
 export async function renderBranch(el, { toast }) {
@@ -86,7 +110,7 @@ export async function renderBranch(el, { toast }) {
       <input class="input" name="file" type="file">
       <button class="btn hot" type="submit">Upload a report</button>
     </form>
-    <p class="note">Other branches stay hidden.</p>`;
+    <button type="button" class="btn" id="sign-out">Sign out</button><p class="note">Other branches stay hidden.</p>`;
   el.querySelector("#me-photo").onchange = e => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
@@ -108,5 +132,6 @@ export async function renderBranch(el, { toast }) {
     toast("Saved to " + branchName(me.branch));
     renderBranch(el, { toast });
   };
+  el.querySelector("#sign-out").onclick = signOut;
 }
 function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&", "<": "<", ">": ">", '"': """ }[c])); }
