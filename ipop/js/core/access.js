@@ -1,5 +1,5 @@
 // Branch access. Admin adds people. A code opens one branch, never the others.
-import { putDoc, allDocs, localDocs } from "./store.js?v=115";
+import { putDoc, allDocs, localDocs, uploadFile } from "./store.js?v=115";
 
 export const BRANCHES = [
   { id: "unaizah", name: "Unaizah" },
@@ -80,7 +80,7 @@ export async function renderBranch(el, { toast }) {
     </header>
     <h2 style="font-weight:600">Your reports</h2>
     <p class="lede">Only what this branch uploaded.</p>
-    ${mine.map(r => `<article class="block" style="padding:12px 0;border-top:1px solid var(--hairline-soft)"><b>${esc(r.title)}</b><small style="display:block;font-weight:300;color:var(--muted)">${esc(r.at.slice(0, 16).replace("T", " · "))}${r.file ? " · file" : ""}</small></article>`).join("") || `<p class="note">Nothing uploaded yet.</p>`}
+    ${mine.map(r => `<article class="block" style="padding:12px 0;border-top:1px solid var(--hairline-soft)"><b>${esc(r.title)}</b><small style="display:block;font-weight:300;color:var(--muted)">${esc(r.at.slice(0, 16).replace("T", " · "))}${r.url ? ` · <a href="${esc(r.url)}">file</a>` : ""}</small></article>`).join("") || `<p class="note">Nothing uploaded yet.</p>`}
     <form id="rep-form" style="display:grid;gap:12px;margin-top:24px">
       <input class="input" name="title" placeholder="Report name" required maxlength="80">
       <input class="input" name="file" type="file">
@@ -98,9 +98,13 @@ export async function renderBranch(el, { toast }) {
     const f = new FormData(e.target);
     const id = "r-" + Date.now().toString(36);
     const file = f.get("file");
-    let saved = "";
-    if (file && file.size) saved = file.name;
-    await putDoc(REPORTS, id, { id, branch: me.branch, by: me.id, title: String(f.get("title")).trim(), file: saved, at: new Date().toISOString() });
+    let saved = "", url = "";
+    if (file && file.size) {
+      saved = file.name;
+      const up = await uploadFile(`branches/${me.branch}/${id}-${file.name}`, file, file.type || "application/octet-stream");
+      url = up?.url || "";
+    }
+    await putDoc(REPORTS, id, { id, branch: me.branch, by: me.id, title: String(f.get("title")).trim(), file: saved, url, at: new Date().toISOString() });
     toast("Saved to " + branchName(me.branch));
     renderBranch(el, { toast });
   };
