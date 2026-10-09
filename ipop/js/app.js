@@ -23,7 +23,7 @@ const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.d
 const exportCount = lazy("./stock/export-count.js?v=106");
 const financeView = lazy("./finance/finance-view.js?v=106");
 const unaizahView = lazy("./finance/unaizah-view.js?v=106");
-const syncAdmin = lazy("./reports/sync-admin.js?v=106");
+const syncAdmin = lazy("./reports/sync-admin.js?v=113");
 const toolsMod = lazy("./core/tools.js?v=106");
 const intelMod = lazy("./stock/stock-intel.js?v=106");
 const menuMod = lazy("./stock/menu-lab.js?v=106"), yieldMod = lazy("./stock/analytics.js?v=106");
@@ -888,10 +888,10 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=106"); const n = await importExpiry(f, loadExcelJS); toast(T(`Expiry sheet merged · ${n} items`, `ملف الصلاحيات اندمج · ${n} صنف`)); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=106"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=113"); const n = await importExpiry(f, loadExcelJS, data.products, store.saveProduct); toast(T(`Expiry sheet merged · ${n.items} items · stock ${n.stock}`, `ملف الصلاحيات اندمج · ${n.items} صنف · الستوك ${n.stock}`)); render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=113"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=106")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=113")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }

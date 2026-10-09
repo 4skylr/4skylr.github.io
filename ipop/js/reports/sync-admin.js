@@ -97,27 +97,45 @@ export async function keepFile(key, file) {
   const db = await new Promise((res, rej) => { const r = indexedDB.open("noir-uploads", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
   await new Promise((res, rej) => { const tx = db.transaction("files", "readwrite"); tx.objectStore("files").put({ name: file.name, type: file.type, at: new Date().toISOString(), buf }, key); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
 }
-// Expiry sheet (Excel): quantity and date of each item's first group, matched by item name
-export async function importExpiry(file, loadExcel) {
+const cellText = v => String(v?.result ?? v?.text ?? v ?? "").trim();
+const cellDate = v => v instanceof Date && !isNaN(v) ? v.toISOString().slice(0, 10) : (cellText(v).slice(0, 10) || "");
+// Expiry sheet: groups 1–5 use the sheet columns (qty 5, date 6, then 7/8 …). Names match even with extra spaces.
+// The dated quantity for that location is written onto system stock, so the file and the stock figure agree.
+export async function importExpiry(file, loadExcel, products = [], saveProduct) {
   await keepFile("dates", file);
   await loadExcel();
   const wb = new window.ExcelJS.Workbook();
   await wb.xlsx.load(await file.arrayBuffer());
-  const sheet = wb.worksheets[0], edits = {};
+  const sheet = wb.worksheets[0], edits = {}, stocked = new Map();
   sheet.eachRow((row, n) => {
     if (n < 3) return;
-    const name = String(row.getCell(2).value || row.getCell(3).value || "");
-    const hit = EXPIRY_SHEET.rows.find(r => name && (r.name || "").toLowerCase() === name.toLowerCase());
+    const name = cellText(row.getCell(2).value || row.getCell(3).value).toLowerCase().replace(/\s+/g, " ");
+    const loc = cellText(row.getCell(3).value).toLowerCase();
+    const hit = EXPIRY_SHEET.rows.find(r => name && (r.name || "").toLowerCase().replace(/\s+/g, " ") === name && (!loc || (r.location || "").toLowerCase().includes(loc) || loc.includes((r.loc || ""))));
     if (!hit) return;
-    edits[String(hit.row)] = edits[String(hit.row)] || {};
-    const qty = row.getCell(4).value, date = row.getCell(5).value;
-    if (qty != null && qty !== "") edits[String(hit.row)].q1 = qty;
-    // ExcelJS gives real dates as Date objects (midnight UTC); text dates pass through as they are
-    if (date instanceof Date && !isNaN(date)) edits[String(hit.row)].d1 = date.toISOString().slice(0, 10);
-    else if (date) edits[String(hit.row)].d1 = String(date?.result ?? date?.text ?? date).slice(0, 10);
+    const edit = edits[String(hit.row)] || {};
+    let total = 0;
+    for (let g = 1; g <= 5; g++) {
+      const qty = row.getCell(4 + g * 2 - 1).value, date = row.getCell(4 + g * 2).value;
+      if (qty != null && qty !== "") { edit["q" + g] = qty; total += Number(qty) || 0; }
+      const d = cellDate(date);
+      if (d) edit["d" + g] = d;
+    }
+    if (Object.keys(edit).length) edits[String(hit.row)] = edit;
+    if (hit.productId && hit.loc && total) stocked.set(hit.productId + ":" + hit.loc, { id: hit.productId, loc: hit.loc, qty: (stocked.get(hit.productId + ":" + hit.loc)?.qty || 0) + total });
   });
   mergeEdits(edits);
-  return Object.keys(edits).length;
+  let wrote = 0;
+  if (saveProduct) {
+    for (const { id, loc, qty } of stocked.values()) {
+      const p = products.find(x => x.id === id);
+      if (!p) continue;
+      p.stock = { ...(p.stock || {}), [loc]: qty };
+      await saveProduct(p, { silent: true });
+      wrote++;
+    }
+  }
+  return { items: Object.keys(edits).length, stock: wrote };
 }
 export function renderAdmin(root, H) {
   if (!isOpen()) return gate(root, H);
