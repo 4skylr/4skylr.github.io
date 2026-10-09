@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPop reset</title>
+</head>
+<body>
+<p>Clearing the old copy…</p>
+<script>
+(async function () {
+  try {
+    if (navigator.serviceWorker) {
+      var rs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map(function (r) { return r.unregister(); }));
+    }
+    if (window.caches) {
+      var ks = await caches.keys();
+      await Promise.all(ks.map(function (k) { return caches.delete(k); }));
+    }
+    try { sessionStorage.clear(); } catch (e) {}
+  } catch (e) {}
+  location.replace("./?reset=1");
+})();
+</script>
+</body>
+</html>
