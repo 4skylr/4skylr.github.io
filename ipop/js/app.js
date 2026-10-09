@@ -4,6 +4,7 @@
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=106";
 import { isOpen, unlock } from "./core/lock.js?v=106";
+import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf } from "./core/access.js?v=115";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
@@ -260,6 +261,13 @@ function go(route) {
 }
 function render() {
   if (CARD_DOOR) return renderDoor();
+  if (!isScanUrl() && !isAdmin() && branchOf() !== "unaizah") {
+    document.body.classList.remove("card-only", "watch-only");
+    $("#kicker").textContent = "Access";
+    $("#page-title").textContent = "Your branch";
+    $("#title-actions").innerHTML = "";
+    return renderBranch($("#view"), { toast });
+  }
   if (!isScanUrl()) lastCard = null;
   document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   const qid = new URLSearchParams(location.search).get("p");
@@ -282,7 +290,7 @@ function render() {
   $("#title-actions").innerHTML = "";
   // a page change starts on the loading mark; pages that load their code first replace it when they are ready
   if (ui.lastPaint !== r.id) { ui.lastPaint = r.id; $("#view").innerHTML = `<div class="loader-page">${loaderHtml(siteLang() === "ar")}</div>`; }
-  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, links: viewLinks, alerts: viewAlerts, settings: viewSettings })[r.id]();
+  ({ dashboard: viewDashboard, products: viewProducts, count: viewCount, yield: viewYield, history: viewHistory, finance: viewFinance, profit: viewProfit, safety: viewSafety, unaizah: viewUnaizah, halls: viewHalls, nightly: viewNightly, links: viewLinks, alerts: viewAlerts, settings: viewSettings, people: viewPeople })[r.id]();
   if (ui.lastEnter !== r.id) { ui.lastEnter = r.id; motionMod().then(m => m.enter($("#view"), $("#page-title"))).catch(() => {}); } // only on a page change, not every re-render
 }
 
@@ -932,6 +940,7 @@ function reportHandlers() {
     }
   };
 }
+function viewPeople() { renderPeople($("#view"), { toast }); }
 function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   if (!isOpen()) {
@@ -943,6 +952,7 @@ function viewSettings() {
   <div class="settings">
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
+    ${isAdmin() ? `<div class="btns"><button class="btn hot" id="open-people">People</button></div>` : ""}
     <section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
@@ -959,6 +969,7 @@ function viewSettings() {
       ${live ? "" : `<div class="btns" style="margin-top:16px"><button class="btn warn" id="reset">${T("Reload report data", "إعادة تحميل بيانات التقرير")}</button></div>`}
     </section>
   </div>`;
+  const peopleBtn = $("#open-people"); if (peopleBtn) peopleBtn.onclick = () => go("people");
   $("#exp-json").onclick = () => { download(`stock-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(store.exportAll(), null, 1), "application/json"); toast("Backup downloaded"); };
   $("#copy-json").onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(store.exportAll())); toast("Copied to clipboard"); } catch { toast("Your browser blocked copying. Use the download instead.", true); } };
   $("#exp-csv").onclick = () => {
@@ -1018,7 +1029,7 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 // watch counts: picked up when the app opens and every minute after, so the Count tab shows what arrived
-if (!CARD_DOOR) { setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
+if (!CARD_DOOR) { syncPeople().catch(() => {}); setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
 // petty cash is gone from the site: clear what it left behind, once per device (a device that could not reach Firebase tries again next time)
 if (!CARD_DOOR && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
 if (CARD_DOOR) {

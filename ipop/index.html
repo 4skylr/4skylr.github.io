@@ -113,8 +113,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-114")) {
-    localStorage.setItem("noir-bust-114", "1");
+  if (!localStorage.getItem("noir-bust-115")) {
+    localStorage.setItem("noir-bust-115", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
@@ -176,8 +176,16 @@ try {
   gate.querySelector("[data-del]").onclick = function () { pin = pin.slice(0, -1); err.textContent = ""; paint(); };
   document.getElementById("sg-clear").onclick = function () { pin = ""; err.textContent = ""; paint(); };
   document.getElementById("sg-go").onclick = function () {
-    if (pin !== "899") return wrong();
-    try { sessionStorage.setItem("noir-site", "1"); sessionStorage.setItem("noir-admin", "1"); } catch (e) {}
+    var people = {};
+    try { people = JSON.parse(localStorage.getItem("noir-col:people") || "{}"); } catch (e) {}
+    var hit = Object.keys(people).map(function (k) { return people[k]; }).find(function (p) { return p && p.pin === pin && p.active !== false; });
+    var who = pin === "899" ? { id: "admin", name: "Admin", role: "admin", branch: "unaizah" } : hit;
+    if (!who) return wrong();
+    try {
+      sessionStorage.setItem("noir-site", "1");
+      if (who.role === "admin") sessionStorage.setItem("noir-admin", "1");
+      sessionStorage.setItem("noir-who", JSON.stringify({ id: who.id, name: who.name, role: who.role, branch: who.branch }));
+    } catch (e) {}
     gate.remove();
   };
 })();
