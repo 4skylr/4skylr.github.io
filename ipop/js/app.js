@@ -24,7 +24,7 @@ const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.d
 const exportCount = lazy("./stock/export-count.js?v=106");
 const financeView = lazy("./finance/finance-view.js?v=106");
 const unaizahView = lazy("./finance/unaizah-view.js?v=106");
-const syncAdmin = lazy("./reports/sync-admin.js?v=113");
+const syncAdmin = lazy("./reports/sync-admin.js?v=116");
 const toolsMod = lazy("./core/tools.js?v=106");
 const intelMod = lazy("./stock/stock-intel.js?v=106");
 const menuMod = lazy("./stock/menu-lab.js?v=106"), yieldMod = lazy("./stock/analytics.js?v=106");
@@ -952,7 +952,6 @@ function viewSettings() {
   <div class="settings">
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
-    ${isAdmin() ? `<div class="btns"><button class="btn hot" id="open-people">People</button></div>` : ""}
     <section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
@@ -969,7 +968,6 @@ function viewSettings() {
       ${live ? "" : `<div class="btns" style="margin-top:16px"><button class="btn warn" id="reset">${T("Reload report data", "إعادة تحميل بيانات التقرير")}</button></div>`}
     </section>
   </div>`;
-  const peopleBtn = $("#open-people"); if (peopleBtn) peopleBtn.onclick = () => go("people");
   $("#exp-json").onclick = () => { download(`stock-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(store.exportAll(), null, 1), "application/json"); toast("Backup downloaded"); };
   $("#copy-json").onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(store.exportAll())); toast("Copied to clipboard"); } catch { toast("Your browser blocked copying. Use the download instead.", true); } };
   $("#exp-csv").onclick = () => {

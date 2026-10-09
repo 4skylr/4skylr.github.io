@@ -113,8 +113,8 @@
 </script>
 <script>
 try {
-  if (!localStorage.getItem("noir-bust-115")) {
-    localStorage.setItem("noir-bust-115", "1");
+  if (!localStorage.getItem("noir-bust-116")) {
+    localStorage.setItem("noir-bust-116", "1");
     if (navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
     if (window.caches) caches.keys().then(function (ks) { ks.forEach(function (k) { caches.delete(k); }); });
   }
