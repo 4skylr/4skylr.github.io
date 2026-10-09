@@ -143,4 +143,4 @@ export async function renderBranch(el, { toast }) {
   };
   el.querySelector("#sign-out").onclick = signOut;
 }
-function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&", "<": "<", ">": ">", '"': """ }[c])); }
+function esc(s) { return String(s ?? ").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c])); }
