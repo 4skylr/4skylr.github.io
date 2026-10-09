@@ -945,7 +945,7 @@ function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   if (!isOpen()) {
     $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>${T("Master sign-in", "دخول الماستر")}</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" aria-label="PIN"><button class="btn hot" type="submit">${T("Open", "دخول")}</button></form>`;
-    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } viewSettings(); };
+    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } try { sessionStorage.setItem("noir-who", JSON.stringify({ id: "admin", name: "Admin", role: "admin", branch: "unaizah" })); sessionStorage.setItem("noir-at", String(Date.now())); } catch {} viewSettings(); };
     return;
   }
   $("#view").innerHTML = `
@@ -983,7 +983,7 @@ function viewSettings() {
     e.target.value = "";
   };
   const out = $("#sign-out"); if (out) out.onclick = signOut;
-  if (isAdmin()) import("./core/access.js?v=118").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
+  if (isAdmin()) import("./core/access.js?v=119").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
