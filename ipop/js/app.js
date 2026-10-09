@@ -4,7 +4,7 @@
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=106";
 import { isOpen, unlock } from "./core/lock.js?v=106";
-import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf, watchKick, signOut } from "./core/access.js?v=117";
+import { renderPeople, renderBranch, syncPeople, isAdmin, branchOf, watchKick, signOut } from "./core/access.js?v=120";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
@@ -983,7 +983,7 @@ function viewSettings() {
     e.target.value = "";
   };
   const out = $("#sign-out"); if (out) out.onclick = signOut;
-  if (isAdmin()) import("./core/access.js?v=119").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
+  if (isAdmin()) import("./core/access.js?v=120").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
