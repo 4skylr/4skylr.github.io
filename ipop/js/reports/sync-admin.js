@@ -148,7 +148,6 @@ export function renderAdmin(root, H) {
 function draw(root, H) {
   const gaps = reviewGaps(H.data().products), hasPin = !!livePin();
   root.innerHTML = `<div id="wc-admin">${reviewHtml(cachedCounts(), H)}</div>
-  <section class="slab" id="people-host"></section>
   <section class="slab">
     <div class="slab-h"><h2>Edit PIN &amp; dated groups</h2></div>
     <p class="note" style="margin-top:0">The edit PIN unlocks stock writes on this device for a few hours: Update on a watch count, Commit on a count sheet. It is never shown on screen.</p>
@@ -169,7 +168,6 @@ function draw(root, H) {
     setLivePin(next); H.toast("Edit PIN saved on this device"); draw(root, H);
   };
   wireCounts(root, H);
-  import("../core/access.js?v=116").then(m => m.renderPeople(root.querySelector("#people-host"), H)).catch(() => {});
   loadCounts(true).then(() => paintCounts(root, H)).catch(() => {});
 }
 function paintCounts(root, H) { const host = root.querySelector("#wc-admin"); if (!host || host.contains(document.activeElement) && document.activeElement !== document.body) return; host.innerHTML = reviewHtml(cachedCounts(), H); wireCounts(root, H); }

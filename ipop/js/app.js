@@ -199,7 +199,7 @@ try { sessionStorage.setItem(LANG_KEY, "en"); sessionStorage.setItem("noir-card-
 const NAV_AR = { dashboard: "نظرة", products: "الستوك", count: "الجرد", yield: "التحليل", history: "السجل", finance: "الميزانية", profit: "الربحية", safety: "السلامة", unaizah: "عنيزة", halls: "القاعات", nightly: "الليلية", links: "روابط", alerts: "التنبيهات", settings: "الإعدادات" };
 function siteLang() { return "en"; }
 // the iPop bar (top): five words, evenly spaced on brushed silver, as in the identity — iPop · Shop · Flavors · Origins · Support
-const TB = [["dashboard", "iPop", "iPop"], ["products", "Shop", "المتجر"], ["profit", "Flavors", "النكهات"], ["finance", "Origins", "الفروع"], ["settings", "Support", "الدعم"]];
+const TB = [["dashboard", "iPop", "iPop"], ["products", "Shop", "المتجر"], ["profit", "Flavors", "النكهات"], ["finance", "Origins", "الفروع"], ["settings", "Admin", "الأدمن"]];
 // the dock (bottom): each page is a key (css/dock.css); rebuilt only when the page, the language or the badge changes,
 // so a key lights up once when you arrive on its page, not on every redraw
 let navKey = "";
@@ -950,6 +950,7 @@ function viewSettings() {
   }
   $("#view").innerHTML = `
   <div class="settings">
+    <section class="slab" id="people-host"></section>
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
     <div class="btns"><button class="btn" id="sign-out">Sign out</button></div>
@@ -982,6 +983,7 @@ function viewSettings() {
     e.target.value = "";
   };
   const out = $("#sign-out"); if (out) out.onclick = signOut;
+  if (isAdmin()) import("./core/access.js?v=118").then(m => m.renderPeople($("#people-host"), { toast })).catch(() => {});
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
