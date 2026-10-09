@@ -981,6 +981,7 @@ function viewSettings() {
     try { await store.importAll(JSON.parse(await f.text())); toast("Import complete"); } catch (err) { toast(err.message || "That file isn't a valid backup", true); }
     e.target.value = "";
   };
+  const out = $("#sign-out"); if (out) out.onclick = signOut;
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
