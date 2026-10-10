@@ -1,11 +1,12 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
 import { isOpen } from "../core/lock.js?v=106";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
+import { EXPIRY_SHEET, setBranchSheet } from "../data/expiry-data.js?v=114";
+import { isHome } from "../core/session.js?v=106";
 import { REPORT_NAMES } from "../core/report-names.js?v=106";
 import { livePin, setLivePin, requirePin, pinUnlocked, downloadSheet } from "../stock/stock-card.js?v=106";
 import { reviewHtml, loadCounts, cachedCounts, updateRow, recountRow, counterName } from "../stock/watch-count.js?v=112";
-import { mergeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
+import { mergeEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFWORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
@@ -94,37 +95,37 @@ export async function keepFile(key, file) {
   const db = await new Promise((res, rej) => { const r = indexedDB.open("noir-uploads", 1); r.onupgradeneeded = () => r.result.createObjectStore("files"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
   await new Promise((res, rej) => { const tx = db.transaction("files", "readwrite"); tx.objectStore("files").put({ name: file.name, type: file.type, at: new Date().toISOString(), buf }, key); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
 }
-const cellText = v => String(v?.result ?? v?.text ?? v ?? "").trim();
-const cellDate = v => v instanceof Date && !isNaN(v) ? v.toISOString().slice(0, 10) : (cellText(v).slice(0, 10) || "");
-// Expiry sheet: groups 1–5 use the sheet columns (qty 5, date 6, then 7/8 …). Names match even with extra spaces.
-// The dated quantity for that location is written onto system stock, so the file and the stock figure agree.
-export async function importExpiry(file, loadExcel, products = []) {
+// Expiry sheet. Unaizah: the uploaded sheet's groups go onto the rows of the sheet the site ships with.
+// Any other branch: the uploaded sheet becomes that branch's own sheet (all its rows), saved in its Firestore.
+// Either way the dated quantity per product and place comes back, so the caller can diff it against stock.
+export async function importExpiry(file, loadExcel, products = [], save = null) {
   await keepFile("dates", file);
   await loadExcel();
   const wb = new window.ExcelJS.Workbook();
   await wb.xlsx.load(await file.arrayBuffer());
-  const sheet = wb.worksheets[0], edits = {}, stocked = new Map();
-  sheet.eachRow((row, n) => {
-    if (n < 3) return;
-    const name = cellText(row.getCell(2).value || row.getCell(3).value).toLowerCase().replace(/\s+/g, " ");
-    const loc = cellText(row.getCell(3).value).toLowerCase();
-    const hit = EXPIRY_SHEET.rows.find(r => name && (r.name || "").toLowerCase().replace(/\s+/g, " ") === name && (!loc || (r.location || "").toLowerCase().includes(loc) || loc.includes((r.loc || ""))));
-    if (!hit) return;
-    const edit = edits[String(hit.row)] || {};
-    let total = 0;
-    for (let g = 1; g <= 5; g++) {
-      const qty = row.getCell(4 + g * 2 - 1).value, date = row.getCell(4 + g * 2).value;
-      if (qty != null && qty !== "") { edit["q" + g] = qty; total += Number(qty) || 0; }
-      const d = cellDate(date);
-      if (d) edit["d" + g] = d;
+  const { readSheet } = await import("../data/expiry-sheet.js?v=114");
+  const read = readSheet(wb, products), stocked = new Map();
+  const add = r => { const total = r.batches.reduce((a, b) => a + (Number(b.qty) || 0), 0);
+    if (r.productId && r.loc) { const k = r.productId + ":" + r.loc; stocked.set(k, { id: r.productId, loc: r.loc, qty: (stocked.get(k)?.qty || 0) + total }); } };
+  let items = 0;
+  if (isHome()) {
+    const key = s => String(s || "").toLowerCase().replace(/[^a-z0-9&]+/g, " ").trim(), edits = {};
+    for (const r of read.rows) {
+      const hit = EXPIRY_SHEET.rows.find(h => key(h.name) === key(r.name) && (!r.loc || h.loc === r.loc));
+      if (!hit) continue;
+      const edit = {}; r.batches.forEach(b => { if (b.qty !== "") edit["q" + b.n] = b.qty; if (b.date) edit["d" + b.n] = b.date; });
+      for (let n = r.batches.length + 1; n <= hit.batches.length; n++) { edit["q" + n] = 0; edit["d" + n] = ""; }
+      edits[String(hit.row)] = edit; add({ ...r, productId: hit.productId, loc: hit.loc });
     }
-    if (Object.keys(edit).length) edits[String(hit.row)] = edit;
-    if (hit.productId && hit.loc && total) stocked.set(hit.productId + ":" + hit.loc, { id: hit.productId, loc: hit.loc, qty: (stocked.get(hit.productId + ":" + hit.loc)?.qty || 0) + total });
-  });
-  mergeEdits(edits);
-  // the quantities the sheet holds per product and warehouse; the caller diffs them against stock and writes history
+    mergeEdits(edits); items = Object.keys(edits).length;
+  } else {
+    const sheet = { file: file.name, sheet: read.sheet, rows: read.rows, at: new Date().toISOString() };
+    setBranchSheet(sheet); writeEdits({});
+    read.rows.forEach(add); items = read.rows.length;
+    if (save) await save(sheet);
+  }
   const found = [...stocked.values()].filter(x => products.some(p => p.id === x.id));
-  return { items: Object.keys(edits).length, found };
+  return { items, found, unmatched: read.rows.filter(r => !r.productId).map(r => r.name) };
 }
 export function renderAdmin(root, H) {
   if (!isOpen()) return gate(root, H);

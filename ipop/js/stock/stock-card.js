@@ -3,7 +3,7 @@
 //   JsBarcode     github.com/lindell/JsBarcode
 //   html5-qrcode  github.com/mebjas/html5-qrcode
 //   ExcelJS       github.com/exceljs/exceljs
-import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=106";
+import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=114";
 import { BARCODES } from "../data/barcodes.js?v=106";
 import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 

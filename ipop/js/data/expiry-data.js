@@ -1,5 +1,5 @@
 // Expiry groups from the Monthly Expiry Monitoring Sheet (generated; replaced by Settings → Required reports → Expiry).
-import { isHome } from "../core/session.js?v=106";
+import { isHome, branchId } from "../core/session.js?v=106";
 // Unaizah's sheet; another branch starts with no rows and adds its own from its uploaded dates file.
 const SHEET = {
  "file": "MONTHLY EXPIRY MONITORING SHEET September 2026.xlsx",
@@ -1670,5 +1670,18 @@ const SHEET = {
   }
  ]
 };
-export const EXPIRY_SHEET = isHome() ? SHEET : { ...SHEET, rows: [] };
+// Unaizah's sheet ships with the site. Every other branch has its own sheet: the one its people upload
+// (Settings → Required reports → Expiry), kept in that branch's Firestore and cached on the device.
+export const HOME_SHEET = SHEET;
+export const BRANCH_SHEET_KEY = `noir-expiry-sheet:${branchId()}`;
+const cached = () => { try { const s = JSON.parse(localStorage.getItem(BRANCH_SHEET_KEY) || "null"); return s && Array.isArray(s.rows) ? s : null; } catch { return null; } };
+export const EXPIRY_SHEET = isHome() ? SHEET : (cached() || { file: "", sheet: "", rows: [], at: "" });
+// replace this branch's sheet in place (every module holds the same object)
+export function setBranchSheet(next) {
+  if (isHome() || !next || !Array.isArray(next.rows)) return false;
+  if (EXPIRY_SHEET.at && next.at && next.at <= EXPIRY_SHEET.at && next.rows.length === EXPIRY_SHEET.rows.length) return false;
+  Object.assign(EXPIRY_SHEET, next, { rows: next.rows });
+  try { localStorage.setItem(BRANCH_SHEET_KEY, JSON.stringify(EXPIRY_SHEET)); } catch {}
+  return true;
+}
 export const PIN_HOURS = 3;

@@ -11,7 +11,7 @@
 //   writes the recorded dates into the expiry sheet, and marks the place ready for Excel.
 //   Recount: leaves the stock as it is and sends the place back to the employee's watch.
 import * as store from "../core/store.js?v=106";
-import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
+import { EXPIRY_SHEET } from "../data/expiry-data.js?v=114";
 import { countToEdits } from "../data/expiry-edits.js?v=106";
 
 export const COL = "watchCounts";

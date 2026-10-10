@@ -24,7 +24,7 @@ const lazy = path => { let p; const f = () => (p ??= import(path).then(m => (f.d
 const exportCount = lazy("./stock/export-count.js?v=106");
 const financeView = lazy("./finance/finance-view.js?v=106");
 const unaizahView = lazy("./finance/unaizah-view.js?v=106");
-const syncAdmin = lazy("./reports/sync-admin.js?v=113");
+const syncAdmin = lazy("./reports/sync-admin.js?v=114");
 const toolsMod = lazy("./core/tools.js?v=106");
 const intelMod = lazy("./stock/stock-intel.js?v=106");
 const menuMod = lazy("./stock/menu-lab.js?v=106"), yieldMod = lazy("./stock/analytics.js?v=106");
@@ -843,10 +843,13 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=113"); const n = await importExpiry(f, loadExcelJS, data.products); await stockReport(n.found, f.name, true, "date-file"); render(); },
-    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=113"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=114"); const n = await importExpiry(f, loadExcelJS, data.products, sheet => store.putRemote("meta", "expirySheet", sheet));
+      await stockReport(n.found, f.name, true, "date-file");
+      if (!isHome()) toast(`${branchName()} expiry sheet · ${n.items} rows${n.unmatched.length ? ` · ${n.unmatched.length} not in the product list` : ""}`);
+      render(); },
+    stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=114"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
-      const pdfjs = await (await import("./reports/sync-admin.js?v=113")).loadPdf();
+      const pdfjs = await (await import("./reports/sync-admin.js?v=114")).loadPdf();
       const doc = await pdfjs.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
       let text = "";
       for (let i = 1; i <= doc.numPages; i++) { const page = await doc.getPage(i); const c = await page.getTextContent(); text += c.items.map(it => it.str).join(" ") + "\n"; }
@@ -983,6 +986,8 @@ if (CARD_DOOR) {
   toolsMod().then(m => m.mountTools(toolHelpers())).catch(() => {});
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); })
+    .then(async () => { if (!isHome()) { const { setBranchSheet } = await import("./data/expiry-data.js?v=114"); if (setBranchSheet(await store.getRemote("meta", "expirySheet"))) render(); } })
+    .catch(() => {})
     .then(() => Promise.all([histMod(), store.allDocs("stockHistory")])).then(([, d]) => { stockHist = d; }).catch(() => {});
 }
 
