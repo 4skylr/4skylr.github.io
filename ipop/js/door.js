@@ -23,7 +23,7 @@ const why = e => {
   if (/operation-not-allowed|admin-restricted/.test(c)) return new DoorError("disabled");
   if (/network-request-failed|unavailable/.test(c)) return new DoorError("network");
   if (/permission-denied/.test(c)) return new DoorError("denied");
-  return new DoorError("other", e?.message);
+  return new DoorError("other", `${MSG.other} (${c || e?.message || "unknown"})`);
 };
 
 // ── Firebase ───────────────────────────────────────────────
@@ -165,7 +165,7 @@ function showDoor(api) {
     try { await enter(api, await api.signIn(code)); return; }
     catch (e) {
       if (e.kind === "wrong" && !(await api.ready().catch(() => true))) { setup(); return; }
-      say(MSG[e.kind] || MSG.other); code = "";
+      say(e.kind === "other" ? e.message : MSG[e.kind] || MSG.other); code = "";
     }
     busy = false; go.textContent = "Sign in"; paint();
   };
