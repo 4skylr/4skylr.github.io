@@ -1,0 +1,44 @@
+rules_version = '2';
+// iPop — who may read and write what. Publish in the Firebase console: Firestore Database → Rules → paste → Publish.
+// Each person signs in with their code (Firebase Authentication, Email/Password). Their record users/<uid> says their
+// role and branch; only the admin writes it. Unaizah keeps the original top-level collections; every other branch
+// lives under branches/<id>/. Nobody signed out can read anything except whether iPop has been set up.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null && request.auth.token.firebase.sign_in_provider == "password"; }
+    function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function member() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && me().active == true; }
+    function isAdmin() { return member() && me().role == "admin"; }
+    function inBranch(b) { return isAdmin() || (member() && me().branch == b); }
+    function setUp() { return exists(/databases/$(database)/documents/door/state); }
+
+    // the door: anyone may ask whether iPop is set up; the very first code entered becomes the admin, once
+    match /door/state {
+      allow get: if true;
+      allow create: if signedIn() && !setUp()
+        && getAfter(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    // closed to everyone: the site reads it to show whether these rules are published
+    match /door/sealed { allow read, write: if false; }
+
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if isAdmin() || (signedIn() && request.auth.uid == uid && !setUp()
+        && request.resource.data.role == "admin"
+        && getAfter(/databases/$(database)/documents/door/state).data.ready == true);
+      allow update, delete: if isAdmin();
+    }
+    match /presence/{uid} {
+      allow read: if member();
+      allow write: if member() && request.auth.uid == uid;
+    }
+    // Al Mithnab, Al Khafji (and any branch added later): only that branch and the admin
+    match /branches/{branch}/{rest=**} {
+      allow read, write: if inBranch(branch);
+    }
+    // Unaizah: products, countSessions, activity, productHistory, watchCounts, uploads, stockHistory, nightly, …
+    match /{col}/{id} {
+      allow read, write: if !(col in ["users", "presence", "door", "branches"]) && inBranch("unaizah");
+    }
+  }
+}

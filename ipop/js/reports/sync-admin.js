@@ -1,6 +1,6 @@
 // Settings · Edit PIN & expiry — reads the stock PDF (mozilla/pdf.js), imports the monthly expiry sheet (exceljs/exceljs),
 // and lists products whose stock does not match their dated groups.
-import { isOpen, unlock } from "../core/lock.js?v=106";
+import { isOpen } from "../core/lock.js?v=106";
 import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
 import { REPORT_NAMES } from "../core/report-names.js?v=106";
 import { livePin, setLivePin, requirePin, pinUnlocked, downloadSheet } from "../stock/stock-card.js?v=106";
@@ -87,10 +87,7 @@ export function reviewGaps(products) {
   }).filter(Boolean);
 }
 
-function gate(root, H) {
-  root.innerHTML = `<section class="slab"><h2>Admin</h2><form id="adm"><input class="input" name="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="Admin PIN" aria-label="Admin PIN"><button class="btn" type="submit">Open</button></form></section>`;
-  root.querySelector("#adm").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; H.toast("Wrong PIN", true); return; } draw(root, H); };
-}
+function gate(root) { root.innerHTML = `<section class="slab"><h2>Admin</h2><p class="note">For supervisors and the admin.</p></section>`; }
 // keep the last uploaded copy of each system file on this device
 export async function keepFile(key, file) {
   const buf = await file.arrayBuffer();

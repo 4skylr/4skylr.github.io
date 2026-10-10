@@ -1,12 +1,6 @@
-// Admin sign-in for Settings, Unaizah audit, cash office and sync.
-// One PIN, this tab only. The clock is not accepted.
-const KEY = "noir-admin";
-const PIN = "899";
-const get = () => { try { return sessionStorage.getItem(KEY); } catch { return null; } };
-export const isOpen = () => get() === "1";
-export function unlock(pin) {
-  if (String(pin ?? "").trim() !== PIN) return false;
-  try { sessionStorage.setItem(KEY, "1"); } catch {}
-  return true;
-}
-export function lock() { try { sessionStorage.removeItem(KEY); } catch {} }
+// Admin screens (Settings admin panel, Unaizah audit, cash office, links): open to the admin and supervisors, as
+// decided at the door (js/door.js) by the person's role in the database. There is no PIN in this site any more.
+import { canUpload } from "./session.js?v=106";
+export const isOpen = () => canUpload();
+export async function unlock() { return false; }
+export function lock() { globalThis.IPOP_DOOR?.lock(); }

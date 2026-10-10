@@ -1,5 +1,7 @@
-// YTD sales from Sales RM Consumed, 1 Jan 2026 to 1 Oct 2026.
-export const SALES_YTD = {
+// YTD sales from Sales RM Consumed, 1 Jan 2026 to 1 Oct 2026 — Unaizah only. Another branch starts empty and fills
+// its own figures by uploading its Sales report (kept under its own key on the device).
+import { isHome, branchId } from "../core/session.js?v=106";
+const UNAIZAH_YTD = {
   "tub-130": 2565, "tub-46": 1406, "tub-64": 2545, "tub-85": 3540,
   "arwa-500": 1687, "arwa-zero": 318, "barbican": 212, "cotton-candy-tub": 286,
   "cups-16": 469, "cups-24": 671, "cups-30": 1243, "dip-cup-4": 27,
@@ -8,6 +10,8 @@ export const SALES_YTD = {
   "nachos-tray-3": 675, "nachos-tray-4": 232, "rani": 692, "schweppes": 288,
   "slush-glass-12": 1237, "slush-glass-16": 1145, "vimto-can": 259, "vimto-pet": 232
 };
+export const SALES_YTD = isHome() ? UNAIZAH_YTD : {};
+export const SALES_KEY = isHome() ? "noir-sales-ytd" : `noir-sales-ytd:${branchId()}`;
 export const SALES_FROM = "2026-01-01";
 export const SALES_TO = "2026-10-01";
 // Items that are not rung up on their own move with something that is.
@@ -27,7 +31,7 @@ export const LINKED = Object.fromEntries(Object.entries(MOVES).filter(([, m]) =>
 export const linkedTo = id => Object.entries(LINKED).filter(([, src]) => src.includes(id)).map(([k]) => k);
 function direct(id) {
   let over = {};
-  try { over = JSON.parse(localStorage.getItem("noir-sales-ytd") || "{}"); } catch {}
+  try { over = JSON.parse(localStorage.getItem(SALES_KEY) || "{}"); } catch {}
   const v = over[id] ?? SALES_YTD[id];
   return v == null ? null : Number(v) || 0;
 }

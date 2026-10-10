@@ -32,7 +32,10 @@ for (const lang of ["en"]) for (const width of [390, 1300]) {
   page.on("pageerror", e => errs.push(e.message.slice(0, 160)));
   page.on("console", m => { if (m.type() === "error" && !NOISE.test(m.text())) errs.push(m.text().slice(0, 160)); });
   page.on("response", r => { if (r.status() >= 400 && r.url().startsWith(BASE)) missing.push(`${r.status()} ${r.url().slice(BASE.length)}`); });
-  await page.addInitScript(l => { sessionStorage.setItem("noir-lang", l); sessionStorage.setItem("noir-admin", "1"); localStorage.setItem("noir-tour-v1", "1"); }, lang);
+  // signed in as the admin through the door's local stand-in (Firebase is blocked in this test)
+  await page.addInitScript(l => { sessionStorage.setItem("noir-lang", l); localStorage.setItem("noir-tour-v1", "1");
+    localStorage.setItem("ipop-door-local", JSON.stringify({ ready: true, accounts: {}, presence: {}, users: { "u-smoke": { name: "Smoke", role: "admin", branch: "unaizah", code: "0000", active: true } } }));
+    sessionStorage.setItem("ipop-door-uid", "u-smoke"); }, lang);
   await page.goto(`${BASE}/ipop/#dashboard`); await wait(2500);
   for (const route of ROUTES) {
     errs = []; missing = [];

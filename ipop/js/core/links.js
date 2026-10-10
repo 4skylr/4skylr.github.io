@@ -1,5 +1,6 @@
 // Links — quick doors to the systems the reports come from. Opens them in a new tab; no passwords are kept here.
 import { isOpen } from "./lock.js?v=106";
+import { isHome } from "./session.js?v=106";
 const AR = () => (sessionStorage.getItem("noir-lang") || "en") === "ar";
 const COL = "links";
 export const BUILT_IN = [
@@ -17,7 +18,7 @@ export async function renderLinks(el, H) {
   const ar = AR(), admin = isOpen();
   let saved = [];
   try { saved = await H.allDocs(COL); } catch { saved = H.localDocs(COL); }
-  const list = [...BUILT_IN, ...saved.filter(l => !l.deleted && safeUrl(l.url)).sort((a, b) => (a.at || "").localeCompare(b.at || ""))];
+  const list = [...BUILT_IN.filter(l => isHome() || l.id !== "unaizah-system"), ...saved.filter(l => !l.deleted && safeUrl(l.url)).sort((a, b) => (a.at || "").localeCompare(b.at || ""))];
   const T = ar ? { open: "افتح", add: "إضافة رابط", name: "الاسم", url: "الرابط", note: "ملاحظة (اختياري)", save: "حفظ", del: "حذف", lock: "إضافة وحذف الروابط بالرقم السري حق الإعدادات.", http: "غير مشفّر (http)", bad: "الرابط لازم يبدأ بـ http أو https" }
     : { open: "Open", add: "Add a link", name: "Name", url: "URL", note: "Note (optional)", save: "Save", del: "Delete", lock: "Adding and removing links needs the Settings PIN.", http: "Not encrypted (http)", bad: "The link must start with http or https" };
   el.innerHTML = `<div class="lk">

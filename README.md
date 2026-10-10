@@ -39,6 +39,27 @@ node .github/scripts/smoke.mjs .
 
 Changes per version: [CHANGELOG.md](CHANGELOG.md). Problems and ideas: open an issue with the forms under **Issues → New issue**.
 
+## Sign-in and branches
+
+iPop opens only with a code. Each code is a Firebase Authentication account (the code is never stored in the site), and
+each person's role and branch are in the database, written only by the admin.
+
+| Branch | Data |
+|---|---|
+| Unaizah | the original collections (products, counts, history, reports) |
+| Al Mithnab | `branches/almithnab/…` only |
+| Al Khafji | `branches/alkhafji/…` only |
+
+Prices, product photos, recipes and the menu are shared. Stock, counts, history and uploaded reports belong to one branch.
+
+**Turn it on (Firebase console, project alwaleed-36b21):**
+1. Authentication → Sign-in method → **Email/Password → Enable**.
+2. Open the site and enter the admin code. The first code entered becomes the admin (once).
+3. Firestore Database → Rules → paste [`firestore.rules`](firestore.rules) → **Publish**. Storage → Rules → paste [`storage.rules`](storage.rules) → **Publish**.
+4. Settings → People: add each person with a 4-digit code, a role and a branch.
+
+Until step 3 is done the database is still open; Settings → People and the lock sheet say which state it is in.
+
 ## Open-source libraries
 
 [GSAP](https://github.com/greensock/GSAP) ·

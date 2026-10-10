@@ -1,6 +1,8 @@
 // Settings · Required reports — every system report the site reads, by section, with when it was last uploaded.
 // Excel files are read with SheetJS (github.com/SheetJS/sheetjs), loaded only when a file is picked.
-export const REPORTS = [
+import { isHome } from "../core/session.js?v=106";
+// Unaizah reads every report; another branch reads its stock, sales and dates (its nightly, halls and cash systems are Unaizah's)
+const ALL_REPORTS = [
   { key: "stock", sec: ["Stock", "المخزون"], name: "Current Stock Position Report", fmt: "PDF", hint: ["Inventory system, today's date", "من نظام المخزون بتاريخ اليوم"], accept: ".pdf,application/pdf" },
   { key: "sales", sec: ["Stock", "المخزون"], name: "Sales RM Consumed", fmt: "PDF", hint: ["1 January → today", "من 1 يناير لليوم"], accept: ".pdf,application/pdf" },
   { key: "expiry", sec: ["Stock", "المخزون"], name: "Monthly Expiry Monitoring Sheet", fmt: "Excel", hint: ["The month's expiry sheet, filled on the floor", "ملف الصلاحيات الشهري بعد التعبئة"], accept: ".xlsx,.xls" },
@@ -9,6 +11,7 @@ export const REPORTS = [
   { key: "dcs", sec: ["Finance · Unaizah", "المالية · عنيزة"], name: "DCS - <Month> <Year>", fmt: "Excel .xls / .xlsx / .ods", hint: ["The month's workbook, one sheet per day. Several files at once is fine.", "ملف الشهر، شيت لكل يوم. تقدر ترفع أكثر من ملف."], accept: ".xls,.xlsx,.ods", multiple: true },
   { key: "rdr", sec: ["Finance · Unaizah", "المالية · عنيزة"], name: "RDR Exception Register", fmt: "Excel", hint: ["User: ALL · 1 January → today", "User: ALL · من 1 يناير لليوم"], accept: ".xls,.xlsx" }
 ];
+export const REPORTS = isHome() ? ALL_REPORTS : ALL_REPORTS.filter(r => ["stock", "sales", "expiry"].includes(r.key));
 
 let XLSXp = null;
 export function loadXLSX() {
@@ -21,7 +24,8 @@ export function loadXLSX() {
 // last upload: the upload log first, else what the data itself says
 export async function lastSeen(H) {
   const json = u => fetch(u).then(r => r.ok ? r.json() : null).catch(() => null);
-  const [seats, rdr, ledger, remote] = await Promise.all([json("halls/seats.json"), json("finance/rdr.json"), json("unaizah/ledger.json"), Promise.race([H.allDocs("uploads").catch(() => []), new Promise(r => setTimeout(() => r([]), 2500))])]);
+  const home = isHome(), none = () => Promise.resolve(null);
+  const [seats, rdr, ledger, remote] = await Promise.all([home ? json("halls/seats.json") : none(), home ? json("finance/rdr.json") : none(), home ? json("unaizah/ledger.json") : none(), Promise.race([H.allDocs("uploads").catch(() => []), new Promise(r => setTimeout(() => r([]), 2500))])]);
   const log = Object.fromEntries([...remote, ...H.localDocs("uploads")].map(d => [d.id, d]));
   const newest = (name, f) => H.localDocs(name).map(f).filter(Boolean).sort().pop();
   const fb = {

@@ -103,7 +103,7 @@ export async function downloadSheet() {
       if (iso && !c.numFmt) c.numFmt = "d/m/yyyy"; } // a cell that held text has no date format: without one Excel shows a serial number
   };
   const all = edits(), rows = expiryRows(null, all);
-  let last = Math.max(...EXPIRY_SHEET.rows.map(r => r.row)), sr = Math.max(...EXPIRY_SHEET.rows.map(r => Number(r.sr) || 0));
+  let last = Math.max(2, ...EXPIRY_SHEET.rows.map(r => r.row)), sr = Math.max(0, ...EXPIRY_SHEET.rows.map(r => Number(r.sr) || 0));
   rows.forEach(r => {
     if (r.added) {
       last++; sr++;

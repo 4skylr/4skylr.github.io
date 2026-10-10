@@ -1,5 +1,7 @@
 // Expiry groups from the Monthly Expiry Monitoring Sheet (generated; replaced by Settings → Required reports → Expiry).
-export const EXPIRY_SHEET = {
+import { isHome } from "../core/session.js?v=106";
+// Unaizah's sheet; another branch starts with no rows and adds its own from its uploaded dates file.
+const SHEET = {
  "file": "MONTHLY EXPIRY MONITORING SHEET September 2026.xlsx",
  "sheet": "Sep - 2026- Monitoring Sheet",
  "rows": [
@@ -1668,4 +1670,5 @@ export const EXPIRY_SHEET = {
   }
  ]
 };
+export const EXPIRY_SHEET = isHome() ? SHEET : { ...SHEET, rows: [] };
 export const PIN_HOURS = 3;

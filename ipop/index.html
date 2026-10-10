@@ -27,6 +27,7 @@
 <link rel="stylesheet" href="css/gallery.css?v=113">
 <link rel="stylesheet" href="css/dock.css?v=113">
 <link rel="stylesheet" href="css/stock-panel.css?v=113">
+<link rel="stylesheet" href="css/door.css?v=113">
 <link rel="stylesheet" href="css/system.css?v=113">
 <script defer src="vendor/jsbarcode.all.min.js?v=16"></script>
 <style>@media print { body.card-only { display: none !important; } #curtain { display: none !important; } }</style>
@@ -47,7 +48,7 @@
 <link rel="modulepreload" href="js/core/store.js?v=106">
 <link rel="modulepreload" href="js/core/firebase-config.js?v=106">
 <link rel="modulepreload" href="js/data/seed-data.js?v=106">
-<link rel="modulepreload" href="js/core/lock.js?v=106">
+<link rel="modulepreload" href="js/core/session.js?v=106">
 <link rel="modulepreload" href="js/core/icons.js?v=106">
 <link rel="modulepreload" href="js/core/loader.js?v=106">
 <link rel="modulepreload" href="js/core/gallery-stage.js?v=111">
@@ -125,6 +126,7 @@ try {
 
 <main class="stage">
   <div class="title-row">
+    <button type="button" class="who" id="who" hidden></button>
     <div class="head-meta">
       <button type="button" class="btn sm ghost icon bell quiet" id="bell-btn" data-route="alerts" aria-label="Stock alerts"><svg class="lu ion" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></svg><sup>0</sup></button>
       <span class="net" id="net"><i></i><span>Connecting…</span></span>
@@ -141,6 +143,6 @@ try {
 <div id="modal-root"></div>
 <div class="toasts" id="toasts" role="status"></div>
 
-<script type="module" src="js/app.js?v=113"></script>
+<script type="module" src="js/door.js?v=113"></script>
 </body>
 </html>

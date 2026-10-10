@@ -1,8 +1,12 @@
 // Data layer: Firestore + Storage when configured, otherwise localStorage
 import { firebaseConfig, FIREBASE_SDK_VERSION } from "./firebase-config.js?v=106";
 import { SEED_PRODUCTS, SEED_VERSION } from "../data/seed-data.js?v=106";
+import { branchId, isHome } from "./session.js?v=106";
 
-const LS_KEY = "noir-inventory:v2";
+// Unaizah (the home branch) keeps the original collections; any other branch reads and writes branches/<id>/<collection>
+// only, and keeps its own copy in this browser, so a phone of one branch never holds another branch's figures.
+const at_ = name => isHome() ? [name] : ["branches", branchId(), name];
+const LS_KEY = isHome() ? "noir-inventory:v2" : `noir-inventory:v2:${branchId()}`;
 const COL = { products: "products", sessions: "countSessions", activity: "activity", meta: "meta" };
 
 let mode = "local";
@@ -50,7 +54,7 @@ let markConnected; const connected = new Promise(r => { markConnected = r; });
 async function remote() { if (mode === "connecting") await connected; return mode === "firebase" && !!fb; }
 
 // Last Firestore snapshot, kept so the next open paints instantly while Firebase reconnects.
-const FB_CACHE = "noir-fb-cache-v1";
+const FB_CACHE = isHome() ? "noir-fb-cache-v1" : `noir-fb-cache-v1:${branchId()}`;
 function fbCacheRead() { try { const raw = localStorage.getItem(FB_CACHE); return raw ? JSON.parse(raw) : null; } catch { return null; } }
 let fbCacheTimer = null;
 function fbCacheWrite() {
@@ -90,7 +94,7 @@ function seedUpgrade(products, fromVersion) {
       // v5: units and report names corrected from the Raw Material List
       if (fromVersion < 5 && sp.unit && cur.unit !== sp.unit) patch.unit = sp.unit;
       if (!cur.sku && sp.sku) patch.sku = sp.sku;
-      if (fromVersion < 6 && sp.stock) { patch.stock = sp.stock; patch.rate = sp.rate; patch.sku = sp.sku; patch.name = sp.name; }
+      if (fromVersion < 6 && sp.stock && isHome()) { patch.stock = sp.stock; patch.rate = sp.rate; patch.sku = sp.sku; patch.name = sp.name; }
     } else if (retired.has(cur.id) && stockTotal(cur) === 0 && isSeedAsset(cur.image)) {
       removals.push(cur.id); continue;
     } else if (isSeedAsset(cur.image) && cur.image) {
@@ -106,7 +110,7 @@ function seedUpgrade(products, fromVersion) {
 
 function seedProducts() {
   const now = new Date().toISOString();
-  return SEED_PRODUCTS.map(p => ({ ...clone(p), createdAt: now, updatedAt: now }));
+  return SEED_PRODUCTS.map(p => ({ ...clone(p), ...(isHome() ? {} : { stock: { refuel: 0, mini: 0, stores: 0 } }), createdAt: now, updatedAt: now }));
 }
 
 // ── Init ─────────────────────────────────────────────────────
@@ -143,23 +147,19 @@ export async function init() {
 
 async function initFirebase() {
   const v = FIREBASE_SDK_VERSION, base = `https://www.gstatic.com/firebasejs/${v}`;
-  const [{ initializeApp }, fs, st, au] = await Promise.all([
-    import(`${base}/firebase-app.js`),
-    import(`${base}/firebase-firestore.js`),
-    import(`${base}/firebase-storage.js`),
-    import(`${base}/firebase-auth.js`)
-  ]);
-  const app = initializeApp(firebaseConfig);
-  const auth = au.getAuth(app);
-  await au.signInAnonymously(auth); // enable Anonymous sign-in under Authentication
-  const db = fs.getFirestore(app);
+  // the door (js/door.js) has already signed this person in: use its app, never a second, anonymous one
+  const door = globalThis.IPOP_FB;
+  if (!door?.auth?.currentUser || door.auth.currentUser.isAnonymous) throw new Error("Not signed in");
+  const [fs, st] = await Promise.all([Promise.resolve(door.fs), import(`${base}/firebase-storage.js`)]);
+  const app = door.app;
+  const db = door.db;
   const storage = st.getStorage(app);
   fb = { db, storage, fs, st };
 
   // a listener that is refused (rules, network) rejects, so the app falls back to local mode instead of waiting forever
   const live = (name, key, order) => new Promise((resolve, reject) => {
     let firstLoad = true;
-    fs.onSnapshot(fs.query(fs.collection(db, name), ...(order ? [fs.orderBy(order, "desc"), fs.limit(200)] : [])), snap => {
+    fs.onSnapshot(fs.query(fs.collection(db, ...at_(name)), ...(order ? [fs.orderBy(order, "desc"), fs.limit(200)] : [])), snap => {
       mem[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       fbCacheWrite();
       emit();
@@ -169,28 +169,28 @@ async function initFirebase() {
   // listeners first so data arrives as early as possible; the one-off seed check runs alongside
   const seedCheck = (async () => {
     // first run: upload the report data
-    const first = await fs.getDocs(fs.query(fs.collection(db, COL.products), fs.limit(1)));
+    const first = await fs.getDocs(fs.query(fs.collection(db, ...at_(COL.products)), fs.limit(1)));
     if (first.empty) {
       const items = seedProducts();
       for (let i = 0; i < items.length; i += 400) {
         const batch = fs.writeBatch(db);
-        items.slice(i, i + 400).forEach(p => batch.set(fs.doc(db, COL.products, p.id), p));
+        items.slice(i, i + 400).forEach(p => batch.set(fs.doc(db, ...at_(COL.products), p.id), p));
         await batch.commit();
       }
       await log("seed", `Loaded ${items.length} products from the stock report`);
-      await fs.setDoc(fs.doc(db, COL.meta, "seed"), { version: SEED_VERSION });
+      await fs.setDoc(fs.doc(db, ...at_(COL.meta), "seed"), { version: SEED_VERSION });
     } else {
-      const metaRef = fs.doc(db, COL.meta, "seed");
+      const metaRef = fs.doc(db, ...at_(COL.meta), "seed");
       const meta = await fs.getDoc(metaRef);
       const from = meta.exists() ? meta.data().version : 2;
       if (from < SEED_VERSION) {
-        const all = (await fs.getDocs(fs.collection(db, COL.products))).docs.map(d => ({ id: d.id, ...d.data() }));
+        const all = (await fs.getDocs(fs.collection(db, ...at_(COL.products)))).docs.map(d => ({ id: d.id, ...d.data() }));
         const { updates, additions, removals } = seedUpgrade(all, from);
         const now = new Date().toISOString();
         const batch = fs.writeBatch(db);
-        updates.forEach(({ id, ...patch }) => batch.update(fs.doc(db, COL.products, id), patch));
-        removals.forEach(id => batch.delete(fs.doc(db, COL.products, id)));
-        additions.forEach(p => batch.set(fs.doc(db, COL.products, p.id), { ...p, createdAt: now, updatedAt: now }));
+        updates.forEach(({ id, ...patch }) => batch.update(fs.doc(db, ...at_(COL.products), id), patch));
+        removals.forEach(id => batch.delete(fs.doc(db, ...at_(COL.products), id)));
+        additions.forEach(p => batch.set(fs.doc(db, ...at_(COL.products), p.id), { ...p, createdAt: now, updatedAt: now }));
         batch.set(metaRef, { version: SEED_VERSION });
         await batch.commit();
         await log("seed", `Catalog updated: ${updates.length} photos refreshed, ${additions.length} added, ${removals.length} retired`);
@@ -209,7 +209,7 @@ async function initFirebase() {
 export async function log(type, text) {
   const entry = { id: txHash(), type, text, at: new Date().toISOString() };
   if (fb) {
-    await fb.fs.setDoc(fb.fs.doc(fb.db, COL.activity, entry.id), entry);
+    await fb.fs.setDoc(fb.fs.doc(fb.db, ...at_(COL.activity), entry.id), entry);
   } else {
     mem.activity = [entry, ...mem.activity].slice(0, 200);
     lsWrite(); emit();
@@ -222,7 +222,7 @@ export async function saveProduct(p, { silent = false } = {}) {
   const isNew = !mem.products.some(x => x.id === p.id);
   const doc = { ...p, updatedAt: now, createdAt: p.createdAt || now };
   if (await remote()) {
-    await fb.fs.setDoc(fb.fs.doc(fb.db, COL.products, doc.id), doc);
+    await fb.fs.setDoc(fb.fs.doc(fb.db, ...at_(COL.products), doc.id), doc);
   } else {
     mem.products = isNew ? [...mem.products, doc] : mem.products.map(x => x.id === doc.id ? doc : x);
     lsWrite(); emit();
@@ -280,8 +280,8 @@ export async function applyStockChanges(changes, { reason, source = "", by = "" 
     for (let i = 0; i < ids.length; i += 120) {
       const part = ids.slice(i, i + 120), partRows = live.filter(r => part.includes(r.productId));
       const commit = withHistory => { const b = fb.fs.writeBatch(fb.db);
-        part.forEach(id => b.update(fb.fs.doc(fb.db, COL.products, id), stockPatch(writes.get(id), at)));
-        if (withHistory) partRows.forEach(({ id, ...r }) => b.set(fb.fs.doc(fb.db, HISTORY, id), r));
+        part.forEach(id => b.update(fb.fs.doc(fb.db, ...at_(COL.products), id), stockPatch(writes.get(id), at)));
+        if (withHistory) partRows.forEach(({ id, ...r }) => b.set(fb.fs.doc(fb.db, ...at_(HISTORY), id), r));
         return b.commit(); };
       try { await commit(historyOk); }
       catch (e) { if (!historyOk || e.code !== "permission-denied") throw e; historyOk = false; await commit(false); }
@@ -300,7 +300,7 @@ export async function countStock(id, loc, qty, { by = "" } = {}) {
   const after = r3(Number(qty)); if (!Number.isFinite(after) || after < 0) throw new Error("Enter a quantity of 0 or more");
   const at = new Date().toISOString(), hid = histId(at, id, loc);
   if (await remote()) {
-    const ref = fb.fs.doc(fb.db, COL.products, id), href = fb.fs.doc(fb.db, HISTORY, hid);
+    const ref = fb.fs.doc(fb.db, ...at_(COL.products), id), href = fb.fs.doc(fb.db, ...at_(HISTORY), hid);
     const run = withHistory => fb.fs.runTransaction(fb.db, async tx => {
       const snap = await tx.get(ref); if (!snap.exists()) throw new Error("Not in the catalog: " + id);
       const row = historyRow(id, loc, Number(snap.data().stock?.[loc]) || 0, after, "count", at, "", by);
@@ -325,7 +325,7 @@ export async function countStock(id, loc, qty, { by = "" } = {}) {
 export async function productHistory(id) {
   const all = Object.entries(lsCol(HISTORY)).map(([k, d]) => ({ id: k, ...d })).filter(r => r.productId === id), seen = new Map(all.map(r => [r.id, r]));
   if (await remote()) {
-    try { (await fb.fs.getDocs(fb.fs.query(fb.fs.collection(fb.db, HISTORY), fb.fs.where("productId", "==", id)))).docs.forEach(d => seen.set(d.id, { id: d.id, ...d.data() })); }
+    try { (await fb.fs.getDocs(fb.fs.query(fb.fs.collection(fb.db, ...at_(HISTORY)), fb.fs.where("productId", "==", id)))).docs.forEach(d => seen.set(d.id, { id: d.id, ...d.data() })); }
     catch (e) { console.warn("History from this device only:", e.message); }
   }
   return [...seen.values()].sort((a, b) => String(b.at).localeCompare(String(a.at)));
@@ -335,7 +335,7 @@ export async function productHistory(id) {
 export async function saveSession(s) {
   const doc = { ...s, updatedAt: new Date().toISOString() };
   if (await remote()) {
-    await fb.fs.setDoc(fb.fs.doc(fb.db, COL.sessions, doc.id), doc);
+    await fb.fs.setDoc(fb.fs.doc(fb.db, ...at_(COL.sessions), doc.id), doc);
   } else {
     const exists = mem.sessions.some(x => x.id === doc.id);
     mem.sessions = exists ? mem.sessions.map(x => x.id === doc.id ? doc : x) : [doc, ...mem.sessions];
@@ -345,7 +345,7 @@ export async function saveSession(s) {
 }
 
 export async function deleteSession(id) {
-  if (await remote()) await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.sessions, id));
+  if (await remote()) await fb.fs.deleteDoc(fb.fs.doc(fb.db, ...at_(COL.sessions), id));
   else { mem.sessions = mem.sessions.filter(x => x.id !== id); lsWrite(); emit(); }
   await log("delete", `Deleted count session ${id.slice(0, 10)}`);
 }
@@ -369,18 +369,18 @@ export async function resetLocal() {
 
 // ── Extra collections (nightly reports, stock history) ────────
 // Saved in this browser and, when Firebase is live, in Firestore too; reads merge both.
-const LS_COL = name => "noir-col:" + name;
+const LS_COL = name => isHome() ? "noir-col:" + name : `noir-col:${branchId()}:${name}`;
 function lsCol(name) { try { return JSON.parse(localStorage.getItem(LS_COL(name)) || "{}"); } catch { return {}; } }
 function lsColWrite(name, all) { try { localStorage.setItem(LS_COL(name), JSON.stringify(all)); } catch (e) { console.warn("Browser storage is full", e); } }
 export async function putDoc(name, id, data) {
   const all = lsCol(name); all[id] = data; lsColWrite(name, all);
-  if (await remote()) { try { await fb.fs.setDoc(fb.fs.doc(fb.db, name, id), data); } catch (e) { console.warn("Saved locally only:", name, e.message); } }
+  if (await remote()) { try { await fb.fs.setDoc(fb.fs.doc(fb.db, ...at_(name), id), data); } catch (e) { console.warn("Saved locally only:", name, e.message); } }
   return data;
 }
 export async function allDocs(name) {
   const all = lsCol(name);
   if (await remote()) {
-    try { (await fb.fs.getDocs(fb.fs.collection(fb.db, name))).docs.forEach(d => { all[d.id] = d.data(); }); lsColWrite(name, all); }
+    try { (await fb.fs.getDocs(fb.fs.collection(fb.db, ...at_(name)))).docs.forEach(d => { all[d.id] = d.data(); }); lsColWrite(name, all); }
     catch (e) { console.warn("Using local copy of", name, e.message); }
   }
   return Object.entries(all).map(([id, d]) => ({ id, ...d }));
@@ -390,15 +390,15 @@ export function localDocs(name) { return Object.entries(lsCol(name)).map(([id, d
 // ── Remote-only helpers (large payloads that must not go into browser storage) ──
 export async function putRemote(name, id, data) {
   if (!(await remote())) return false;
-  try { await fb.fs.setDoc(fb.fs.doc(fb.db, name, id), data); return true; } catch (e) { console.warn("Remote save failed:", name, e.message); return false; }
+  try { await fb.fs.setDoc(fb.fs.doc(fb.db, ...at_(name), id), data); return true; } catch (e) { console.warn("Remote save failed:", name, e.message); return false; }
 }
 export async function getRemote(name, id) {
   if (!(await remote())) return null;
-  try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, name, id)); return s.exists() ? s.data() : null; } catch { return null; }
+  try { const s = await fb.fs.getDoc(fb.fs.doc(fb.db, ...at_(name), id)); return s.exists() ? s.data() : null; } catch { return null; }
 }
 export async function deleteRemote(name, id) {
   if (!(await remote())) return false;
-  try { await fb.fs.deleteDoc(fb.fs.doc(fb.db, name, id)); return true; } catch { return false; }
+  try { await fb.fs.deleteDoc(fb.fs.doc(fb.db, ...at_(name), id)); return true; } catch { return false; }
 }
 export async function uploadFile(path, blob, contentType) {
   if (!(await remote())) return null;
@@ -416,7 +416,7 @@ export async function purgePetty() {
   if (!(await remote())) return false;
   let ok = true;
   for (const n of COLS) {
-    try { const snap = await fb.fs.getDocs(fb.fs.collection(fb.db, n)); for (const d of snap.docs) { try { await fb.fs.deleteDoc(d.ref); } catch { ok = false; } } } catch { ok = false; }
+    try { const snap = await fb.fs.getDocs(fb.fs.collection(fb.db, ...at_(n))); for (const d of snap.docs) { try { await fb.fs.deleteDoc(d.ref); } catch { ok = false; } } } catch { ok = false; }
   }
   const sweep = async ref => { const r = await fb.st.listAll(ref); for (const f of r.items) { try { await fb.st.deleteObject(f); } catch { ok = false; } } for (const p of r.prefixes) await sweep(p); };
   try { await sweep(fb.st.ref(fb.storage, "petty")); } catch { ok = false; }

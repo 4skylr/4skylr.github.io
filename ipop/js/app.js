@@ -3,7 +3,7 @@
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
 import * as store from "./core/store.js?v=106";
-import { isOpen, unlock } from "./core/lock.js?v=106";
+import { session, isAdmin, isHome, canUpload, role, branchName, roleName, BRANCHES, branchId } from "./core/session.js?v=106";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
 import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
@@ -14,7 +14,7 @@ import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=106";
 import { SEED_DATE } from "./data/seed-data.js?v=106";
 import { WAREHOUSES, countRowHtml, mountStockCard, openStockCard } from "./stock/stock-panel.js?v=106";
 import { openScanner, downloadSheet, idFromCode, mountLabelSheet, exportLabelsPdf } from "./stock/stock-card.js?v=106";
-import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=106";
+import { soldOf, moveOf, SALES_FROM, SALES_TO, SALES_KEY } from "./data/sales-data.js?v=106";
 import { usageOf } from "./stock/consumption.js?v=106";
 const NAMES_AR = {};
 import { stockAlerts, renderAlerts } from "./stock/stock-alerts.js?v=106";
@@ -201,18 +201,55 @@ const TB = [["dashboard", "iPop", "iPop"], ["products", "Shop", "المتجر"],
 // the dock (bottom): each page is a key (css/dock.css); rebuilt only when the page, the language or the badge changes,
 // so a key lights up once when you arrive on its page, not on every redraw
 let navKey = "";
+// who may open which page: the admin everything; a branch never another branch's money; uploads for supervisors
+function allowed(id) {
+  if (id === "finance") return isAdmin();                                   // every branch's budget
+  if (id === "unaizah") return isHome() && (isAdmin() || role() === "supervisor"); // Unaizah's cash office
+  if (id === "settings") return canUpload();                                // uploads and, for the admin, people
+  if (["halls", "nightly", "safety"].includes(id)) return isHome();          // Unaizah's auditoriums, nightly reports and building
+  return true;
+}
 function renderNav() {
   const wc = pendingCount(cachedCounts()), ar = siteLang() === "ar", key = `${ui.route}|${ar}|${wc}`;
   if (key === navKey && $("#nav").childElementCount) return; navKey = key;
   const tb = $("#tb-nav");
-  if (tb) tb.innerHTML = TB.map(([id, en, a]) => `<button type="button" class="tb-link${id === "dashboard" ? " tb-brand" : ""}" data-route="${id}" ${ui.route === id ? 'aria-current="page"' : ""}>${ar ? a : en}</button>`).join("");
-  $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings" && r.id !== "alerts").map(r => { const lab = ar ? (NAV_AR[r.id] || r.label) : r.label;
+  if (tb) tb.innerHTML = TB.filter(([id]) => allowed(id)).map(([id, en, a]) => `<button type="button" class="tb-link${id === "dashboard" ? " tb-brand" : ""}" data-route="${id}" ${ui.route === id ? 'aria-current="page"' : ""}>${ar ? a : en}</button>`).join("");
+  $("#nav").innerHTML = ROUTES.filter(r => r.id !== "settings" && r.id !== "alerts" && allowed(r.id)).map(r => { const lab = ar ? (NAV_AR[r.id] || r.label) : r.label;
     return `<button type="button" class="dk" data-route="${r.id}" ${ui.route === r.id ? 'aria-current="page"' : ""} aria-label="${lab}">
       <span class="dk-key"><span class="dk-btn"><span class="dk-corner"></span><span class="dk-inner">${keySymbol(r.id)}</span></span>
         <span class="dk-bg"><i class="dk-shine-1"></i><i class="dk-shine-2"></i></span><span class="dk-glow"></span></span>
       <i class="dk-led" aria-hidden="true"></i><span class="dk-label">${lab}</span>${r.id === "count" && wc ? `<sup class="nav-badge data">${wc}</sup>` : ""}</button>`; }).join("");
 }
+// who is signed in, at the top of every page; it opens the lock sheet
+function renderWho() {
+  const s = session(), el = $("#who"); if (!el || !s) return;
+  el.hidden = false;
+  el.innerHTML = `<i class="who-dot" aria-hidden="true"></i><b>${esc(s.name)}</b><span>Online · ${esc(branchName())}</span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
+  el.setAttribute("aria-label", `${s.name} is online in ${branchName()}. Encryption and lock`);
+  el.onclick = openLockSheet;
+}
+async function openLockSheet() {
+  const s = session(), door = globalThis.IPOP_DOOR;
+  const m = openModal(`<h2>Encrypted <span class="voice">· ${esc(s.name)}</span></h2>
+    <p class="lede">${esc(roleName())} · ${esc(branchName())}</p>
+    <ul class="lock-facts">
+      <li><b>Sign-in</b><span>Your code is checked by Firebase Authentication on Google's servers. It is not stored in this site.</span></li>
+      <li><b>Connection</b><span>Encrypted in transit between this phone and Google (HTTPS / TLS).</span></li>
+      <li><b>Stored data</b><span>Encrypted at rest by Google Cloud (AES-256).</span></li>
+      <li><b>Access</b><span id="lock-rules">Checking the access rules…</span></li>
+    </ul>
+    ${isAdmin() ? `<label class="lock-branch" for="lock-branch">View branch</label><select class="select" id="lock-branch">${BRANCHES.map(b => `<option value="${b.id}" ${b.id === branchId() ? "selected" : ""}>${b.name}</option>`).join("")}</select>` : ""}
+    <div class="lock-acts"><button type="button" class="btn hot" id="lock-now">Lock</button><button type="button" class="btn" data-x>Close</button></div>`, "narrow");
+  m.querySelector("#lock-now").onclick = () => door?.lock();
+  m.querySelectorAll("[data-x]").forEach(b => b.onclick = closeModal);
+  m.querySelector("#lock-branch")?.addEventListener("change", e => door?.viewBranch(e.target.value));
+  const st = await door?.probe().catch(() => "unknown"), el = m.querySelector("#lock-rules");
+  if (el) el.textContent = st === "protected" ? `Published rules: this code reaches ${isAdmin() ? "every branch (admin)" : `only ${branchName()}`}.`
+    : st === "local" ? "Test mode on this computer."
+    : "The database rules are not published yet. Until they are, the data is not locked. (Admin: publish firestore.rules.)";
+}
 function renderNet() {
+  renderWho();
   const live = data.mode === "firebase", el = $("#net");
   el.classList.toggle("live", live);
   el.querySelector("span").textContent = live ? "Firebase · synced" : data.mode === "connecting" ? "Connecting…" : "Local node · this browser";
@@ -281,9 +318,10 @@ function render() {
   }
   renderNav(); renderNet(); renderBell();
   document.documentElement.lang = "en";
+  if (!allowed(ui.route)) ui.route = "dashboard";
   const r = ROUTES.find(x => x.id === ui.route) || ROUTES[0];
   const arTitle = siteLang() === "ar" && TITLE_AR[r.id];
-  $("#kicker").textContent = arTitle ? arTitle[0] : r.kicker;
+  $("#kicker").textContent = `${arTitle ? arTitle[0] : r.kicker} · ${branchName()}`;
   $("#page-title").innerHTML = arTitle ? arTitle[1] : r.title;
   $("#title-actions").innerHTML = "";
   // a page change starts on the loading mark; pages that load their code first replace it when they are ready
@@ -681,7 +719,8 @@ function fillBrief(ar) {
       <div class="fav-row">${top.map((x, i) => `<button class="fav-it" data-edit="${x.p.id}"><span class="fav-n data">${i + 1}</span>${pic(x.p, "fav-pic")}<span class="fav-t"><b>${esc((ar ? NAMES_AR[x.p.id] : null) || x.p.name)}</b><small>${esc(x.l.slice(0, 2).map(d => d.name).join(ar ? "، " : ", "))}</small></span><span class="fav-h data">♥ ${x.l.length}</span></button>`).join("")}</div>`;
   }).catch(() => {});
   const T2 = (en, a) => ar ? a : en, put = (id, tone, n, l, list) => { const b = $("#" + id); if (!b) return; b.className = `bf ${tone}`; b.querySelector("b").textContent = n; b.querySelector(".bf-l").textContent = l; b.querySelector(".bf-list").innerHTML = list; };
-  safetyMod().then(m => {
+  if (!isHome()) $("#bf-safety")?.remove(); // the safety devices are Unaizah's building
+  else safetyMod().then(m => {
     const S = m.safetySummary({ localDocs: store.localDocs }), open = S.late + S.issue;
     put("bf-safety", open ? "t-bad" : S.soon ? "t-warn" : S.none ? "t-info" : "t-ok", String(open),
       T2(`overdue or open issues · ${S.soon} due soon`, `متأخرة أو ملاحظات · ${S.soon} قريبة`),
@@ -814,7 +853,7 @@ function reportHandlers() {
       const sales = {};
       data.products.forEach(p => { if (!p.sku) return; const i = text.toLowerCase().indexOf(String(p.sku).toLowerCase()); if (i < 0) return; const m = text.slice(i, i + 80).match(/[\d,]+\.\d{2}/); if (m) sales[p.id] = Number(m[0].replace(/,/g, "")); });
       if (!Object.keys(sales).length) throw new Error(T("No products found in this report", "ما لقيت منتجات بهالتقرير"));
-      localStorage.setItem("noir-sales-ytd", JSON.stringify(sales));
+      localStorage.setItem(SALES_KEY, JSON.stringify(sales));
       toast(T(`Sales saved · ${Object.keys(sales).length} items`, `مبيعات محفوظة · ${Object.keys(sales).length} صنف`));
     },
     halls: async ([f], step) => {
@@ -850,16 +889,12 @@ function reportHandlers() {
 }
 function viewSettings() {
   const live = data.mode === "firebase", ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
-  if (!isOpen()) {
-    $("#view").innerHTML = `<form class="slab" id="master-gate"><h2>${T("Master sign-in", "دخول الماستر")}</h2><input class="input" name="pin" type="password" inputmode="numeric" placeholder="••••" autocomplete="off" aria-label="PIN"><button class="btn hot" type="submit">${T("Open", "دخول")}</button></form>`;
-    $("#master-gate").onsubmit = e => { e.preventDefault(); if (!unlock(e.target.pin.value)) { e.target.pin.value = ""; toast(T("Wrong PIN", "الرقم غلط"), true); return; } viewSettings(); };
-    return;
-  }
   $("#view").innerHTML = `
   <div class="settings">
+    ${isAdmin() ? `<div id="people-host" class="people-wrap"></div>` : ""}
     <div id="rq-host" class="rq-wrap"></div>
     <div id="sync-admin"></div>
-    <section class="slab">
+    ${isAdmin() ? `<section class="slab">
       <div class="slab-h"><h2>${T("Backup &amp; export", "نسخ احتياطي وتصدير")}</h2></div>
       <div class="btns">
         <button class="btn" id="exp-json">${icon("download")}Backup JSON</button>
@@ -873,8 +908,9 @@ function viewSettings() {
       <div class="slab-h"><h2>${T("Starting data", "البيانات الأصلية")}</h2></div>
       <p style="margin:0;color:var(--ink-2);font-size:14px">${T("Current Stock Position Report", "تقرير الجرد الأصلي")} · Noir Cinema, Othaim Mall, Onaizah · <span class="data" style="font-size:12px">${when(SEED_DATE)}</span>. ${T("Three locations: Concession, Mini Store, Store. Unit cost is net amount ÷ system stock, before VAT.", "ثلاث مواقع: الكونسيشن، الميني ستور، المستودع. تكلفة الوحدة = الصافي ÷ كمية النظام، قبل الضريبة.")}</p>
       ${live ? "" : `<div class="btns" style="margin-top:16px"><button class="btn warn" id="reset">${T("Reload report data", "إعادة تحميل بيانات التقرير")}</button></div>`}
-    </section>
+    </section>` : ""}
   </div>`;
+  if (isAdmin()) {
   $("#exp-json").onclick = () => { download(`stock-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(store.exportAll(), null, 1), "application/json"); toast("Backup downloaded"); };
   $("#copy-json").onclick = async () => { try { await navigator.clipboard.writeText(JSON.stringify(store.exportAll())); toast("Copied to clipboard"); } catch { toast("Your browser blocked copying. Use the download instead.", true); } };
   $("#exp-csv").onclick = () => {
@@ -887,6 +923,8 @@ function viewSettings() {
     try { await store.importAll(JSON.parse(await f.text())); toast("Import complete"); } catch (err) { toast(err.message || "That file isn't a valid backup", true); }
     e.target.value = "";
   };
+  }
+  if (isAdmin()) import("./core/people.js?v=106").then(m => m.renderPeople($("#people-host"), { toast, esc })).catch(e => toast(e.message, true));
   syncAdmin().then(m => m.renderAdmin(document.getElementById("sync-admin"), { ...cardHelpers(), when, qty }));
   reportsMod().then(m => m.renderReports($("#rq-host"), { allDocs: store.allDocs, localDocs: store.localDocs, toast, go, markUpload, salesTo: SALES_TO, handlers: reportHandlers() }))
     .catch(e => toast(e.message, true));
