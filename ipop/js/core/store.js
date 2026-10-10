@@ -231,37 +231,104 @@ export async function saveProduct(p, { silent = false } = {}) {
   return doc;
 }
 
-// Quantities only: writes stock.<place> for one product and touches no other field (name, price, cost, image,
-// recipe, barcode, par stay exactly as they are). changes: { stores?, mini?, refuel? }
-export async function setStock(id, changes, note = "") {
-  const at = new Date().toISOString(), keys = Object.keys(changes || {}).filter(k => LOCATIONS.some(l => l.id === k));
-  if (!keys.length) return;
-  if (!mem.products.some(x => x.id === id)) throw new Error("Not in the catalog: " + id);
-  if (await remote()) {
-    const batch = fb.fs.writeBatch(fb.db);
-    batch.update(fb.fs.doc(fb.db, COL.products, id), Object.fromEntries([...keys.map(k => [`stock.${k}`, Number(changes[k]) || 0]), ["updatedAt", at]]));
-    await batch.commit();
-  } else {
-    mem.products = mem.products.map(p => p.id === id ? { ...p, stock: { ...(p.stock || {}), ...Object.fromEntries(keys.map(k => [k, Number(changes[k]) || 0])) }, updatedAt: at } : p);
-    lsWrite(); emit();
-  }
-  if (note) await log("edit", note);
+// ── Stock writes with history ───────────────────────────────
+// Every change to stock.<warehouse> goes through here: the product gets only the changed field (plus stockAt.<warehouse>
+// and updatedAt, so the card can say "as of"), and productHistory gets one row per change. Rows are never overwritten.
+// A decrease is a sale only in the Concession (refuel), the floor that sells; Mini Store and Main Stores decreases are
+// transfers or waste.
+export const HISTORY = "productHistory";
+export const SALE_LOC = "refuel";
+const r3 = n => Math.round(n * 1000) / 1000;
+const isLoc = loc => LOCATIONS.some(l => l.id === loc);
+const histId = (at, pid, loc) => `${at.replace(/\D/g, "").slice(0, 17)}-${pid}-${loc}-${Math.random().toString(36).slice(2, 8)}`;
+function historyRow(productId, loc, before, after, reason, at, source, by) {
+  const delta = r3(after - before), sale = loc === SALE_LOC && delta < 0;
+  return { productId, warehouse: loc, before: r3(before), after: r3(after), delta, reason, sale, sold: sale ? -delta : 0, at, source: source || "", by: by || "" };
 }
-// many products at once (a stock report upload): { id: { stores?, mini?, refuel? } }, quantities only
-export async function setStockMany(byId) {
-  const at = new Date().toISOString(), ids = Object.keys(byId || {}).filter(id => mem.products.some(x => x.id === id));
-  const clean = o => Object.fromEntries(Object.entries(o || {}).filter(([k]) => LOCATIONS.some(l => l.id === k)).map(([k, v]) => [k, Number(v) || 0]));
-  if (await remote()) {
-    for (let i = 0; i < ids.length; i += 400) { // a Firestore batch takes 500 writes at most
-      const batch = fb.fs.writeBatch(fb.db);
-      ids.slice(i, i + 400).forEach(id => { const c = clean(byId[id]); if (Object.keys(c).length) batch.update(fb.fs.doc(fb.db, COL.products, id), { ...Object.fromEntries(Object.entries(c).map(([k, v]) => [`stock.${k}`, v])), updatedAt: at }); });
-      await batch.commit();
-    }
-  } else {
-    mem.products = mem.products.map(p => ids.includes(p.id) ? { ...p, stock: { ...(p.stock || {}), ...clean(byId[p.id]) }, updatedAt: at } : p);
-    lsWrite(); emit();
+function keepLocal(rows) {
+  if (!rows.length) return;
+  const all = lsCol(HISTORY); rows.forEach(r => { all[r.id] = r; }); lsColWrite(HISTORY, all);
+}
+function applyLocal(writes, at) {
+  mem.products = mem.products.map(p => {
+    const w = writes.get(p.id); if (!w) return p;
+    return { ...p, stock: { ...(p.stock || {}), ...w }, stockAt: { ...(p.stockAt || {}), ...Object.fromEntries(Object.keys(w).map(k => [k, at])) }, stockUpdatedAt: at, updatedAt: at };
+  });
+  lsWrite(); emit();
+}
+const stockPatch = (w, at) => ({ ...Object.fromEntries(Object.entries(w).flatMap(([k, v]) => [[`stock.${k}`, v], [`stockAt.${k}`, at]])), stockUpdatedAt: at, updatedAt: at });
+
+// A file (stock report, dates sheet): changes = [{ id, loc, qty }], each diffed against the stock on file.
+// Only real changes are written. Returns the history rows, split into what went up and what went down.
+export async function applyStockChanges(changes, { reason, source = "", by = "" } = {}) {
+  const at = new Date().toISOString(), rows = [], writes = new Map();
+  for (const c of changes || []) {
+    const p = mem.products.find(x => x.id === c.id); if (!p || !isLoc(c.loc)) continue;
+    const before = Number(writes.get(p.id)?.[c.loc] ?? p.stock?.[c.loc]) || 0, after = r3(Number(c.qty) || 0);
+    if (Math.abs(after - before) < 1e-9) continue;
+    const w = writes.get(p.id) || {}; w[c.loc] = after; writes.set(p.id, w);
+    const prev = rows.findIndex(r => r.productId === p.id && r.warehouse === c.loc);
+    const row = { id: histId(at, p.id, c.loc), ...historyRow(p.id, c.loc, prev >= 0 ? rows[prev].before : before, after, reason, at, source, by) };
+    if (prev >= 0) rows[prev] = row; else rows.push(row);
   }
-  return ids.length;
+  const live = rows.filter(r => Math.abs(r.delta) > 1e-9);
+  if (!live.length) return { rows: [], up: [], down: [] };
+  let historyOk = true;
+  if (await remote()) {
+    const ids = [...writes.keys()];
+    // one batch holds at most 500 writes: a product and its rows always travel together
+    for (let i = 0; i < ids.length; i += 120) {
+      const part = ids.slice(i, i + 120), partRows = live.filter(r => part.includes(r.productId));
+      const commit = withHistory => { const b = fb.fs.writeBatch(fb.db);
+        part.forEach(id => b.update(fb.fs.doc(fb.db, COL.products, id), stockPatch(writes.get(id), at)));
+        if (withHistory) partRows.forEach(({ id, ...r }) => b.set(fb.fs.doc(fb.db, HISTORY, id), r));
+        return b.commit(); };
+      try { await commit(historyOk); }
+      catch (e) { if (!historyOk || e.code !== "permission-denied") throw e; historyOk = false; await commit(false); }
+    }
+    if (!historyOk) { keepLocal(live); console.warn("productHistory was refused by the database rules; the rows are kept on this device"); }
+  } else { applyLocal(writes, at); keepLocal(live); }
+  return { rows: live, up: live.filter(r => r.delta > 0), down: live.filter(r => r.delta < 0), historyOk };
+}
+
+// One count from one phone: read the current figure and write the new one in a single transaction, touching only
+// stock.<warehouse> of this product. Two phones on different products or warehouses never touch each other's fields;
+// on the same product and warehouse the later save wins for that one field. A count always leaves a history row,
+// also when it confirms the figure (delta 0).
+export async function countStock(id, loc, qty, { by = "" } = {}) {
+  if (!isLoc(loc)) throw new Error("Unknown warehouse: " + loc);
+  const after = r3(Number(qty)); if (!Number.isFinite(after) || after < 0) throw new Error("Enter a quantity of 0 or more");
+  const at = new Date().toISOString(), hid = histId(at, id, loc);
+  if (await remote()) {
+    const ref = fb.fs.doc(fb.db, COL.products, id), href = fb.fs.doc(fb.db, HISTORY, hid);
+    const run = withHistory => fb.fs.runTransaction(fb.db, async tx => {
+      const snap = await tx.get(ref); if (!snap.exists()) throw new Error("Not in the catalog: " + id);
+      const row = historyRow(id, loc, Number(snap.data().stock?.[loc]) || 0, after, "count", at, "", by);
+      tx.update(ref, stockPatch({ [loc]: after }, at));
+      if (withHistory) tx.set(href, row);
+      return row;
+    });
+    try { return { id: hid, ...(await run(true)) }; }
+    catch (e) {
+      if (e.code !== "permission-denied") throw e;
+      const row = { id: hid, ...(await run(false)) }; keepLocal([row]);
+      console.warn("productHistory was refused by the database rules; the row is kept on this device"); return row;
+    }
+  }
+  const p = mem.products.find(x => x.id === id); if (!p) throw new Error("Not in the catalog: " + id);
+  const row = { id: hid, ...historyRow(id, loc, Number(p.stock?.[loc]) || 0, after, "count", at, "", by) };
+  applyLocal(new Map([[id, { [loc]: after }]]), at); keepLocal([row]);
+  return row;
+}
+
+// The history of one product, newest first (the database and this device's copy, merged).
+export async function productHistory(id) {
+  const all = Object.entries(lsCol(HISTORY)).map(([k, d]) => ({ id: k, ...d })).filter(r => r.productId === id), seen = new Map(all.map(r => [r.id, r]));
+  if (await remote()) {
+    try { (await fb.fs.getDocs(fb.fs.query(fb.fs.collection(fb.db, HISTORY), fb.fs.where("productId", "==", id)))).docs.forEach(d => seen.set(d.id, { id: d.id, ...d.data() })); }
+    catch (e) { console.warn("History from this device only:", e.message); }
+  }
+  return [...seen.values()].sort((a, b) => String(b.at).localeCompare(String(a.at)));
 }
 
 // ── Count sessions ──────────────────────────────
@@ -281,27 +348,6 @@ export async function deleteSession(id) {
   if (await remote()) await fb.fs.deleteDoc(fb.fs.doc(fb.db, COL.sessions, id));
   else { mem.sessions = mem.sessions.filter(x => x.id !== id); lsWrite(); emit(); }
   await log("delete", `Deleted count session ${id.slice(0, 10)}`);
-}
-
-// commit: overwrite system stock with counted quantities
-export async function commitSession(session) {
-  const loc = session.location;
-  const counted = Object.entries(session.counts || {});
-  if (await remote()) {
-    const batch = fb.fs.writeBatch(fb.db);
-    counted.forEach(([pid, qty]) => {
-      const p = mem.products.find(x => x.id === pid); if (!p) return;
-      batch.update(fb.fs.doc(fb.db, COL.products, pid), { [`stock.${loc}`]: Number(qty), updatedAt: new Date().toISOString() });
-    });
-    await batch.commit();
-  } else {
-    mem.products = mem.products.map(p => session.counts?.[p.id] != null
-      ? { ...p, stock: { ...p.stock, [loc]: Number(session.counts[p.id]) }, updatedAt: new Date().toISOString() } : p);
-    lsWrite(); emit();
-  }
-  const done = await saveSession({ ...session, status: "committed", committedAt: new Date().toISOString() });
-  await log("commit", `Committed ${LOCATIONS.find(l => l.id === loc)?.name} count · ${counted.length} items`);
-  return done;
 }
 
 // ── Import / Export / Reset ──────────────────────────────────

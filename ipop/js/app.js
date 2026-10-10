@@ -12,7 +12,8 @@ import { syncCountsToSheet, pendingCount, cachedCounts } from "./stock/watch-cou
 import { pcardHtml, wirePcards } from "./stock/product-card.js?v=106";
 import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=106";
 import { SEED_DATE } from "./data/seed-data.js?v=106";
-import { openProductCard, openScanner, requirePin, pinUnlocked, applyCountToSheet, downloadSheet, idFromCode, mountLabelSheet, mountProductPage, exportLabelsPdf } from "./stock/stock-card.js?v=106";
+import { WAREHOUSES, countRowHtml, mountStockCard, openStockCard } from "./stock/stock-panel.js?v=106";
+import { openScanner, downloadSheet, idFromCode, mountLabelSheet, exportLabelsPdf } from "./stock/stock-card.js?v=106";
 import { soldOf, moveOf, SALES_FROM, SALES_TO } from "./data/sales-data.js?v=106";
 import { usageOf } from "./stock/consumption.js?v=106";
 const NAMES_AR = {};
@@ -29,7 +30,6 @@ const intelMod = lazy("./stock/stock-intel.js?v=106");
 const menuMod = lazy("./stock/menu-lab.js?v=106"), yieldMod = lazy("./stock/analytics.js?v=106");
 const labMod = lazy("./stock/stock-lab.js?v=106");
 const showMod = lazy("./stock/showcase.js?v=106");
-const p360Mod = lazy("./stock/product-360.js?v=106");
 // GitHub libraries: krisk/Fuse (typo-tolerant search) · formkit/auto-animate (list motion) · kamranahmedse/driver.js (tour, in tools.js)
 const fuseMod = lazy("../vendor/fuse.min.mjs");
 const aaMod = lazy("../vendor/auto-animate.mjs");
@@ -109,7 +109,6 @@ function level(p, amount = total(p)) {
   const state = amount <= 0 ? "empty" : pct < .25 ? "crit" : pct < .5 ? "low" : pct > 1.001 ? "over" : "ok";
   return { par, pct, left: amount, state };
 }
-const tank = (lv, cls = "") => `<span class="tank ${cls} s-${lv.state}" style="--lv:${Math.min(Math.max(lv.pct, 0), 1).toFixed(3)}" aria-hidden="true"><i class="liquid"></i></span>`;
 const pctText = lv => lv.state === "unset" ? "—" : `${Math.round(lv.pct * 100)}%`;
 const lsGet = (k, d) => { try { const v = localStorage.getItem("noir-ui2:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } };
 const lsSet = (k, v) => { try { localStorage.setItem("noir-ui2:" + k, JSON.stringify(v)); } catch {} };
@@ -145,7 +144,7 @@ const CAT_COLORS = ["#5b7bff", "#4c6bff", "#edf1f8", "#8c95a8", "#7f95ff", "#334
 const ui = {
   route: ROUTES.some(r => r.id === location.hash.slice(1)) ? location.hash.slice(1) : lsGet("route", "dashboard"),
   q: "", cat: lsGet("cat", "all"), loc: lsGet("loc", "all"), sort: lsGet("sort", "cat"), view: lsGet("showIntro", false) ? lsGet("view", "show") : (lsSet("showIntro", true), lsSet("labIntro", true), lsSet("view", "show"), "show"),
-  session: null, countQ: "", countOnlyStock: lsGet("countOnlyStock", true), countCat: "all", setupLoc: "mini"
+  countQ: "", countOnlyStock: lsGet("countOnlyStock", true), countWh: ""
 };
 // Lemon and mint go into mocktails (slush glass), not hot drinks.
 const CAT_FIX = { lemon: "slush", mint: "slush" };
@@ -222,20 +221,28 @@ function renderNet() {
 // stock reports: compare with the stock on file and save the difference (Product 360 shows it as history)
 let stockHist = store.localDocs("stockHistory");
 const histMod = lazy("./stock/stock-history.js?v=106");
-async function stockReport(found, source, fromRequired) {
+async function stockReport(found, source, fromRequired, reason = "stock-file") {
   const m = await histMod();
-  const entry = await m.applyStockReport(found, { data: () => data, setStockMany: store.setStockMany, putDoc: store.putDoc, log: store.log }, source);
+  const entry = await m.applyStockReport(found, { data: () => data, applyStockChanges: store.applyStockChanges, putDoc: store.putDoc, log: store.log }, source, reason);
   stockHist = [...stockHist.filter(e => e.id !== entry.id), entry];
   localStorage.setItem("noir-sync-at", new Date().toISOString());
-  const sold = entry.net.filter(n => n.delta < 0), added = entry.net.filter(n => n.delta > 0);
-  toast(`Quantities updated · ${entry.products} products · ${sold.length} down · ${added.length} up`);
-  // items in the file that the catalog does not have: shown, never created
-  if (entry.unmatched?.length) openModal(`<h2>Not in the catalog <span class="voice">· ${entry.unmatched.length}</span></h2>
-    <p class="lede">These lines of ${esc(source)} match no product, so nothing was created or changed for them. Only stock quantities were updated.</p>
-    <ul class="unmatched">${entry.unmatched.map(u => `<li>${esc(u)}</li>`).join("")}</ul>`, "narrow");
+  showChanges(entry);
   renderBell();
-  if (!fromRequired) markUpload("stock", source).catch(() => {});
+  if (!fromRequired) markUpload(reason === "date-file" ? "expiry" : "stock", source).catch(() => {});
   return entry;
+}
+// what an upload changed: up and down per product and warehouse, and the lines that matched no product
+function showChanges(entry) {
+  const L = id => LOCATIONS.find(l => l.id === id)?.name || id;
+  const row = l => `<li><span><b>${esc(l.name)}</b><small>${esc(L(l.loc))}${l.sale ? " · sold" : ""}</small></span><span class="data">${qty(l.from)} → ${qty(l.to)}</span><b class="data ${l.delta > 0 ? "up" : "dn"}">${l.delta > 0 ? "+" : "−"}${qty(Math.abs(l.delta))} ${esc(UNITS[l.unit] || l.unit || "")}</b></li>`;
+  const up = entry.lines.filter(l => l.delta > 0), down = entry.lines.filter(l => l.delta < 0);
+  toast(`${entry.reason === "date-file" ? "Dates file" : "Stock file"} · ${up.length} up · ${down.length} down`);
+  if (!up.length && !down.length && !entry.unmatched?.length) return;
+  openModal(`<h2>${esc(entry.source || "Upload")}</h2>
+    <p class="lede">Compared with the stock on file. Each change is saved to the product's history${entry.historyOk === false ? " on this device (the database refused the history rows)" : ""}. Only Concession decreases count as sold.</p>
+    ${down.length ? `<h3 class="chg-h">Went down · ${down.length}</h3><ul class="chg">${down.map(row).join("")}</ul>` : ""}
+    ${up.length ? `<h3 class="chg-h">Went up · ${up.length}</h3><ul class="chg">${up.map(row).join("")}</ul>` : ""}
+    ${entry.unmatched?.length ? `<h3 class="chg-h">Not in the catalog · ${entry.unmatched.length}</h3><p class="note">Nothing was created or changed for these lines.</p><ul class="unmatched">${entry.unmatched.map(u => `<li>${esc(u)}</li>`).join("")}</ul>` : ""}`, "narrow");
 }
 window.__stockReport = stockReport;
 // header bell: how many items need action today (critical + act today)
@@ -249,8 +256,8 @@ function renderBell() {
 document.addEventListener("click", e => {
   const r = e.target.closest("[data-route]"); if (r) return go(r.dataset.route);
   const ed = e.target.closest("[data-edit]");
-  if (ed) { const p = data.products.find(x => x.id === ed.dataset.edit); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); return; }
-  const sc = e.target.closest("[data-startcount]"); if (sc) { ui.setupLoc = sc.dataset.startcount; go("count"); }
+  if (ed) { const p = data.products.find(x => x.id === ed.dataset.edit); if (p) openStockCard(p, panelHelpers()); return; }
+  const sc = e.target.closest("[data-startcount]"); if (sc) { ui.countWh = sc.dataset.startcount; lsSet("countWh", ui.countWh); go("count"); }
 });
 function go(route) {
   if (CARD_DOOR) return;
@@ -260,7 +267,6 @@ function go(route) {
 }
 function render() {
   if (CARD_DOOR) return renderDoor();
-  if (!isScanUrl()) lastCard = null;
   document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   const qid = new URLSearchParams(location.search).get("p");
   if (qid && data.products?.length) {
@@ -480,7 +486,7 @@ function renderResults() {
   if (ui.view === "show") {
     const L = filtered();
     if (!$("#show")) $("#results").innerHTML = `<div id="show"></div>`;
-    showMod().then(m => { const h = $("#show"); if (h) m.renderShowcase(h, { ...toolHelpers(), level, catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } }, L); }).catch(e => toast(e.message, true));
+    showMod().then(m => { const h = $("#show"); if (h) m.renderShowcase(h, { ...toolHelpers(), level, catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) openStockCard(p, panelHelpers()); } }, L); }).catch(e => toast(e.message, true));
     return;
   }
   if (ui.view === "lab") {
@@ -539,39 +545,62 @@ function topRank(id) {
 
 
 // ── Count ────────────────────────────────────────────────────
-function newSession(where, counter) {
-  const system = {}, rates = {};
-  data.products.forEach(p => { system[p.id] = Number(p.stock?.[where]) || 0; rates[p.id] = Number(p.rate) || 0; });
-  return { id: store.txHash(), location: where, counter, status: "draft", createdAt: new Date().toISOString(), counts: {}, system, rates };
+// Choose the warehouse, then a short list: name, what is on file, one number, Save. Each save writes stock.<warehouse>
+// for that product only (store.countStock, a transaction) and one productHistory row, so five phones counting the same
+// warehouse never undo each other: the later save wins only for the one field it changed.
+const countWh = () => { const v = ui.countWh || lsGet("countWh", "refuel"); return WAREHOUSES.some(w => w.id === v) ? v : "refuel"; };
+function countRows(at) {
+  const q = (ui.countQ || "").trim().toLowerCase(), order = CATEGORIES.map(c => c.id);
+  return data.products.filter(p => (!ui.countOnlyStock || (Number(p.stock?.[at]) || 0) > 0) && (!q || [p.name, p.sku, p.code].some(x => String(x || "").toLowerCase().includes(q))))
+    .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.name.localeCompare(b.name));
 }
-
+const countHelpers = () => ({ ...cardHelpers(), catName });
 function viewCount() {
-  if (ui.session) return viewRun();
-  const drafts = data.sessions.filter(s => s.status === "draft");
+  const at = countWh(), H = countHelpers(), rowsEl = $("#cnt-rows");
+  // a sync from another phone: update the figures in place, keep the list, the search and anything typed
+  if (rowsEl && rowsEl.dataset.wh === at) {
+    rowsEl.querySelectorAll(".sk-row").forEach(li => { const p = data.products.find(x => x.id === li.dataset.id); if (!p) return;
+      const tmp = document.createElement("template"); tmp.innerHTML = countRowHtml(p, H, at).trim();
+      li.querySelector(".sk-row-now").replaceWith(tmp.content.querySelector(".sk-row-now")); });
+    $$("#cnt-wh [data-cwh]").forEach(b => { b.querySelector("b").textContent = qty(data.products.reduce((a, p) => a + (Number(p.stock?.[b.dataset.cwh]) > 0 ? 1 : 0), 0)); });
+    return;
+  }
   $("#view").innerHTML = `<div id="wc-host">${wcNote()}</div>
-    <div class="setup">
-      <section class="slab">
-        <div class="slab-h"><h2>New count</h2><span class="voice">pick a vault</span></div>
-        <div class="gates" role="group" aria-label="Location">
-          ${LOCATIONS.map(l => `<button class="gate" data-pick="${l.id}" aria-pressed="${ui.setupLoc === l.id}">
-            <span class="code" aria-hidden="true">${l.code}</span><b>${l.name}</b><span>${data.products.filter(p => Number(p.stock?.[l.id]) > 0).length} SKUs on system</span></button>`).join("")}
-        </div>
-        <div class="fl" style="margin-bottom:16px"><label for="counter">Counted by</label><input class="input" id="counter" value="${esc(lsGet("counter", ""))}" placeholder="Your name"></div>
-        <label class="check"><input type="checkbox" id="only" ${ui.countOnlyStock ? "checked" : ""}> Only list items the system has at this location</label>
-        <button class="btn hot" id="start" style="width:100%">${icon("count")}Open count sheet</button>
-      </section>
-      <section class="slab">
-        <div class="slab-h"><h2>Drafts</h2><span class="tag">${drafts.length} saved</span></div>
-        <div class="drafts">
-          ${drafts.map(s => `<div class="draft"><div><b>${esc(loc(s.location).name)}</b> <span style="color:var(--muted);font-size:13px">· ${esc(s.counter || "unnamed")} · ${Object.keys(s.counts || {}).length} counted</span><span class="data">${esc(s.id)}</span></div>
-            <button class="btn sm" data-resume="${esc(s.id)}">Resume</button></div>`).join("") || '<p class="empty"><span class="voice">Nothing half-done.</span> Counts you save without committing wait here.</p>'}
-        </div>
-      </section>
-    </div>`;
-  $$("[data-pick]").forEach(b => b.onclick = () => { ui.setupLoc = b.dataset.pick; $$("[data-pick]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
-  $("#only").onchange = e => { ui.countOnlyStock = e.target.checked; lsSet("countOnlyStock", ui.countOnlyStock); };
-  $("#start").onclick = () => { const c = $("#counter").value.trim(); lsSet("counter", c); ui.session = newSession(ui.setupLoc, c); ui.countQ = ""; ui.countCat = "all"; render(); };
-  $$("[data-resume]").forEach(b => b.onclick = () => { ui.session = JSON.parse(JSON.stringify(data.sessions.find(s => s.id === b.dataset.resume))); render(); });
+    <section class="slab cnt">
+      <div class="slab-h"><h2>Count a warehouse</h2><span class="voice">choose it, type what you count, save</span></div>
+      <div class="sk-chips cnt-wh" id="cnt-wh" role="radiogroup" aria-label="Warehouse">${WAREHOUSES.map(w => `<button type="button" class="sk-chip" role="radio" aria-checked="${w.id === at}" data-cwh="${w.id}">
+        <span>${w.name}</span><b class="data">${qty(data.products.filter(p => Number(p.stock?.[w.id]) > 0).length)}</b><small>items on file</small></button>`).join("")}</div>
+      <div class="cnt-tools">
+        <div class="seek">${icon("search")}<input id="cq" type="search" placeholder="Find an item" value="${esc(ui.countQ || "")}" aria-label="Find an item"></div>
+        <label class="check"><input type="checkbox" id="conly" ${ui.countOnlyStock ? "checked" : ""}> Only items on file in ${esc(WAREHOUSES.find(w => w.id === at).name)}</label>
+      </div>
+      <ol class="sk-rows" id="cnt-rows" data-wh="${at}"></ol>
+    </section>`;
+  const paintRows = () => {
+    const list = countRows(at), el = $("#cnt-rows");
+    el.innerHTML = list.map(p => countRowHtml(p, H, at)).join("") || `<li class="empty">No item matches.</li>`;
+  };
+  paintRows();
+  $$("#cnt-wh [data-cwh]").forEach(b => b.onclick = () => { ui.countWh = b.dataset.cwh; lsSet("countWh", ui.countWh); $("#cnt-rows").dataset.wh = ""; viewCount(); });
+  $("#cq").oninput = e => { ui.countQ = e.target.value; paintRows(); };
+  $("#conly").onchange = e => { ui.countOnlyStock = e.target.checked; lsSet("countOnlyStock", ui.countOnlyStock); paintRows(); };
+  // one save per row; Enter saves and moves to the next row
+  $("#cnt-rows").addEventListener("submit", async e => {
+    e.preventDefault();
+    const form = e.target, li = form.closest(".sk-row"), inp = form.qty, msg = li.querySelector(".sk-row-msg"), v = inp.value.trim();
+    if (v === "" || !(Number(v) >= 0)) { msg.textContent = "Type the quantity you counted (0 if none)."; inp.focus(); return; }
+    const btn = form.querySelector("button"); btn.disabled = true;
+    try {
+      const row = await store.countStock(li.dataset.id, at, Number(v), { by: lsGet("counter", "") });
+      li.classList.add("is-saved"); inp.value = "";
+      msg.textContent = `Saved · ${qty(row.before)} → ${qty(row.after)}${row.delta ? ` (${row.delta > 0 ? "+" : "−"}${qty(Math.abs(row.delta))})` : " · same as on file"}`;
+      const p = data.products.find(x => x.id === li.dataset.id);
+      if (p) { const tmp = document.createElement("template"); tmp.innerHTML = countRowHtml({ ...p, stock: { ...p.stock, [at]: row.after }, stockAt: { ...(p.stockAt || {}), [at]: row.at } }, H, at).trim();
+        li.querySelector(".sk-row-now").replaceWith(tmp.content.querySelector(".sk-row-now")); }
+      li.nextElementSibling?.querySelector("input")?.focus();
+    } catch (x) { msg.textContent = x.message || "Could not save"; }
+    btn.disabled = false;
+  });
   refreshWc();
 }
 // watch count reports are matched on the admin panel (Settings); here only a pointer to them
@@ -582,119 +611,18 @@ function refreshWc() {
   return syncCountsToSheet(data.products || []).then(list => {
     const open = list.filter(r => r.status === "submitted"), ids = open.map(r => r.id + (r.submittedAt || r.at));
     if (wcSeen && ids.some(id => !wcSeen.has(id))) toast("New watch count report in");
-    wcSeen = new Set(ids); renderNav(); if (ui.route === "count" && !ui.session && !typing()) paintWc();
+    wcSeen = new Set(ids); renderNav(); if (ui.route === "count" && !typing()) paintWc();
   }).catch(() => {});
 }
 
-const inScope = (s, p) => !ui.countOnlyStock || (s.system?.[p.id] || 0) > 0 || s.counts[p.id] != null;
-function runRows(s) {
-  const q = ui.countQ.trim().toLowerCase(), order = CATEGORIES.map(c => c.id);
-  return data.products.filter(p => inScope(s, p) && (ui.countCat === "all" || p.category === ui.countCat) &&
-    (!q || [p.name, p.sku, p.code].some(x => String(x || "").toLowerCase().includes(q))))
-    .sort((a, b) => order.indexOf(a.category) - order.indexOf(b.category) || a.name.localeCompare(b.name));
-}
-function stats(s) {
-  const ids = Object.keys(s.counts || {}); let diff = 0, off = 0;
-  ids.forEach(id => { const d = Number(s.counts[id]) - (s.system?.[id] || 0); diff += d * (s.rates?.[id] || 0); if (Math.abs(d) > 1e-9) off++; });
-  return { counted: ids.length, diff, off, scope: data.products.filter(p => inScope(s, p)).length };
-}
 const delta = d => d == null ? `<span class="delta">—</span>` : Math.abs(d) < 1e-9 ? `<span class="delta eq">match</span>` : `<span class="delta ${d > 0 ? "up" : "dn"}">${d > 0 ? "+" : ""}${qty(d)}</span>`;
-
-function viewRun() {
-  const s = ui.session;
-  $("#kicker").textContent = `Stocktake · ${loc(s.location).name}${s.counter ? " · " + s.counter : ""}`;
-  $("#page-title").innerHTML = `${esc(loc(s.location).name)} <span class="voice">count</span>`;
-  $("#title-actions").innerHTML = `<button class="btn ghost" id="leave">${icon("x")}Close sheet</button>`;
-  const cats = CATEGORIES.filter(c => data.products.some(p => p.category === c.id && inScope(s, p)));
-  $("#view").innerHTML = `
-    <div class="run-head"><span class="pill draft">Draft</span><span class="hash-chip">${esc(s.id)}</span></div>
-    <div class="controls">
-      <div class="seek">${icon("search")}<input id="cq" type="search" placeholder="Find an item" value="${esc(ui.countQ)}" aria-label="Find an item"><kbd>/</kbd></div>
-      <select class="select" id="ccat" aria-label="Category"><option value="all">All categories</option>${cats.map(c => `<option value="${c.id}" ${ui.countCat === c.id ? "selected" : ""}>${c.name}</option>`).join("")}</select>
-      <label class="check" style="margin:0"><input type="checkbox" id="conly" ${ui.countOnlyStock ? "checked" : ""}> Items on system only</label>
-    </div>
-    <div class="stubs" id="stubs"></div>
-    <div class="hud" id="hud"></div>`;
-  renderStubs(); renderHud();
-  $("#cq").oninput = e => { ui.countQ = e.target.value; renderStubs(); };
-  $("#ccat").onchange = e => { ui.countCat = e.target.value; renderStubs(); };
-  $("#conly").onchange = e => { ui.countOnlyStock = e.target.checked; lsSet("countOnlyStock", ui.countOnlyStock); renderStubs(); renderHud(); };
-  $("#leave").onclick = async () => {
-    const saved = data.sessions.find(x => x.id === s.id);
-    if (Object.keys(s.counts).length && JSON.stringify(saved?.counts) !== JSON.stringify(s.counts)) {
-      if (!await confirmBox('Close <span class="voice">without saving?</span>', "This sheet has counts that aren't saved. Save it as a draft first if you want to come back to it.", "Close anyway", true)) return;
-    }
-    ui.session = null; render();
-  };
-}
-
-// While counting, the gauge shows what's on the shelf against what the system expects
-function stubLevel(sys, counted) {
-  const now = counted == null ? sys : Number(counted);
-  return level({ par: Math.max(sys, 0) || (now > 0 ? now : 0) }, now);
-}
-
-function renderStubs() {
-  const s = ui.session, rows = runRows(s);
-  $("#stubs").innerHTML = rows.map(p => {
-    const c = s.counts[p.id], sys = s.system[p.id] ?? (Number(p.stock?.[s.location]) || 0), d = c == null ? null : Number(c) - sys;
-    return `<div class="stub ${c == null ? "" : Math.abs(d) < 1e-9 ? "ok" : "off"}" data-row="${esc(p.id)}">
-      ${pic(p, "pic")}${tank(stubLevel(sys, c), "mini")}
-      <div class="nm"><b>${esc(p.name)}</b><span>${esc(p.sku || p.code || catName(p.category))}</span></div>
-      <div class="sys"><span>System</span><b>${qty(sys)}</b></div>
-      <div class="stepper"><button type="button" data-step="-1" aria-label="Minus one">−</button>
-        <input type="number" inputmode="decimal" step="any" min="0" id="c-${esc(p.id)}" value="${c ?? ""}" placeholder="count" aria-label="Counted ${esc(p.name)}">
-        <button type="button" data-step="1" aria-label="Plus one">+</button></div>
-      <div class="dv"><span>Variance</span>${delta(d)}</div>
-    </div>`;
-  }).join("") || '<p class="empty slab"><span class="voice">No match.</span> Try another search or category.</p>';
-
-  $$(".stub").forEach(row => {
-    const id = row.dataset.row, inp = row.querySelector("input");
-    const set = v => {
-      if (v === "" || v == null || isNaN(v)) delete s.counts[id]; else s.counts[id] = Math.max(0, Number(v));
-      const c = s.counts[id], d = c == null ? null : c - (s.system[id] ?? 0);
-      row.className = "stub " + (c == null ? "" : Math.abs(d) < 1e-9 ? "ok" : "off");
-      row.querySelector(".dv").innerHTML = `<span>Variance</span>${delta(d)}`;
-      const lv = stubLevel(s.system[id] ?? 0, c), t = row.querySelector(".tank");
-      t.className = `tank mini s-${lv.state}`; t.style.setProperty("--lv", Math.min(Math.max(lv.pct, 0), 1).toFixed(3));
-      renderHud();
-    };
-    inp.addEventListener("input", () => set(inp.value));
-    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); const nx = row.nextElementSibling?.querySelector("input"); nx ? nx.focus() : inp.blur(); } });
-    row.querySelectorAll("[data-step]").forEach(b => b.onclick = () => {
-      const cur = s.counts[id] ?? (s.system[id] ?? 0);
-      const nv = Math.max(0, Math.round((Number(cur) + Number(b.dataset.step)) * 1000) / 1000);
-      inp.value = nv; set(nv);
-    });
-  });
-}
-
-function renderHud() {
-  const s = ui.session, st = stats(s);
-  $("#hud").innerHTML = `
-    <div class="stats">
-      <div><span>Counted</span><b>${st.counted}<small style="color:var(--muted);font-size:13px;font-weight:400"> / ${st.scope}</small></b></div>
-      <div><span>With variance</span><b style="color:${st.off ? "var(--bad)" : "var(--good)"}">${st.off}</b></div>
-      <div><span>Variance SAR</span><b style="color:${st.diff < 0 ? "var(--bad)" : st.diff > 0 ? "var(--good)" : "inherit"}">${st.diff > 0 ? "+" : ""}${sar(st.diff)}</b></div>
-    </div>
-    <div class="acts"><button class="btn" id="save-draft">Save draft</button><button class="btn hot" id="commit" ${st.counted ? "" : "disabled"}>${icon("check")}Commit count</button></div>
-    <div class="track"><i style="width:${st.scope ? Math.min(100, st.counted / st.scope * 100) : 0}%"></i></div>`;
-  $("#save-draft").onclick = async () => {
-    try { await store.saveSession(s); await store.log("draft", `Saved ${loc(s.location).name} draft · ${st.counted} items`); toast("Draft saved"); } catch (e) { toast(e.message, true); }
-  };
-  $("#commit").onclick = async () => {
-    if (!pinUnlocked() && !await requirePin()) return;
-    if (!await confirmBox('Commit <span class="voice">this count?</span>', `${loc(s.location).name} stock will be overwritten with your counts for ${st.counted} items. The September expiry sheet batch 1 quantity is updated too.`, "Commit")) return;
-    try { await store.commitSession(s); applyCountToSheet(s.location, s.counts); ui.session = null; toast("Count committed · sheet updated"); go("history"); } catch (e) { toast(e.message, true); }
-  };
-}
 
 // ── Yield analytics ──────────────────────────────────────────
 const helpers = () => ({ data: () => data, total, qty, sar, esc, pic, when, nf0, LOCATIONS, UNITS });
 const cardHelpers = () => ({ ...helpers(), UNITS, openModal, toast, src });
-const p360Helpers = () => ({ ...toolHelpers(), catName, topRank, stockHist: () => stockHist });
-const toolHelpers = () => ({ ...cardHelpers(), fuzzyIds, namesAr: NAMES_AR, level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openProductCard(p, cardHelpers()) });
+// the stock card: counts and history straight from the store
+const panelHelpers = () => ({ ...cardHelpers(), catName, countStock: store.countStock, productHistory: store.productHistory, onChange: store.onChange });
+const toolHelpers = () => ({ ...cardHelpers(), fuzzyIds, namesAr: NAMES_AR, level, icon, sar, download, csv, go, closeModal, routes: ROUTES, navAr: NAV_AR, CATEGORIES, LOCATIONS, value, openCard: p => openStockCard(p, panelHelpers()) });
 function viewLabels() {
   document.body.classList.remove("card-only", "watch-only"); document.documentElement.classList.remove("nw-lock");
   renderNav(); renderNet();
@@ -706,38 +634,27 @@ function viewLabels() {
   $("#do-print").onclick = () => window.print();
   $("#do-pdf").onclick = () => exportLabelsPdf(data.products).then(() => toast("Label PDF downloaded")).catch(e => toast(e.message, true));
 }
-let lastCard = null, cardQueue = Promise.resolve();
 function renderDoor() {
   const id = new URLSearchParams(location.search).get("p") || (location.hash.startsWith("#p/") ? location.hash.slice(3) : "");
   document.body.classList.add("card-only");
   const p = id && data.products?.find(x => x.id === id);
   if (p) { if (location.hash !== "#p/" + p.id) history.replaceState(null, "", location.pathname + location.search + "#p/" + p.id); return viewScanProduct(p); }
   if (data.products?.length || !id) {
-    lastCard = null;
     $("#view").innerHTML = `<article class="phone-card door-empty"><h1>${id ? "Product not found" : "Scan a product label"}</h1><p>${id ? "This label points to a product that is not in the catalog." : "Point the camera at a product label."}</p></article>`;
     window.NoirCurtain?.open();
   }
 }
+// a scan opens the product's stock card; the card follows live changes itself, so a sync never rebuilds it
 function viewScanProduct(p) {
-  const sig = JSON.stringify(p) + "|" + (localStorage.getItem("noir-expiry-edits-v1") || "");
-  if (lastCard && lastCard.id === p.id && lastCard.sig === sig) return;
-  lastCard = { id: p.id, sig };
   document.body.classList.add("card-only");
   $("#kicker").textContent = "";
   $("#page-title").innerHTML = "";
   $("#title-actions").innerHTML = "";
-  // one draw at a time: a data refresh that lands mid-draw waits, then redraws quietly (no replayed intro)
-  cardQueue = cardQueue.then(() => {
-    if (lastCard?.sig !== sig) return;
-    const quiet = !!$("#scan-root .phone-card");
-    if (!$("#scan-root")) $("#view").innerHTML = `<div id="scan-root"></div>`;
-    return Promise.resolve(mountProductPage($("#scan-root"), p, { ...cardHelpers(), quiet }))
-      .then(() => new Promise(r => requestAnimationFrame(r)))
-      .then(() => window.NoirCurtain?.open());
-  }).catch(err => {
-    $("#scan-root").innerHTML = `<article class="phone-card"><h1>${esc(p.name)}</h1><p>${esc(err.message || "The product could not be opened")}</p></article>`;
-    window.NoirCurtain?.open();
-  });
+  if ($("#scan-root .sk")?.dataset.id === p.id) return;
+  $("#view").innerHTML = `<div id="scan-root" class="sk-page"></div>`;
+  try { mountStockCard($("#scan-root"), p, panelHelpers()); }
+  catch (err) { $("#scan-root").innerHTML = `<article class="sk"><h2 class="sk-name">${esc(p.name)}</h2><p>${esc(err.message || "The product could not be opened")}</p></article>`; }
+  requestAnimationFrame(() => window.NoirCurtain?.open());
 }
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
@@ -788,7 +705,7 @@ function viewSafety() {
 function viewAlerts() {
   $("#title-actions").innerHTML = "";
   $("#view").innerHTML = `<div id="alerts-host">${loaderHtml()}</div>`;
-  renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) p360Mod().then(m => m.open360(p, p360Helpers())).catch(() => openProductCard(p, cardHelpers())); } });
+  renderAlerts($("#alerts-host"), { ...toolHelpers(), catName, openProduct: id => { const p = data.products.find(x => x.id === id); if (p) openStockCard(p, panelHelpers()); } });
 }
 const linksMod = lazy("./core/links.js?v=106");
 function viewLinks() {
@@ -861,11 +778,10 @@ function detail(s) {
     <p class="lede"><span class="data" style="color:var(--violet)">${esc(s.id)}</span> · ${esc(s.counter || "—")} · ${when(s.createdAt)}</p>
     <div class="ledger-wrap"><table class="ledger" style="min-width:540px"><thead><tr><th>Item</th><th class="r">System</th><th class="r">Counted</th><th class="r">Variance</th><th class="r">SAR</th></tr></thead>
     <tbody>${L.map(r => `<tr style="cursor:default"><td>${esc(r.p.name)}</td><td class="r data">${qty(r.sys)}</td><td class="r data">${qty(r.c)}</td><td class="r">${delta(r.d)}</td><td class="r data">${sar(r.v)}</td></tr>`).join("")}</tbody></table></div>
-    <div class="actions">${s.status === "draft" ? `<button class="btn" id="sd-resume">Resume counting</button>` : ""}
+    <div class="actions">
       <div class="end"><button class="btn" id="sd-csv">${icon("download")}CSV</button><button class="btn hot" id="sd-close">Done</button></div></div>`);
   $("#sd-close", m).onclick = closeModal;
   $("#sd-csv", m).onclick = () => exportSession(s);
-  $("#sd-resume", m)?.addEventListener("click", () => { closeModal(); ui.session = JSON.parse(JSON.stringify(s)); go("count"); });
 }
 function exportSession(s) {
   const rows = [["Code", "Report name", "Product", "System", "Counted", "Variance", "Unit cost", "Variance SAR"]];
@@ -888,7 +804,7 @@ const loadExcelJS = () => window.ExcelJS ? Promise.resolve() : loadScriptTag("ht
 function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
-    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=113"); const n = await importExpiry(f, loadExcelJS, data.products, store.saveProduct); toast(T(`Expiry sheet merged · ${n.items} items · stock ${n.stock}`, `ملف الصلاحيات اندمج · ${n.items} صنف · الستوك ${n.stock}`)); render(); },
+    expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=113"); const n = await importExpiry(f, loadExcelJS, data.products); await stockReport(n.found, f.name, true, "date-file"); render(); },
     stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=113"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {
       const pdfjs = await (await import("./reports/sync-admin.js?v=113")).loadPdf();
@@ -990,7 +906,6 @@ function exportLedger() {
 let renderQueued = 0;
 store.onChange(snap => {
   data = fixCats(snap); topCache = null;
-  if (ui.route === "count" && ui.session) { renderNet(); renderBell(); return; }
   if (!renderQueued) renderQueued = requestAnimationFrame(() => { renderQueued = 0; if (!typing() && !counting()) render(); });
 });
 // a count mission open on the watch is never redrawn under the person counting; the page catches up when it closes

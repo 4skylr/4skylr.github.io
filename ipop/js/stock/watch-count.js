@@ -12,7 +12,7 @@
 //   Recount: leaves the stock as it is and sends the place back to the employee's watch.
 import * as store from "../core/store.js?v=106";
 import { EXPIRY_SHEET } from "../data/expiry-data.js?v=106";
-import { countToEdits, MAX_GROUPS } from "../data/expiry-edits.js?v=106";
+import { countToEdits } from "../data/expiry-edits.js?v=106";
 
 export const COL = "watchCounts";
 export const ORDER = ["stores", "mini", "refuel"]; // the walk: Main Stores → Mini Store → Concession
@@ -50,20 +50,6 @@ export const openRecount = (list, pid) => list.filter(r => r.pid === pid && r.st
 const waiting = r => r.status === "submitted" || r.status === "match";
 export const pendingCount = list => list.filter(waiting).length;
 
-async function save(p, stops, by, recount) {
-  const now = new Date().toISOString(), list = await loadCounts();
-  const fresh = stops.map(s => ({ loc: s.loc, counted: r3(s.groups.reduce((a, g) => a + (Number(g.qty) || 0), 0)), groups: s.groups }));
-  // a recount replaces only the places it was asked for; a second count of the same product before sending replaces the first
-  const dev = deviceId();
-  const prev = recount || list.find(r => r.pid === p.id && r.status === "pending" && (r.deviceId ? r.deviceId === dev : r.by === by)) || null;
-  const stopsOut = recount ? recount.stops.map(s => fresh.find(x => x.loc === s.loc) || s).concat(fresh.filter(x => !recount.stops.some(s => s.loc === x.loc))) : fresh;
-  const rec = { id: prev?.id || `${p.id}-${dev.slice(-4)}-${now.replace(/\D/g, "").slice(0, 14)}`, pid: p.id, name: p.name, unit: p.unit || "", by, at: now,
-    deviceId: dev, device: by, first: prev?.first || now, tries: (recount?.tries || 0) + 1, dated: !noDate(p), stops: stopsOut, status: "pending", recount: [] };
-  try { localStorage.setItem("noir-device-name", by); } catch {}
-  await store.putDoc(COL, rec.id, rec);
-  store.log("count", `Watch count saved · ${p.name} · ${by}`).catch(() => {});
-  return keep(rec);
-}
 // "Send report to admin": every pending count this person saved becomes submitted
 export async function sendReport(by) {
   const list = await loadCounts(true), at = new Date().toISOString(), own = myPending(list, by);
@@ -123,7 +109,7 @@ export async function updateRow(id, loc, by) {
   const p = store.snapshot().products.find(x => x.id === rec.pid); if (!p) throw new Error("This product is not in the catalog");
   const row = reviewRows([{ ...rec, status: "submitted" }], [p]).find(x => x.loc === loc);
   if (!row?.ok) throw new Error(`Not updated: ${row ? row.flags.join(", ") : "no match"}. Ask for a recount.`);
-  await store.setStock(p.id, { [loc]: row.counted }, `Watch count · ${locLabel(loc)} · ${by || "admin"}`);
+  await store.countStock(p.id, loc, row.counted, { by: by || "admin" }); // one field, one productHistory row
   const at = new Date().toISOString();
   const next = settle({ ...rec, stops: rec.stops.map(x => x.loc === loc ? { ...x, state: "updated", updatedAt: at, updatedBy: by || "", excel: true } : x) });
   toSheet(p, next.stops.find(x => x.loc === loc));
@@ -183,111 +169,4 @@ export function reviewHtml(list, H) {
     ${open.length ? table(open) : `<p class="empty">Nothing waiting. A report shows up here once an employee taps Send report to admin.</p>`}
     ${done.length ? `<details class="wc-done"><summary>Settled lately · ${done.length}</summary>${table(done)}</details>` : ""}
   </section>`;
-}
-
-// ── the date wheel ──────────────────────────────────────────────────
-const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const ROW = 30;
-function wheelHtml(iso) {
-  const d = /^\d{4}-\d{2}-\d{2}/.test(iso || "") ? iso : new Date(Date.now() + 180 * 864e5).toISOString().slice(0, 10);
-  const [y, m, day] = d.split("-").map(Number), y0 = new Date().getFullYear() - 1;
-  const col = (k, items, sel) => `<div class="nw-wcol" data-k="${k}" data-sel="${sel}" tabindex="0">${items.map((t, i) => `<span data-i="${i}">${t}</span>`).join("")}</div>`;
-  return `<div class="nw-wheel">
-    ${col("d", Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")), day - 1)}
-    ${col("m", MON, m - 1)}
-    ${col("y", Array.from({ length: 9 }, (_, i) => String(y0 + i)), Math.max(0, y - y0))}
-    <i class="nw-wband" aria-hidden="true"></i></div>`;
-}
-function mountWheel(el) {
-  const y0 = new Date().getFullYear() - 1;
-  el.querySelectorAll(".nw-wcol").forEach(c => {
-    c.scrollTop = Number(c.dataset.sel) * ROW;
-    const mark = () => { const i = Math.max(0, Math.min(c.children.length - 1, Math.round(c.scrollTop / ROW))); c.dataset.sel = i; [...c.children].forEach((s, k) => s.classList.toggle("on", k === i)); };
-    let t = 0; c.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(mark, 60); }, { passive: true }); mark();
-    c.addEventListener("click", e => { const s = e.target.closest("span"); if (s) c.scrollTo({ top: Number(s.dataset.i) * ROW, behavior: "smooth" }); });
-    c.addEventListener("keydown", e => { if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); c.scrollBy({ top: e.key === "ArrowDown" ? ROW : -ROW, behavior: "smooth" }); } });
-  });
-  return () => { const v = k => Number(el.querySelector(`.nw-wcol[data-k="${k}"]`).dataset.sel);
-    const y = y0 + v("y"), m = v("m") + 1, last = new Date(y, m, 0).getDate(), d = Math.min(v("d") + 1, last);
-    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`; };
-}
-
-// ── the count on the watch ──────────────────────────────────────────
-// opts: { p, H, only (places to recount), prev (the record being recounted), groupsAt(loc) → groups on file, onDone(rec) }
-export function startMission(disp, opts) {
-  const { p, H } = opts, dated = !noDate(p);
-  const stops = (opts.only?.length ? ORDER.filter(l => opts.only.includes(l)) : ORDER).map(loc => ({ loc, groups: [] }));
-  const unit = esc(H.UNITS?.[p.unit] || p.unit || "");
-  const box = document.createElement("div"); box.className = "nw-m";
-  disp.append(box); disp.classList.add("is-mission");
-  const close = () => { box.remove(); disp.classList.remove("is-mission"); dispatchEvent(new Event("nw-mission-end")); };
-  let i = 0, draft = null;
-  const steps = () => `<span class="nw-m-step data">${i + 1} / ${stops.length}</span>`;
-
-  const intro = () => {
-    box.innerHTML = `<div class="nw-m-in nw-m-intro"><h4>${opts.only?.length ? "Recount" : "Count"}<small>${esc(p.name)}</small></h4>
-      <ol class="nw-m-route">${stops.map((s, k) => `<li><i class="data">${k + 1}</i>${esc(locLabel(s.loc))}<small>${dated ? "quantity · date" : "quantity"}</small></li>`).join("")}</ol>
-      <div class="nw-m-actions"><button type="button" class="nw-m-btn ghost" data-x>Later</button><button type="button" class="nw-m-btn" data-go>Start</button></div></div>`;
-    box.querySelector("[data-x]").onclick = close; box.querySelector("[data-go]").onclick = go;
-  };
-  // "Go to …": a little map that opens like a maps app, the pin drops on the place
-  const go = () => {
-    const s = stops[i];
-    box.innerHTML = `<div class="nw-m-in nw-m-go"><div class="nw-map l-${s.loc}" aria-hidden="true"><div class="nw-map-tiles"><i class="park"></i><i class="water"></i><i class="blk a"></i><i class="blk b"></i><i class="blk c"></i></div>
-        <svg class="nw-route" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M18 92 C 22 70, 44 74, 48 58 S 70 40, 66 30"/></svg>
-        <span class="nw-me"></span><span class="nw-pin"><i></i></span><span class="nw-pulse"></span></div>
-      <div class="nw-go-card">${steps()}<small>Go to</small><b>${esc(locLabel(s.loc))}</b>
-        <button type="button" class="nw-m-btn" data-ok>OK</button></div></div>`;
-    box.querySelector("[data-ok]").onclick = () => entry(true);
-  };
-  const entry = fresh => {
-    const s = stops[i];
-    if (fresh) { draft = { qty: "", date: "" }; if (!s.groups.length && dated) { const g = opts.groupsAt?.(s.loc)?.[0]; if (g?.date) draft.date = g.date; } }
-    const last = i === stops.length - 1;
-    box.innerHTML = `<div class="nw-m-in nw-m-entry"><header><b>${esc(locLabel(s.loc))}</b>${steps()}</header>
-      ${s.groups.length ? `<div class="nw-m-groups">${s.groups.map((g, k) => `<span class="nw-m-chip"><em class="data">${k + 1}</em><b class="data">${fmtN(g.qty)}${g.date ? ` · ${dmy(g.date)}` : ""}</b><button type="button" data-rm="${k}" aria-label="Remove group ${k + 1}">×</button></span>`).join("")}</div>` : ""}
-      <label class="nw-m-l">${dated ? `Group ${s.groups.length + 1} · ` : ""}Quantity <small>${unit}</small></label>
-      <div class="nw-step"><button type="button" data-d="-1" aria-label="One less">−</button><input class="data" type="number" inputmode="decimal" min="0" step="any" value="${esc(draft.qty)}" placeholder="0" aria-label="Quantity"><button type="button" data-d="1" aria-label="One more">+</button></div>
-      ${dated ? `<label class="nw-m-l">Expiry date</label>${wheelHtml(draft.date)}` : ""}
-      <p class="nw-m-err" role="alert"></p>
-      <div class="nw-m-actions">${dated && s.groups.length < MAX_GROUPS - 1 ? `<button type="button" class="nw-m-btn ghost" data-more>+ Group</button>` : ""}
-        <button type="button" class="nw-m-btn" data-next>${last ? "Finish" : "Next place"}</button></div></div>`;
-    const inp = box.querySelector("input"), read = dated ? mountWheel(box.querySelector(".nw-wheel")) : () => "";
-    box.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { inp.value = fmtN(Math.max(0, (Number(inp.value) || 0) + Number(b.dataset.d))); });
-    box.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { draft = { qty: inp.value, date: read() }; s.groups.splice(Number(b.dataset.rm), 1); entry(false); });
-    const take = needed => {
-      const raw = inp.value.trim(), q = Number(raw);
-      if (raw === "" && !needed) return true;
-      if (raw === "" || !isFinite(q) || q < 0) { box.querySelector(".nw-m-err").textContent = "Enter the quantity (0 if there is none)"; inp.focus(); return false; }
-      s.groups.push({ qty: r3(q), date: dated && q > 0 ? read() : "" }); return true;
-    };
-    box.querySelector("[data-more]")?.addEventListener("click", () => { if (take(true)) { draft = { qty: "", date: "" }; entry(false); } });
-    box.querySelector("[data-next]").onclick = () => { if (!take(!s.groups.length)) return; i++; if (i < stops.length) go(); else finish(); };
-  };
-  const finish = () => {
-    box.innerHTML = `<div class="nw-m-in nw-m-sum"><h4>Your count</h4>
-      <ul class="nw-m-tot">${stops.map(s => `<li><span>${esc(locLabel(s.loc))}</span><b class="data">${fmtN(r3(s.groups.reduce((a, g) => a + g.qty, 0)))} ${unit}</b></li>`).join("")}</ul>
-      <label class="nw-m-l">Counted by</label><input class="nw-m-name" value="${esc(opts.prev?.by || counterName())}" placeholder="Your name" autocomplete="name">
-      <p class="nw-m-err" role="alert"></p>
-      <div class="nw-m-actions"><button type="button" class="nw-m-btn ghost" data-back>Back</button><button type="button" class="nw-m-btn" data-save>Save</button></div></div>`;
-    box.querySelector("[data-back]").onclick = () => { i = stops.length - 1; entry(true); };
-    box.querySelector("[data-save]").onclick = async e => {
-      const by = box.querySelector(".nw-m-name").value.trim();
-      if (!by) { box.querySelector(".nw-m-err").textContent = "Write your name"; return; }
-      try { localStorage.setItem("noir-counter", by); } catch {}
-      e.target.disabled = true; e.target.textContent = "Saving…";
-      const rec = await save(p, stops, by, opts.prev).catch(err => { box.querySelector(".nw-m-err").textContent = err.message; e.target.disabled = false; e.target.textContent = "Save"; return null; });
-      if (rec) result(rec);
-    };
-  };
-  const result = rec => {
-    box.innerHTML = `<div class="nw-m-in nw-m-res is-ok"><span class="nw-m-mark" aria-hidden="true"></span>
-      <h4>Saved</h4>
-      <ul class="nw-m-tot">${rec.stops.filter(s => stops.some(x => x.loc === s.loc)).map(s => `<li><span>${esc(locLabel(s.loc))}</span><b class="data">${fmtN(s.counted)} ${unit}</b></li>`).join("")}</ul>
-      <p class="nw-m-note">Waiting on this phone. When the round is done, tap Send report to admin under the watch.</p>
-      <div class="nw-m-actions"><button type="button" class="nw-m-btn" data-x>Done</button></div></div>`;
-    box.querySelector("[data-x]").onclick = () => { close(); opts.onDone?.(rec); };
-  };
-  intro();
-  return close;
 }

@@ -1,0 +1,105 @@
+/* The stock card (js/stock/stock-panel.js): one product, how many, where, as of when. Tokens from system.css. */
+.sk { display: grid; gap: var(--gap); padding: var(--pad); background: var(--canvas); border: 1px solid var(--hairline-soft); border-radius: var(--r-card); box-shadow: none; }
+.sk-head { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.sk-photo { flex: none; width: 72px; height: 72px; border-radius: var(--r-card); border: 1px solid var(--hairline-soft); overflow: hidden; display: grid; place-items: center; background: var(--canvas); }
+.sk-photo .sk-img { width: 100%; height: 100%; object-fit: contain; }
+.sk-id { min-width: 0; }
+.sk-name { margin: 0; font: 600 24px/1.17 var(--f-display); letter-spacing: -0.01em; color: var(--ink); }
+.sk-code { margin: 4px 0 0; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+
+/* the one figure that matters, large, with where and when */
+.sk-now { display: grid; gap: 2px; padding: 4px 0; }
+.sk-where { font: 600 14px/1.3 var(--f-text); color: var(--ink-2); }
+.sk-qty { font: 600 clamp(44px, 9vw, 64px)/1 var(--f-display); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sk-qty small { margin-inline-start: 8px; font: 400 21px/1 var(--f-text); color: var(--muted); letter-spacing: 0; }
+.sk-asof { font-size: 15px; color: var(--muted); }
+
+/* three warehouses: pills; the chosen one is the active state */
+.sk-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sk-chip { display: grid; justify-items: center; gap: 2px; min-height: 64px; padding: 10px 8px; border: 1px solid var(--hairline); border-radius: var(--r-pill);
+  background: var(--canvas); color: var(--ink); cursor: pointer; font: 400 14px/1.2 var(--f-text); box-shadow: none; }
+.sk-chip b { font: 600 19px/1.1 var(--f-text); font-variant-numeric: tabular-nums; }
+.sk-chip small { font-size: 11px; color: var(--muted); }
+.sk-chip:hover { border-color: var(--ink-2); }
+.sk-chip[aria-checked="true"] { background: var(--blue-fill); border-color: var(--blue-fill); color: #ffffff; }
+.sk-chip[aria-checked="true"] small { color: rgba(255, 255, 255, .85); }
+.sk-total { margin: 0; font-size: 15px; color: var(--muted); }
+.sk-total b { color: var(--ink-2); font-weight: 600; }
+
+/* one filled action; while counting it becomes the field and Save (still one filled button) */
+.sk-act { display: grid; }
+.sk-go { width: 100%; min-height: 48px; font-size: 17px; }
+.sk-count { display: grid; gap: 8px; }
+.sk-count label { font: 600 14px/1.3 var(--f-text); color: var(--ink-2); }
+.sk-count label small { font-weight: 400; color: var(--muted); }
+.sk-count-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.sk-count-row .input { min-height: 48px; font-size: 21px; }
+.sk-count-row .btn { min-height: 48px; padding-inline: 20px; }
+.sk-err, .sk-row-msg { margin: 0; font-size: 14px; color: var(--muted); }
+.sk-err:empty, .sk-row-msg:empty { display: none; }
+
+/* read more: cost, sold, category, expiry — collapsed */
+.sk-more { border-top: 1px solid var(--hairline-soft); padding-top: 4px; }
+.sk-more > summary { cursor: pointer; padding: 10px 0; color: var(--blue-action); font-size: 15px; list-style: none; }
+.sk-more > summary::-webkit-details-marker { display: none; }
+.sk-more > summary::after { content: " ›"; }
+.sk-more[open] > summary::after { content: " ‹"; }
+.sk-facts { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px 16px; }
+.sk-facts div { display: grid; gap: 2px; }
+.sk-facts dt { font-size: 13px; color: var(--muted); }
+.sk-facts dd { margin: 0; font-size: 17px; color: var(--ink); }
+.sk-note { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.sk-sub { margin: 16px 0 6px; font: 600 15px/1.3 var(--f-text); color: var(--ink); }
+.sk-groups { list-style: none; margin: 0; padding: 0; display: grid; }
+.sk-groups li { display: grid; grid-template-columns: minmax(0, 1.4fr) auto auto; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--hairline-soft); font-size: 15px; }
+.sk-groups li:last-child { border-bottom: 0; }
+.sk-groups li.is-soon span:last-child { color: var(--color-launch-orange); }
+.sk-groups li.is-exp span:last-child { color: var(--bad); }
+
+/* the product page: as a sheet, the sheet is the card; on a scan, the card fills the screen width up to a reading measure */
+.sheet.sk-sheet { padding: 0; }
+.sk-sheet .sk { border: 0; }
+.sk-page { max-width: 640px; margin: 0 auto; }
+
+/* the count screen: warehouse first, then one row per product */
+.cnt .sk-chips { margin-bottom: var(--gap); }
+.cnt .sk-chip { min-height: 72px; }
+.cnt-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); margin-bottom: 4px; }
+.cnt-tools .seek { flex: 1 1 260px; }
+.cnt-tools .check { margin: 0; font-size: 15px; }
+.sk-rows { list-style: none; margin: 0; padding: 0; }
+.sk-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(96px, auto) minmax(180px, 240px); gap: 8px 16px; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--hairline-soft); }
+.sk-row:last-child { border-bottom: 0; }
+.sk-row-photo { width: 44px; height: 44px; border-radius: var(--r-card); overflow: hidden; display: grid; place-items: center; }
+.sk-row-photo .sk-img { width: 100%; height: 100%; object-fit: contain; }
+.sk-row-id { min-width: 0; display: grid; }
+.sk-row-id b { font-weight: 600; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sk-row-id small { font-size: 13px; color: var(--muted); }
+.sk-row-now { display: grid; justify-items: end; text-align: end; }
+.sk-row-now b { font: 600 19px/1.2 var(--f-text); font-variant-numeric: tabular-nums; }
+.sk-row-now b small { font: 400 13px var(--f-text); color: var(--muted); }
+.sk-row-now > small { font-size: 12px; color: var(--muted); }
+.sk-row-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.sk-row-form .input { min-height: 44px; font-size: 19px; }
+.sk-row-msg { grid-column: 2 / -1; }
+.sk-row.is-saved .sk-row-msg { color: var(--good); }
+@media (max-width: 640px) {
+  .sk { padding: 20px 16px; }
+  .sk-row { grid-template-columns: 44px minmax(0, 1fr) auto; }
+  .sk-row-form { grid-column: 1 / -1; }
+  .sk-row-msg { grid-column: 1 / -1; }
+  .sk-count-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .sk-count-row [data-cancel] { grid-column: 1 / -1; }
+}
+
+/* an upload's changes: what went down, what went up */
+.chg-h { margin: 18px 0 6px; font: 600 15px/1.3 var(--f-text); }
+.chg { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
+.chg li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--hairline-soft); font-size: 15px; }
+.chg li span:first-child { display: grid; min-width: 0; }
+.chg li small { font-size: 12px; color: var(--muted); }
+.chg .up { color: var(--good); } .chg .dn { color: var(--bad); }
+.sk [hidden] { display: none !important; }
+@media (max-width: 640px) { .sk-groups li { grid-template-columns: minmax(0, 1fr) auto; } .sk-groups li span:last-child { grid-column: 1 / -1; color: var(--muted); } }
+#modal-root .sheet > h2 { padding-inline-end: 48px; overflow-wrap: anywhere; }

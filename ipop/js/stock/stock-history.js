@@ -1,36 +1,34 @@
-// Stock history from "Current Stock Position" reports.
-// A product has no history of its own: every uploaded report is compared with the stock on file,
-// and the difference is saved. Less than before = sold, more than before = added (delivery or transfer in).
+// Stock files (the "Current Stock Position" report, the expiry/dates sheet): every upload is compared with the stock on
+// file per product and warehouse. Each change is one productHistory row (store.applyStockChanges); this collection keeps
+// one summary per upload for the Ledger. A decrease counts as sold only in the Concession (refuel).
 export const COL = "stockHistory";
 
 // Quantities only: stock.stores, stock.mini and stock.refuel. Name, price, cost, image, recipe, barcode and par are never
 // written. An item the file has but the catalog does not is listed (found.unmatched), never created.
 // A full report lists everything the branch holds, so a place it leaves out for a product is 0 there; nothing is deleted.
-export async function applyStockReport(found, H, source = "") {
-  const products = H.data().products, next = {}, lines = [];
+export async function applyStockReport(found, H, source = "", reason = "stock-file") {
+  const products = H.data().products, next = {};
   found.forEach(row => {
     const p = products.find(x => x.id === row.id); if (!p) return;
     (next[row.id] ??= {})[row.loc] = Number(row.qty) || 0;
   });
-  const listed = new Set(Object.keys(next)), full = listed.size >= Math.max(10, products.length * .4);
+  const listed = new Set(Object.keys(next)), full = reason === "stock-file" && listed.size >= Math.max(10, products.length * .4);
   if (full) for (const p of products) for (const loc of ["stores", "mini", "refuel"]) {
     if (next[p.id]?.[loc] == null && Number(p.stock?.[loc])) (next[p.id] ??= {})[loc] = 0;
   }
-  for (const [id, locs] of Object.entries(next)) {
-    const p = products.find(x => x.id === id);
-    for (const [loc, to] of Object.entries(locs)) { const from = Number(p.stock?.[loc]) || 0;
-      if (Math.abs(to - from) > 1e-9) lines.push({ id, name: p.name, unit: p.unit, loc, from, to, delta: Math.round((to - from) * 1000) / 1000 }); }
-  }
-  await H.setStockMany(next);
+  // diffed against the stock on file; each change becomes one productHistory row
+  const res = await H.applyStockChanges(Object.entries(next).flatMap(([id, locs]) => Object.entries(locs).map(([loc, qty]) => ({ id, loc, qty }))), { reason, source });
+  const name = id => products.find(x => x.id === id), lines = res.rows.map(r => ({ id: r.productId, name: name(r.productId)?.name || r.productId, unit: name(r.productId)?.unit || "",
+    loc: r.warehouse, from: r.before, to: r.after, delta: r.delta, sale: r.sale }));
   // one net figure per product, for the upload summary
   const net = {};
   lines.forEach(l => { (net[l.id] ??= { id: l.id, name: l.name, unit: l.unit, delta: 0 }).delta += l.delta; });
   const at = new Date().toISOString(), unmatched = [...new Set((found.unmatched || []).map(u => u.trim()).filter(Boolean))];
-  const entry = { id: "rep-" + at.replace(/\D/g, "").slice(0, 14), at, source, products: listed.size, lines, unmatched,
+  const entry = { id: "rep-" + at.replace(/\D/g, "").slice(0, 14), at, source, reason, products: listed.size, lines, unmatched, historyOk: res.historyOk,
     net: Object.values(net).map(n => ({ ...n, delta: Math.round(n.delta * 1000) / 1000 })).filter(n => Math.abs(n.delta) > 1e-9) };
   await H.putDoc(COL, entry.id, entry);
-  const sold = entry.net.filter(n => n.delta < 0).length, added = entry.net.filter(n => n.delta > 0).length;
-  await H.log("report", `Stock report · ${entry.products} products · ${sold} down · ${added} up${unmatched.length ? ` · ${unmatched.length} not in the catalog` : ""}`);
+  const down = lines.filter(l => l.delta < 0).length, up = lines.filter(l => l.delta > 0).length;
+  await H.log("report", `${reason === "date-file" ? "Dates file" : "Stock report"} · ${source} · ${up} up · ${down} down${unmatched.length ? ` · ${unmatched.length} not in the catalog` : ""}`);
   return entry;
 }
 

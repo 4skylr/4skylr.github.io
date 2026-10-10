@@ -101,7 +101,7 @@ const cellText = v => String(v?.result ?? v?.text ?? v ?? "").trim();
 const cellDate = v => v instanceof Date && !isNaN(v) ? v.toISOString().slice(0, 10) : (cellText(v).slice(0, 10) || "");
 // Expiry sheet: groups 1–5 use the sheet columns (qty 5, date 6, then 7/8 …). Names match even with extra spaces.
 // The dated quantity for that location is written onto system stock, so the file and the stock figure agree.
-export async function importExpiry(file, loadExcel, products = [], saveProduct) {
+export async function importExpiry(file, loadExcel, products = []) {
   await keepFile("dates", file);
   await loadExcel();
   const wb = new window.ExcelJS.Workbook();
@@ -125,17 +125,9 @@ export async function importExpiry(file, loadExcel, products = [], saveProduct) 
     if (hit.productId && hit.loc && total) stocked.set(hit.productId + ":" + hit.loc, { id: hit.productId, loc: hit.loc, qty: (stocked.get(hit.productId + ":" + hit.loc)?.qty || 0) + total });
   });
   mergeEdits(edits);
-  let wrote = 0;
-  if (saveProduct) {
-    for (const { id, loc, qty } of stocked.values()) {
-      const p = products.find(x => x.id === id);
-      if (!p) continue;
-      p.stock = { ...(p.stock || {}), [loc]: qty };
-      await saveProduct(p, { silent: true });
-      wrote++;
-    }
-  }
-  return { items: Object.keys(edits).length, stock: wrote };
+  // the quantities the sheet holds per product and warehouse; the caller diffs them against stock and writes history
+  const found = [...stocked.values()].filter(x => products.some(p => p.id === x.id));
+  return { items: Object.keys(edits).length, found };
 }
 export function renderAdmin(root, H) {
   if (!isOpen()) return gate(root, H);

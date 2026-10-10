@@ -5,7 +5,6 @@
 //   ExcelJS       github.com/exceljs/exceljs
 import { EXPIRY_SHEET, PIN_HOURS } from "../data/expiry-data.js?v=106";
 import { BARCODES } from "../data/barcodes.js?v=106";
-import { renderScanCard } from "./scan-view.js?v=106";
 import { readEdits, writeEdits, expiryRows } from "../data/expiry-edits.js?v=106";
 
 const UNLOCK = "noir-edit-until";
@@ -44,26 +43,6 @@ export function idFromCode(raw) {
 }
 
 const rowsFor = id => expiryRows(id);
-function fmtDate(v) {
-  if (!v) return "—";
-  if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) {
-    const [y, m, d] = String(v).slice(0, 10).split("-");
-    return `${d}/${m}/${y}`;
-  }
-  return String(v);
-}
-function asDate(v) {
-  if (!v) return null;
-  if (/^\d{4}-\d{2}-\d{2}/.test(String(v))) return new Date(String(v).slice(0, 10) + "T00:00:00");
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(String(v))) { const [d, m, y] = String(v).split("/"); return new Date(`${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}T00:00:00`); }
-  return null;
-}
-function daysLeft(v) {
-  const dt = asDate(v);
-  if (!dt || isNaN(dt)) return null;
-  const today = new Date(); today.setHours(0, 0, 0, 0); // whole days from today, so the count does not flip at noon
-  return Math.round((dt - today) / 86400000);
-}
 export function requirePin() {
   if (pinUnlocked()) return Promise.resolve(true);
   return new Promise(resolve => {
@@ -94,15 +73,6 @@ export function requirePin() {
   });
 }
 
-export function openProductCard(p, helpers) {
-  H = helpers;
-  if (!p) return;
-  const host = document.createElement("div");
-  H.openModal("", "wide");
-  const sheet = document.querySelector("#modal-root .sheet");
-  sheet.innerHTML = ""; sheet.append(host);
-  renderScanCard(host, p, { H, rowsFor, daysLeft, fmtDate, asDate });
-}
 
 export async function applyCountToSheet(locationId, counts) {
   const all = edits();
@@ -164,10 +134,6 @@ export async function mountLabelSheet(root, products, helpers) {
     const sum = batchSummary(p.id);
     return `<article class="cut"><img class="logo" alt="" src="${H.esc(img)}"><img class="qr" alt="Scan ${H.esc(p.name)}" src="${H.esc(m.qr)}"><b>${H.esc(p.name)}</b></article>`;
   }).join("");
-}
-export async function mountProductPage(root, p, helpers) {
-  H = helpers;
-  renderScanCard(root, p, { H, rowsFor, daysLeft, fmtDate, asDate });
 }
 
 export async function printBarcodes() { location.hash = "labels"; }
