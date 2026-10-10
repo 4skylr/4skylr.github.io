@@ -45,12 +45,12 @@ for (const lang of ["en"]) for (const width of [390, 1300]) {
     rows.push({ lang, width, route, ok: !why.length, why });
     if (why.length) { failures.push(`${lang} ${width} ${route}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/${lang}-${width}-${route}.png` }); }
   }
-  // a label scan opens the product's stock card, from the current address and from the old printed ones
+  // a label scan opens the product watch, from the current address and from the old printed ones
   if (width < 500) for (const url of ["/ipop/?p=caramel", "/noir-stock/?p=caramel"]) {
     errs = []; missing = [];
     await page.goto(BASE + url); await wait(3000);
-    const st = await page.evaluate(() => ({ path: location.pathname, chips: document.querySelectorAll(".sk .sk-chip").length, name: document.querySelector(".sk-name")?.textContent || "" }));
-    const why = [...errs.map(e => "error: " + e), ...missing.map(m => "missing: " + m), ...(st.path !== "/ipop/" ? [`landed on ${st.path}`] : []), ...(st.chips !== 3 || !st.name ? ["the stock card did not open"] : [])];
+    const st = await page.evaluate(() => ({ path: location.pathname, watch: document.querySelectorAll(".nw .nw-display").length, name: document.querySelector(".nw-name")?.textContent || "" }));
+    const why = [...errs.map(e => "error: " + e), ...missing.map(m => "missing: " + m), ...(st.path !== "/ipop/" ? [`landed on ${st.path}`] : []), ...(st.watch !== 1 || !st.name ? ["the product watch did not open"] : [])];
     rows.push({ lang, width, route: "scan " + url, ok: !why.length, why });
     if (why.length) { failures.push(`${lang} ${width} scan ${url}: ${why.join("; ")}`); await page.screenshot({ path: `smoke-shots/scan-${url.split("/")[1]}.png` }); }
   }

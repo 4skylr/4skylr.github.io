@@ -27,10 +27,10 @@ export function asOf(iso) {
 export const whAsOf = (p, loc) => p.stockAt?.[loc] || p.stockUpdatedAt || p.updatedAt || "";
 const total = p => WAREHOUSES.reduce((a, w) => a + num(p.stock?.[w.id]), 0);
 // expiry dates arrive as 2028-02-18 or 18/2/2028 (the monthly sheet)
-const toIso = v => { const s = String(v || "").trim(); if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+export const toIso = v => { const s = String(v || "").trim(); if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : ""; };
-const fmtDate = v => { const i = toIso(v); return i ? new Date(i + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : String(v || ""); };
-const daysTo = v => { const i = toIso(v); if (!i) return null; const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(i + "T00:00:00") - t) / 864e5); };
+export const fmtDate = v => { const i = toIso(v); return i ? new Date(i + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : String(v || ""); };
+export const daysTo = v => { const i = toIso(v); if (!i) return null; const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(i + "T00:00:00") - t) / 864e5); };
 
 // sold = every Concession decrease in the history; last sale = the newest of them
 export function soldFrom(rows) {

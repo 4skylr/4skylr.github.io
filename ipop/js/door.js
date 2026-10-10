@@ -47,6 +47,7 @@ async function firebaseDoor() {
     kind: "firebase",
     async current() { await auth.authStateReady(); const u = auth.currentUser; if (u?.isAnonymous) { await au.signOut(auth); return null; } return u?.uid || null; },
     signIn: code => accountUid(auth, code, false),
+    async guest() { return (await au.signInAnonymously(auth)).user.uid; },
     async signOut() { await au.signOut(auth); },
     async ready() { try { return (await fs.getDoc(ref("door", "state"))).exists(); } catch (e) { throw why(e); } },
     async bootstrap(code, name) {
@@ -132,7 +133,8 @@ async function enter(api, uid) {
   globalThis.IPOP_SESSION = { uid, name: prof.name || "", role: prof.role || "employee", branch: view || prof.branch || HOME, home: prof.branch || HOME };
   globalThis.IPOP_DOOR = {
     kind: api.kind,
-    lock: async () => { await api.signOut(); sessionStorage.removeItem("ipop-view-branch"); location.reload(); },
+    lock: async () => { await api.signOut(); sessionStorage.removeItem("ipop-view-branch"); askSignIn(); },
+    signIn: () => {},
     viewBranch: id => { if (!admin) return; sessionStorage.setItem("ipop-view-branch", id); location.reload(); },
     people: () => api.people(), addPerson: p => api.addPerson(p), removePerson: uid => api.removePerson(uid),
     online: () => api.online(), probe: () => api.probe()
@@ -140,6 +142,18 @@ async function enter(api, uid) {
   api.presence(globalThis.IPOP_SESSION);
   setInterval(() => { if (!document.hidden) api.presence(globalThis.IPOP_SESSION); }, 120000);
   document.getElementById("door")?.remove();
+  document.documentElement.classList.remove("door-open");
+  await import(`./app.js?v=${V}`);
+}
+
+const isScan = () => !!new URLSearchParams(location.search).get("p") || location.hash.startsWith("#p/");
+const askSignIn = () => { sessionStorage.setItem("ipop-want-door", "1"); location.reload(); };
+async function guest(api) {
+  let uid = "";
+  try { uid = (await api?.guest?.()) || ""; } catch { /* the catalog alone, without the live stock */ }
+  globalThis.IPOP_SESSION = { uid, name: "", role: "guest", branch: HOME, home: HOME, guest: true };
+  globalThis.IPOP_DOOR = { kind: api?.kind || "none", guest: true, signIn: askSignIn, lock: askSignIn,
+    viewBranch() {}, people: async () => [], online: async () => [], probe: async () => "unknown" };
   document.documentElement.classList.remove("door-open");
   await import(`./app.js?v=${V}`);
 }
@@ -187,9 +201,13 @@ function showDoor(api) {
   let api;
   try { api = await firebaseDoor(); }
   catch (e) {
+    if (!LOCAL && isScan()) { await guest(null); return; }
     if (!LOCAL) { document.body.insertAdjacentHTML("beforeend", doorHtml()); window.NoirCurtain?.open(); const m = document.querySelector(".door-msg"); m.textContent = MSG.network; m.classList.add("bad"); document.querySelector(".door-go").disabled = true; return; }
     api = localDoor();
   }
   try { const uid = await api.current(); if (uid) { await enter(api, uid); return; } } catch { /* signed out, or no longer active */ }
+  // a label scan opens the product without a code, unless the person asked to sign in from it
+  const want = sessionStorage.getItem("ipop-want-door"); sessionStorage.removeItem("ipop-want-door");
+  if (isScan() && !want) { await guest(api); return; }
   showDoor(api);
 })();

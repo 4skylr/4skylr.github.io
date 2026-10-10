@@ -2,7 +2,7 @@
 // Larger pages load on demand through lazy(); folders: core/ (shell services), data/ (generated data),
 // stock/ (stock, cards, alerts), finance/ (ledger, budget, audit), reports/ (nightly, halls, uploads).
 // With window.CARD_DOOR set (the barcode door build) it renders a single product card and nothing else.
-import * as store from "./core/store.js?v=106";
+import * as store from "./core/store.js?v=115";
 import { session, isAdmin, isHome, canUpload, role, branchName, roleName, BRANCHES, branchId } from "./core/session.js?v=106";
 import { icon, keySymbol } from "./core/icons.js?v=106";
 import { loaderHtml } from "./core/loader.js?v=106";
@@ -10,9 +10,9 @@ import { stageHtml, wireStage } from "./core/gallery-stage.js?v=111";
 import { tone } from "./core/chart-theme.js?v=106";
 import { syncCountsToSheet, pendingCount, cachedCounts } from "./stock/watch-count.js?v=112";
 import { pcardHtml, wirePcards } from "./stock/product-card.js?v=106";
-import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=106";
+import { LOCATIONS, CATEGORIES, UNITS } from "./core/store.js?v=115";
 import { SEED_DATE } from "./data/seed-data.js?v=106";
-import { WAREHOUSES, countRowHtml, mountStockCard, openStockCard } from "./stock/stock-panel.js?v=106";
+import { WAREHOUSES, countRowHtml, openStockCard } from "./stock/stock-panel.js?v=115";
 import { openScanner, downloadSheet, idFromCode, mountLabelSheet, exportLabelsPdf } from "./stock/stock-card.js?v=106";
 import { soldOf, moveOf, SALES_FROM, SALES_TO, SALES_KEY } from "./data/sales-data.js?v=106";
 import { usageOf } from "./stock/consumption.js?v=106";
@@ -222,7 +222,7 @@ function renderNav() {
 }
 // who is signed in, at the top of every page; it opens the lock sheet
 function renderWho() {
-  const s = session(), el = $("#who"); if (!el || !s) return;
+  const s = session(), el = $("#who"); if (!el || !s || s.guest) return;
   el.hidden = false;
   el.innerHTML = `<i class="who-dot" aria-hidden="true"></i><b>${esc(s.name)}</b><span>Online · ${esc(branchName())}</span><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
   el.setAttribute("aria-label", `${s.name} is online in ${branchName()}. Encryption and lock`);
@@ -315,6 +315,12 @@ function render() {
   if (hash.startsWith("p/") && data.products?.length) {
     const p = data.products.find(x => x.id === hash.slice(2));
     if (p) return viewScanProduct(p);
+  }
+  // a scan needs no code; the rest of the site does
+  if (session()?.guest) {
+    if (!isScanUrl()) return globalThis.IPOP_DOOR?.signIn();
+    if (data.products?.length) { document.body.classList.add("card-only"); $("#view").innerHTML = `<article class="sk sk-page"><h2 class="sk-name">Product not found</h2><p class="sk-code">This label points to a product that is not in the catalog.</p></article>`; window.NoirCurtain?.open(); }
+    return;
   }
   renderNav(); renderNet(); renderBell();
   document.documentElement.lang = "en";
@@ -682,17 +688,16 @@ function renderDoor() {
     window.NoirCurtain?.open();
   }
 }
-// a scan opens the product's stock card; the card follows live changes itself, so a sync never rebuilds it
+// a scan opens the product watch; it repaints only when this product's stock changes
+const scanMod = lazy("./stock/scan-view.js?v=114");
 function viewScanProduct(p) {
   document.body.classList.add("card-only");
   $("#kicker").textContent = "";
   $("#page-title").innerHTML = "";
   $("#title-actions").innerHTML = "";
-  if ($("#scan-root .sk")?.dataset.id === p.id) return;
-  $("#view").innerHTML = `<div id="scan-root" class="sk-page"></div>`;
-  try { mountStockCard($("#scan-root"), p, panelHelpers()); }
-  catch (err) { $("#scan-root").innerHTML = `<article class="sk"><h2 class="sk-name">${esc(p.name)}</h2><p>${esc(err.message || "The product could not be opened")}</p></article>`; }
-  requestAnimationFrame(() => window.NoirCurtain?.open());
+  if (!$("#scan-root")) $("#view").innerHTML = `<div id="scan-root"></div>`;
+  scanMod().then(m => { const root = $("#scan-root"); if (root) m.renderScanCard(root, p, panelHelpers()); requestAnimationFrame(() => window.NoirCurtain?.open()); })
+    .catch(err => { $("#scan-root").innerHTML = `<article class="sk"><h2 class="sk-name">${esc(p.name)}</h2><p>${esc(err.message || "The product could not be opened")}</p></article>`; window.NoirCurtain?.open(); });
 }
 // These boards read their own JSON, not the stock store, so a store sync must not rebuild them.
 function viewUnaizah() { if (!$("#view").querySelector(".uz:not(.fx)")) unaizahView().then(m => { if (ui.route === "unaizah") m.renderUnaizah($("#view"), { allDocs: store.allDocs }); }); }
@@ -974,9 +979,9 @@ window.addEventListener("hashchange", () => {
   if (ROUTES.some(x => x.id === r) && r !== ui.route) go(r);
 });
 // watch counts: picked up when the app opens and every minute after, so the Count tab shows what arrived
-if (!CARD_DOOR) { setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
+if (!CARD_DOOR && !session()?.guest) { setTimeout(refreshWc, 3000); setInterval(() => { if (!document.hidden) refreshWc(); }, 60000); }
 // petty cash is gone from the site: clear what it left behind, once per device (a device that could not reach Firebase tries again next time)
-if (!CARD_DOOR && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
+if (!CARD_DOOR && !session()?.guest && !localStorage.getItem("noir-petty-gone")) setTimeout(() => store.purgePetty().then(ok => { if (ok) localStorage.setItem("noir-petty-gone", "1"); }).catch(() => {}), 8000);
 if (CARD_DOOR) {
   render();
   store.init().catch(e => { console.error(e); toast("Couldn't load data: " + e.message, true); });

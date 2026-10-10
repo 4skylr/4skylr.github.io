@@ -115,6 +115,18 @@ function seedProducts() {
 
 // ── Init ─────────────────────────────────────────────────────
 export async function init() {
+  // a label scan without a code: the catalog, plus the one scanned product read live (rules allow that single read)
+  if (globalThis.IPOP_SESSION?.guest) {
+    mem = { products: seedProducts(), sessions: [], activity: [] }; mode = "guest"; emit();
+    const id = new URLSearchParams(location.search).get("p") || (location.hash.startsWith("#p/") ? location.hash.slice(3) : ""), door = globalThis.IPOP_FB;
+    if (id && door?.auth?.currentUser) {
+      try {
+        const snap = await door.fs.getDoc(door.fs.doc(door.db, COL.products, id));
+        if (snap.exists()) { const live = { id, ...snap.data() }; mem.products = mem.products.some(p => p.id === id) ? mem.products.map(p => p.id === id ? { ...p, ...live } : p) : [...mem.products, live]; emit(); }
+      } catch (e) { console.warn("Live product not read:", e.code || e.message); }
+    }
+    return mode;
+  }
   if (firebaseConfig.apiKey) {
     // paint right away from the last snapshot (or the bundled report) while Firebase connects
     const cached = fbCacheRead();

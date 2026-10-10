@@ -37,6 +37,11 @@ service cloud.firestore {
       allow read, write: if inBranch(branch);
     }
     // Unaizah: products, countSessions, activity, productHistory, watchCounts, uploads, stockHistory, nightly, …
+    // a label scan (no code): one Unaizah product at a time, read only — never the list, never a write
+    match /products/{id} {
+      allow get: if request.auth != null;
+    }
+
     match /{col}/{id} {
       allow read, write: if !(col in ["users", "presence", "door", "branches"]) && inBranch("unaizah");
     }
