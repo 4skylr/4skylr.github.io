@@ -143,7 +143,7 @@ const CAT_COLORS = ["#5b7bff", "#4c6bff", "#edf1f8", "#8c95a8", "#7f95ff", "#334
 // ── State ────────────────────────────────────────────────────
 const ui = {
   route: ROUTES.some(r => r.id === location.hash.slice(1)) ? location.hash.slice(1) : lsGet("route", "dashboard"),
-  q: "", cat: lsGet("cat", "all"), loc: lsGet("loc", "all"), sort: lsGet("sort", "cat"), view: lsGet("showIntro", false) ? lsGet("view", "show") : (lsSet("showIntro", true), lsSet("labIntro", true), lsSet("view", "show"), "show"),
+  q: "", cat: lsGet("cat", "all"), loc: lsGet("loc", "all"), sort: lsGet("sort", "cat"), view: lsGet("levelsIntro", false) ? lsGet("view", "levels") : (lsSet("showIntro", true), lsSet("labIntro", true), lsSet("levelsIntro", true), lsSet("view", "levels"), "levels"),
   countQ: "", countOnlyStock: lsGet("countOnlyStock", true), countWh: ""
 };
 // Lemon and mint go into mocktails (slush glass), not hot drinks.
@@ -259,23 +259,27 @@ function renderNet() {
 let stockHist = store.localDocs("stockHistory");
 const histMod = lazy("./stock/stock-history.js?v=106");
 async function stockReport(found, source, fromRequired, reason = "stock-file") {
-  const m = await histMod();
+  const m = await histMod(), lv = await levelsMod();
+  const lowBefore = reason === "stock-file" ? lv.lowSnapshot(data.products) : null;
   const entry = await m.applyStockReport(found, { data: () => data, applyStockChanges: store.applyStockChanges, putDoc: store.putDoc, log: store.log }, source, reason);
   stockHist = [...stockHist.filter(e => e.id !== entry.id), entry];
   localStorage.setItem("noir-sync-at", new Date().toISOString());
-  showChanges(entry);
+  if (lowBefore) entry.check = await lv.saveCheck(lowBefore, store.snapshot().products, source);
+  showChanges(entry, lv);
   renderBell();
   if (!fromRequired) markUpload(reason === "date-file" ? "expiry" : "stock", source).catch(() => {});
   return entry;
 }
 // what an upload changed: up and down per product and warehouse, and the lines that matched no product
-function showChanges(entry) {
+function showChanges(entry, lv) {
   const L = id => LOCATIONS.find(l => l.id === id)?.name || id;
   const row = l => `<li><span><b>${esc(l.name)}</b><small>${esc(L(l.loc))}${l.sale ? " · sold" : ""}</small></span><span class="data">${qty(l.from)} → ${qty(l.to)}</span><b class="data ${l.delta > 0 ? "up" : "dn"}">${l.delta > 0 ? "+" : "−"}${qty(Math.abs(l.delta))} ${esc(UNITS[l.unit] || l.unit || "")}</b></li>`;
   const up = entry.lines.filter(l => l.delta > 0), down = entry.lines.filter(l => l.delta < 0);
   toast(`${entry.reason === "date-file" ? "Dates file" : "Stock file"} · ${up.length} up · ${down.length} down`);
-  if (!up.length && !down.length && !entry.unmatched?.length) return;
+  const check = lv && entry.check ? lv.checkHtml(entry.check, { esc, qty }) : "";
+  if (!up.length && !down.length && !entry.unmatched?.length && !check) return;
   openModal(`<h2>${esc(entry.source || "Upload")}</h2>
+    ${check}
     <p class="lede">Compared with the stock on file. Each change is saved to the product's history${entry.historyOk === false ? " on this device (the database refused the history rows)" : ""}. Only Concession decreases count as sold.</p>
     ${down.length ? `<h3 class="chg-h">Went down · ${down.length}</h3><ul class="chg">${down.map(row).join("")}</ul>` : ""}
     ${up.length ? `<h3 class="chg-h">Went up · ${up.length}</h3><ul class="chg">${up.map(row).join("")}</ul>` : ""}
@@ -506,6 +510,7 @@ function viewProducts() {
       <select class="select" id="sort" aria-label="Sort">
         ${[["cat", "By category"], ["value", "Highest value"], ["qty", "Highest quantity"], ["name", "A → Z"], ["recent", "Recently edited"]].map(([v, t]) => `<option value="${v}" ${ui.sort === v ? "selected" : ""}>${t}</option>`).join("")}</select>
       <div class="seg" role="group" aria-label="View">
+        <button data-view="levels" aria-pressed="${ui.view === "levels"}">${icon("alerts")}Levels</button>
         <button data-view="show" aria-pressed="${ui.view === "show"}">${icon("stage")}Showcase</button>
         <button data-view="lab" aria-pressed="${ui.view === "lab"}">${icon("finance")}Lab</button>
         <button data-view="grid" aria-pressed="${ui.view === "grid"}">${icon("grid")}Cards</button>
@@ -526,7 +531,17 @@ function viewProducts() {
   $$(".cat").forEach(c => c.onclick = () => { ui.cat = c.dataset.cat; lsSet("cat", ui.cat); $$(".cat").forEach(x => x.setAttribute("aria-pressed", x === c)); renderResults(); });
 }
 
+const levelsMod = lazy("./stock/levels.js?v=115");
+let levelsPulled = false;
 function renderResults() {
+  if (ui.view === "levels") {
+    const L = filtered();
+    if (!$("#levels")) $("#results").innerHTML = `<div id="levels"><p class="empty">…</p></div>`;
+    levelsMod().then(m => { const h = $("#levels"); if (h) m.renderLevels(h, { ...cardHelpers(), openCard: p => openStockCard(p, panelHelpers()) }, L); }).catch(e => toast(e.message, true));
+    // the last stock-file check may have been made on another phone
+    if (!levelsPulled) { levelsPulled = true; store.allDocs("levelChecks").then(() => { if (ui.route === "products" && ui.view === "levels") renderResults(); }).catch(() => {}); }
+    return;
+  }
   if (ui.view === "show") {
     const L = filtered();
     if (!$("#show")) $("#results").innerHTML = `<div id="show"></div>`;
@@ -849,8 +864,12 @@ function reportHandlers() {
   const ar = siteLang() === "ar", T = (en, a) => ar ? a : en;
   return {
     expiry: async ([f]) => { const { importExpiry } = await import("./reports/sync-admin.js?v=114"); const n = await importExpiry(f, loadExcelJS, data.products, sheet => store.putRemote("meta", "expirySheet", sheet));
-      await stockReport(n.found, f.name, true, "date-file");
-      if (!isHome()) toast(`${branchName()} expiry sheet · ${n.items} rows${n.unmatched.length ? ` · ${n.unmatched.length} not in the product list` : ""}`);
+      // the dates file never changes stock: it is checked against it, product by product and warehouse by warehouse
+      const lv = await levelsMod(), list = lv.dateConflicts(data.products);
+      toast(`Dates file · ${n.items} rows · ${list.length} ${list.length === 1 ? "conflict" : "conflicts"} with stock`);
+      openModal(`<h2>${esc(f.name)}</h2><p class="lede">${isHome() ? "" : `${esc(branchName())} · `}${n.items} rows read. Stock was not changed; only the stock file changes stock.</p>
+        ${lv.conflictsHtml(list, { esc, qty })}${n.unmatched?.length ? `<h3 class="chg-h">Not in the catalog · ${n.unmatched.length}</h3><ul class="unmatched">${[...new Set(n.unmatched)].map(u => `<li>${esc(u)}</li>`).join("")}</ul>` : ""}`, "narrow");
+      $$("#modal-root [data-open]").forEach(el => el.onclick = () => { const p = data.products.find(x => x.id === el.dataset.open); if (p) openStockCard(p, panelHelpers()); });
       render(); },
     stock: async ([f]) => { const { parseStockPdf } = await import("./reports/sync-admin.js?v=114"); await stockReport(await parseStockPdf(f, data.products), f.name, true); },
     sales: async ([f]) => {

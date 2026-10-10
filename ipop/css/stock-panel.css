@@ -103,3 +103,42 @@
 .sk [hidden] { display: none !important; }
 @media (max-width: 640px) { .sk-groups li { grid-template-columns: minmax(0, 1fr) auto; } .sk-groups li span:last-child { grid-column: 1 / -1; color: var(--muted); } }
 #modal-root .sheet > h2 { padding-inline-end: 48px; overflow-wrap: anywhere; }
+
+/* Shop → Levels (js/stock/levels.js): Concession levels, red under 5; the last stock file; dates against stock */
+.lv { display: grid; gap: 24px; }
+.lv-head { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 24px; background: var(--section); border-radius: var(--r-card); }
+.lv-head > div { display: grid; gap: 2px; }
+.lv-k { font: 600 14px/1.3 var(--f-text); color: var(--ink-2); }
+.lv-head b { font: 600 40px/1.05 var(--f-display); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lv-head span:last-child { font-size: 14px; color: var(--muted); }
+.lv .lv-bad { color: var(--bad); } .lv .lv-ok { color: var(--good); }
+.lv-block h3 { margin: 0 0 4px; font: 600 21px/1.2 var(--f-display); color: var(--ink); }
+.lv-block > .note { margin: 0 0 8px; font-size: 15px; color: var(--muted); }
+.lv-list { list-style: none; margin: 0; padding: 0; }
+.lv-list li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline-soft); cursor: pointer; }
+.lv-list li:last-child { border-bottom: 0; }
+.lv-list li:focus-visible { outline: 2px solid var(--blue-fill); outline-offset: 2px; border-radius: var(--r-card); }
+.lv-pic { width: 44px; height: 44px; border-radius: var(--r-card); overflow: hidden; display: grid; place-items: center; }
+.lv-pic img { width: 100%; height: 100%; object-fit: contain; }
+.lv-id { min-width: 0; display: grid; }
+.lv-id b { font-weight: 600; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lv-id small { font-size: 13px; color: var(--muted); }
+.lv-qty { display: grid; justify-items: end; }
+.lv-qty b { font: 600 24px/1.1 var(--f-display); color: var(--ink); }
+.lv-qty small { font-size: 12px; color: var(--muted); }
+.lv-list li.is-low .lv-qty b, .lv-list li.is-low .lv-id small { color: var(--bad); }
+/* the check and the dates rows: name · numbers · verdict */
+.lv-check li, .lv-dates li { grid-template-columns: minmax(0, 1fr) auto auto; }
+.lv-check li span:first-child, .lv-dates li span:first-child { display: grid; min-width: 0; }
+.lv-check small, .lv-dates small { font-size: 12px; color: var(--muted); }
+.lv-tag { font: 600 13px/1 var(--f-text); padding: 6px 10px; border-radius: var(--r-pill); border: 1px solid currentColor; white-space: nowrap; }
+.lv-check .is-ok .lv-tag { color: var(--good); }
+.lv-check .is-low .lv-tag, .lv-tag.is-up, .lv-tag.is-down { color: var(--bad); }
+.lv-more > summary { cursor: pointer; padding: 8px 0; color: var(--blue-action); font-size: 17px; }
+@media (max-width: 640px) {
+  .lv-head { padding: 16px; gap: 8px; }
+  .lv-head b { font-size: 32px; }
+  .lv-check li, .lv-dates li { grid-template-columns: minmax(0, 1fr) auto; }
+  .lv-check li .data, .lv-dates li .data { grid-column: 1; grid-row: 2; font-size: 13px; color: var(--muted); }
+  .lv-check li .lv-tag, .lv-dates li .lv-tag { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+}
